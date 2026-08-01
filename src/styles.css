@@ -1234,6 +1234,7 @@ input::placeholder, textarea::placeholder {
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  margin: 0; /* Reset dialog default margins */
 }
 
 .modal::backdrop {
@@ -1256,6 +1257,7 @@ input::placeholder, textarea::placeholder {
   box-shadow: var(--shadow-lg);
   animation: modalIn 0.3s ease-out;
   backdrop-filter: blur(20px);
+  color: var(--text-primary); /* Ensure text color is set */
 }
 
 @keyframes modalIn {
