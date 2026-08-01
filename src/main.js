@@ -276,10 +276,10 @@ class GlobalFlowAnimation {
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
     if (isLight) {
       return {
-        primary: '#4f8eff',
-        warm: '#d97706',
-        secondary: '#7c3aed',
-        lineColor: 'rgba(79, 142, 255, 0.12)'
+        primary: '#2563eb',        // Darker blue
+        warm: '#b45309',           // Darker amber
+        secondary: '#6d28d9',      // Darker purple
+        lineColor: 'rgba(37, 99, 235, 0.2)'
       };
     }
     return {
