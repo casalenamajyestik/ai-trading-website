@@ -267,6 +267,27 @@ class GlobalFlowAnimation {
     this.animate();
     
     window.addEventListener('resize', () => this.resize());
+    // Listen for theme changes
+    const observer = new MutationObserver(() => this.init());
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  }
+  
+  getThemeColors() {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if (isLight) {
+      return {
+        primary: '#4f8eff',
+        warm: '#d97706',
+        secondary: '#7c3aed',
+        lineColor: 'rgba(79, 142, 255, 0.12)'
+      };
+    }
+    return {
+      primary: '#4f8eff',
+      warm: '#f5a623',
+      secondary: '#a78bfa',
+      lineColor: 'rgba(79, 142, 255, 0.06)'
+    };
   }
   
   resize() {
@@ -276,10 +297,11 @@ class GlobalFlowAnimation {
   }
   
   init() {
+    const colors = this.getThemeColors();
     const regions = [
-      { x: 0.2, y: 0.3, label: 'asia', color: '#4f8eff' },
-      { x: 0.7, y: 0.25, label: 'americas', color: '#f5a623' },
-      { x: 0.5, y: 0.7, label: 'emea', color: '#a78bfa' }
+      { x: 0.2, y: 0.3, label: 'asia', color: colors.primary },
+      { x: 0.7, y: 0.25, label: 'americas', color: colors.warm },
+      { x: 0.5, y: 0.7, label: 'emea', color: colors.secondary }
     ];
     
     this.nodes = regions.map(r => ({
@@ -316,9 +338,10 @@ class GlobalFlowAnimation {
     
     const cx = w / 2;
     const cy = h / 2;
+    const colors = this.getThemeColors();
     
     // Draw connection lines
-    ctx.strokeStyle = 'rgba(79, 142, 255, 0.06)';
+    ctx.strokeStyle = colors.lineColor;
     ctx.lineWidth = 1;
     this.nodes.forEach(node => {
       ctx.beginPath();
