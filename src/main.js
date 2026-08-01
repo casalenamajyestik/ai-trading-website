@@ -50,6 +50,35 @@ langBtns.forEach(btn => {
   btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
 });
 
+// ============ Mobile Navigation ============
+const hamburger = document.getElementById('hamburger');
+const navLinks = document.getElementById('navLinks');
+
+if (hamburger && navLinks) {
+  hamburger.addEventListener('click', () => {
+    const isOpen = navLinks.classList.toggle('active');
+    hamburger.classList.toggle('active');
+    hamburger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+
+  // Close menu on link click
+  navLinks.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      navLinks.classList.remove('active');
+      hamburger.classList.remove('active');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
+  });
+}
+
+// ============ Nav Scroll Effect ============
+const nav = document.querySelector('.nav');
+window.addEventListener('scroll', () => {
+  if (nav) {
+    nav.classList.toggle('scrolled', window.scrollY > 50);
+  }
+}, { passive: true });
+
 // ============ Login Modal ============
 const loginModal = document.getElementById('loginModal');
 const loginLink = document.querySelector('.btn-login');
@@ -57,83 +86,127 @@ const modalClose = document.querySelector('.modal-close');
 const modalBackdrop = document.querySelector('.modal-backdrop');
 
 function openLogin() {
-  loginModal.showModal();
+  if (loginModal) loginModal.showModal();
 }
 
 function closeLogin() {
-  loginModal.close();
+  if (loginModal) loginModal.close();
 }
 
-loginLink.addEventListener('click', (e) => {
-  e.preventDefault();
-  openLogin();
-});
+if (loginLink) {
+  loginLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    openLogin();
+  });
+}
 
-modalClose.addEventListener('click', closeLogin);
-modalBackdrop.addEventListener('click', closeLogin);
+if (modalClose) modalClose.addEventListener('click', closeLogin);
+if (modalBackdrop) modalBackdrop.addEventListener('click', closeLogin);
 
 // Close on Escape
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && loginModal.open) closeLogin();
+  if (e.key === 'Escape' && loginModal && loginModal.open) closeLogin();
 });
 
 // ============ Login Form ============
 const loginForm = document.getElementById('loginForm');
 
-loginForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const email = document.getElementById('loginEmail').value;
-  const password = document.getElementById('loginPassword').value;
-  
-  if (!email || !password) {
-    showToast('Please fill in all fields', 'error');
-    return;
-  }
-  
-  // Simulate login
-  const btn = loginForm.querySelector('button[type="submit"]');
-  btn.textContent = 'Signing in...';
-  btn.disabled = true;
-  
-  setTimeout(() => {
-    showToast('Welcome back! Login successful.', 'success');
-    closeLogin();
-    loginForm.reset();
-    btn.textContent = 'Sign In';
-    btn.disabled = false;
-  }, 1500);
-});
+if (loginForm) {
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+      showToast('Mohon isi semua field', 'error');
+      return;
+    }
+    
+    const btn = loginForm.querySelector('button[type="submit"]');
+    const originalText = btn.textContent;
+    btn.textContent = 'Masuk...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+      showToast('Selamat datang! Login berhasil.', 'success');
+      closeLogin();
+      loginForm.reset();
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }, 1500);
+  });
+}
 
 // ============ Register Form ============
 const registerForm = document.getElementById('registerForm');
 
-registerForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const name = document.getElementById('name').value;
-  const email = document.getElementById('email').value;
-  const terms = registerForm.querySelector('[name="terms"]');
-  
-  if (!name || !email) {
-    showToast('Please fill in your name and email', 'error');
-    return;
+if (registerForm) {
+  // Real-time validation
+  const nameInput = document.getElementById('name');
+  const emailInput = document.getElementById('email');
+  const termsCheckbox = registerForm.querySelector('[name="terms"]');
+  const submitBtn = registerForm.querySelector('button[type="submit"]');
+
+  function validateField(input) {
+    if (!input) return true;
+    const value = input.value.trim();
+    const isValid = value.length > 0;
+    input.classList.toggle('invalid', !isValid && value.length === 0 && input !== document.activeElement);
+    input.classList.toggle('valid', isValid);
+    return isValid;
   }
-  
-  if (!terms.checked) {
-    showToast('Please agree to the Terms of Service', 'error');
-    return;
+
+  function validateForm() {
+    const isNameValid = validateField(nameInput);
+    const isEmailValid = validateField(emailInput);
+    const isTermsValid = termsCheckbox ? termsCheckbox.checked : true;
+    
+    if (submitBtn) {
+      submitBtn.disabled = !(isNameValid && isEmailValid && isTermsValid);
+    }
   }
-  
-  const btn = registerForm.querySelector('button[type="submit"]');
-  btn.textContent = 'Creating Account...';
-  btn.disabled = true;
-  
-  setTimeout(() => {
-    showToast('Account created! Welcome aboard. 🎉', 'success');
-    registerForm.reset();
-    btn.textContent = 'Daftar Gratis Sekarang';
-    btn.disabled = false;
-  }, 2000);
-});
+
+  if (nameInput) nameInput.addEventListener('input', validateForm);
+  if (emailInput) emailInput.addEventListener('input', validateForm);
+  if (termsCheckbox) termsCheckbox.addEventListener('change', validateForm);
+
+  // Initial state
+  validateForm();
+
+  registerForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = nameInput ? nameInput.value.trim() : '';
+    const email = emailInput ? emailInput.value.trim() : '';
+    const terms = termsCheckbox ? termsCheckbox.checked : false;
+    
+    if (!name || !email) {
+      showToast('Mohon isi nama dan email', 'error');
+      return;
+    }
+    
+    if (!terms) {
+      showToast('Harap setujui Syarat & Ketentuan', 'error');
+      return;
+    }
+    
+    const btn = submitBtn;
+    const originalText = btn ? btn.textContent : '';
+    if (btn) {
+      btn.textContent = 'Membuat Akun...';
+      btn.disabled = true;
+    }
+    
+    setTimeout(() => {
+      showToast('Akun berhasil dibuat! Selamat bergabung 🎉', 'success');
+      registerForm.reset();
+      if (btn) {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+      validateForm();
+    }, 2000);
+  });
+}
 
 // ============ Toast Notification ============
 function showToast(message, type = 'info') {
@@ -159,12 +232,12 @@ function showToast(message, type = 'info') {
     boxShadow: 'var(--shadow-lg)',
     transform: 'translateY(100px)',
     opacity: '0',
-    transition: 'all 0.3s ease'
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
   });
   
-  if (type === 'success') toast.style.background = 'var(--accent-secondary)';
-  else if (type === 'error') toast.style.background = 'var(--accent-danger)';
-  else toast.style.background = 'var(--accent-primary)';
+  if (type === 'success') toast.style.background = 'rgba(34, 211, 167, 0.92)';
+  else if (type === 'error') toast.style.background = 'rgba(240, 78, 78, 0.92)';
+  else toast.style.background = 'rgba(79, 142, 255, 0.92)';
   
   document.body.appendChild(toast);
   
@@ -202,10 +275,9 @@ class GlobalFlowAnimation {
   }
   
   init() {
-    // Create region nodes
     const regions = [
-      { x: 0.2, y: 0.3, label: 'asia', color: '#3b82f6' },
-      { x: 0.7, y: 0.25, label: 'americas', color: '#f59e0b' },
+      { x: 0.2, y: 0.3, label: 'asia', color: '#4f8eff' },
+      { x: 0.7, y: 0.25, label: 'americas', color: '#f5a623' },
       { x: 0.5, y: 0.7, label: 'emea', color: '#a78bfa' }
     ];
     
@@ -215,7 +287,6 @@ class GlobalFlowAnimation {
       py: r.y * this.canvas.height
     }));
     
-    // Create particles flowing from nodes to center
     const centerX = this.canvas.width / 2;
     const centerY = this.canvas.height / 2;
     
@@ -246,7 +317,7 @@ class GlobalFlowAnimation {
     const cy = h / 2;
     
     // Draw connection lines
-    ctx.strokeStyle = 'rgba(59, 130, 246, 0.06)';
+    ctx.strokeStyle = 'rgba(79, 142, 255, 0.06)';
     ctx.lineWidth = 1;
     this.nodes.forEach(node => {
       ctx.beginPath();
@@ -337,6 +408,27 @@ function initCounters() {
   
   counters.forEach(c => observer.observe(c));
 }
+
+// ============ Smooth Scroll for Anchor Links ============
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function(e) {
+    const targetId = this.getAttribute('href');
+    if (targetId === '#') return;
+    
+    const target = document.querySelector(targetId);
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      // Close mobile menu if open
+      if (navLinks) {
+        navLinks.classList.remove('active');
+        hamburger.classList.remove('active');
+        hamburger.setAttribute('aria-expanded', 'false');
+      }
+    }
+  });
+});
 
 // ============ Init ============
 document.addEventListener('DOMContentLoaded', () => {
