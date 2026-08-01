@@ -22,7 +22,6 @@ export const translations = {
         primary: 'Mulai Gratis',
         secondary: ''
       },
-      trust: 'Dipercaya oleh trader di',
       regions: {
         asia: 'Asia Pasifik',
         americas: 'Amerika',
@@ -132,7 +131,6 @@ export const translations = {
         primary: 'Start Free',
         secondary: ''
       },
-      trust: 'Trusted by traders in',
       regions: {
         asia: 'Asia Pacific',
         americas: 'Americas',
