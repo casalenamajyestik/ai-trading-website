@@ -59,10 +59,12 @@ export const translations = {
       phone_placeholder: '+62 8xx xxx xxxx',
       experience: 'Pengalaman Trading',
       experience_placeholder: 'Pilih pengalaman',
-      experience_beginner: 'Pemula (0-6 bulan)',
-      experience_intermediate: 'Menengah (6-24 bulan)',
-      experience_advanced: 'Mahir (2+ tahun)',
-      experience_pro: 'Profesional',
+      experience: {
+        beginner: 'Pemula (0-6 bulan)',
+        intermediate: 'Menengah (6-24 bulan)',
+        advanced: 'Mahir (2+ tahun)',
+        pro: 'Profesional'
+      },
       terms: 'Saya setuju dengan <a href="#tos">Syarat & Ketentuan</a> dan <a href="#privacy">Kebijakan Privasi</a>',
       submit: 'Daftar Gratis Sekarang',
       note: '✓ Gratis selamanya · ✓ Tidak perlu kartu kredit · ✓ Bisa batal kapan saja'
@@ -167,10 +169,12 @@ export const translations = {
       phone_placeholder: '+1 xxx xxx xxxx',
       experience: 'Trading Experience',
       experience_placeholder: 'Select experience',
-      experience_beginner: 'Beginner (0-6 months)',
-      experience_intermediate: 'Intermediate (6-24 months)',
-      experience_advanced: 'Advanced (2+ years)',
-      experience_pro: 'Professional',
+      experience: {
+        beginner: 'Beginner (0-6 months)',
+        intermediate: 'Intermediate (6-24 months)',
+        advanced: 'Advanced (2+ years)',
+        pro: 'Professional'
+      },
       terms: 'I agree to the <a href="#tos">Terms of Service</a> and <a href="#privacy">Privacy Policy</a>',
       submit: 'Sign Up Free Now',
       note: '✓ Free forever · ✓ No credit card needed · ✓ Cancel anytime'
