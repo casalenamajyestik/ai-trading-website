@@ -1,6 +1,6 @@
 /* ===== i18n Translations ===== */
 
-const translations = {
+export const translations = {
   id: {
     nav: {
       features: 'Fitur',

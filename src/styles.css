@@ -321,6 +321,36 @@ input:focus, select:focus, textarea:focus {
   height: 16px;
 }
 
+.core-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.social-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.social-link .social-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-icon,
+.feature-icon-svg,
+.hero-scroll-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.btn-lg .btn-icon {
+  width: 20px;
+  height: 20px;
+}
+
 .btn-primary {
   background: var(--gradient-primary);
   color: white;
@@ -624,7 +654,7 @@ input:focus, select:focus, textarea:focus {
   animation: coreGlow 4s ease-in-out infinite;
 }
 
-.core-center svg {
+.core-center .core-icon {
   width: 40px;
   height: 40px;
 }
@@ -779,6 +809,11 @@ input:focus, select:focus, textarea:focus {
 }
 
 .feature-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.feature-icon-svg {
   width: 24px;
   height: 24px;
 }
