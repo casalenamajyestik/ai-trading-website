@@ -466,7 +466,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (text) el.innerHTML = text;
   });
-  
+
+  // Init i18n placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    const parts = key.split('.');
+    let text = translations[i18next.language]?.[parts[0]];
+    for (let i = 1; i < parts.length; i++) {
+      text = text?.[parts[i]];
+    }
+    if (text) el.placeholder = text;
+  });
+
   // Init canvas animation
   const canvas = document.getElementById('globalFlowCanvas');
   if (canvas) new GlobalFlowAnimation(canvas);
@@ -488,5 +499,16 @@ i18next.on('languageChanged', (lng) => {
       text = text?.[parts[i]];
     }
     if (text) el.innerHTML = text;
+  });
+
+  // Re-translate placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    const parts = key.split('.');
+    let text = translations[lng]?.[parts[0]];
+    for (let i = 1; i < parts.length; i++) {
+      text = text?.[parts[i]];
+    }
+    if (text) el.placeholder = text;
   });
 });
