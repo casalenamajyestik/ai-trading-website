@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI Trading Platform - Gratis Selamanya. Trading Cerdas untuk Semua.">
+  <title>AI Trading Platform | Gratis Selamanya</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Navigation -->
+    <header class="nav" role="banner">
+      <div class="nav-container">
+        <a href="/" class="nav-logo" aria-label="AI Trading Platform Home">
+          <svg class="logo-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <rect width="32" height="32" rx="8" fill="currentColor"/>
+            <path d="M8 16L14 22L24 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="logo-text">AI Trading</span>
+        </a>
+        
+        <nav class="nav-links" role="navigation" aria-label="Main navigation">
+          <a href="#features" class="nav-link" data-i18n="nav.features">Fitur</a>
+          <a href="#about" class="nav-link" data-i18n="nav.about">Tentang</a>
+          <a href="#contact" class="nav-link" data-i18n="nav.contact">Kontak</a>
+        </nav>
+        
+        <div class="nav-actions">
+          <!-- Language Selector -->
+          <div class="language-selector" role="group" aria-label="Pilih bahasa">
+            <button class="lang-btn active" data-lang="id" aria-pressed="true" aria-label="Bahasa Indonesia">
+              <span class="lang-flag" aria-hidden="true">🇮🇩</span>
+              <span class="lang-text">ID</span>
+            </button>
+            <button class="lang-btn" data-lang="en" aria-pressed="false" aria-label="English">
+              <span class="lang-flag" aria-hidden="true">🇺🇸</span>
+              <span class="lang-text">EN</span>
+            </button>
+          </div>
+          
+          <!-- Theme Toggle -->
+          <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="5"/>
+              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </button>
+          
+          <!-- Login Button -->
+          <a href="#login" class="btn btn-primary btn-login" data-i18n="nav.login">Masuk</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <main class="hero" role="main">
+      <!-- Global Data Flow Animation Canvas -->
+      <div class="hero-background">
+        <canvas id="globalFlowCanvas" aria-hidden="true"></canvas>
+        <div class="gradient-overlay"></div>
+      </div>
+      
+      <div class="hero-container">
+        <div class="hero-content">
+          <div class="hero-badge" data-i18n="hero.badge">
+            <span class="badge-dot" aria-hidden="true"></span>
+            Gratis Selamanya · No Credit Card · Setup 5 Menit
+          </div>
+          
+          <h1 class="hero-title" data-i18n="hero.title">
+            Trading Cerdas, <span class="highlight">Tanpa Batas</span>
+          </h1>
+          
+          <p class="hero-subtitle" data-i18n="hero.subtitle">
+            Platform trading AI pertama di Indonesia yang benar-benar gratis selamanya. 
+            Algoritma canggih, data real-time global, dan otomatisasi penuh — tanpa biaya tersembunyi.
+          </p>
+          
+          <div class="hero-stats" role="list" aria-label="Platform statistics">
+            <div class="stat-item" role="listitem">
+              <span class="stat-number" data-count="15000">0</span>
+              <span class="stat-label" data-i18n="hero.stats.traders">Trader Aktif</span>
+            </div>
+            <div class="stat-item" role="listitem">
+              <span class="stat-number" data-count="99.9">0</span>
+              <span class="stat-label" data-i18n="hero.stats.uptime">Uptime %</span>
+            </div>
+            <div class="stat-item" role="listitem">
+              <span class="stat-number" data-count="50">0</span>
+              <span class="stat-label" data-i18n="hero.stats.exchanges">Exchange</span>
+            </div>
+            <div class="stat-item" role="listitem">
+              <span class="stat-number" data-count="0">0</span>
+              <span class="stat-label" data-i18n="hero.stats.fees">Biaya Bulanan</span>
+            </div>
+          </div>
+          
+          <div class="hero-cta">
+            <a href="#register" class="btn btn-primary btn-lg" data-i18n="hero.cta.primary">
+              Mulai Trading Gratis
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </a>
+            <a href="#demo" class="btn btn-secondary btn-lg" data-i18n="hero.cta.secondary">
+              Lihat Demo Live
+            </a>
+          </div>
+          
+          <div class="hero-trust" data-i18n="hero.trust">
+            <span class="trust-text">Dipercaya oleh trader di</span>
+            <div class="trust-logos" aria-label="Supported exchanges">
+              <span class="trust-logo" data-exchange="binance">Binance</span>
+              <span class="trust-logo" data-exchange="bybit">Bybit</span>
+              <span class="trust-logo" data-exchange="okx">OKX</span>
+              <span class="trust-logo" data-exchange="kucoin">KuCoin</span>
+              <span class="trust-logo" data-exchange="gate">Gate.io</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Visual: Global Server Workstation -->
+        <div class="hero-visual" aria-label="Global data flow visualization">
+          <div class="workstation-container">
+            <div class="workstation-core" id="workstationCore" role="img" aria-label="AI Server core processing global data">
+              <div class="core-ring ring-1"></div>
+              <div class="core-ring ring-2"></div>
+              <div class="core-ring ring-3"></div>
+              <div class="core-center">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                  <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+                  <path d="M12 22V12M12 2V12M22 8.5L12 12M2 8.5L12 12M22 15.5L12 12M2 15.5L12 12"/>
+                </svg>
+              </div>
+            </div>
+            
+            <!-- Data streams from regions -->
+            <div class="data-streams" id="dataStreams" aria-hidden="true">
+              <!-- Streams will be generated by JS -->
+            </div>
+            
+            <!-- Region nodes -->
+            <div class="region-nodes" id="regionNodes" aria-hidden="true">
+              <!-- Nodes will be generated by JS -->
+            </div>
+          </div>
+          
+          <div class="visual-labels">
+            <div class="label-item" data-region="asia">
+              <span class="label-indicator"></span>
+              <span data-i18n="hero.regions.asia">Asia Pasifik</span>
+              <span class="label-metric">47% Volume</span>
+            </div>
+            <div class="label-item" data-region="americas">
+              <span class="label-indicator"></span>
+              <span data-i18n="hero.regions.americas">Amerika</span>
+              <span class="label-metric">32% Volume</span>
+            </div>
+            <div class="label-item" data-region="emea">
+              <span class="label-indicator"></span>
+              <span data-i18n="hero.regions.emea">EMEA</span>
+              <span class="label-metric">21% Volume</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="hero-scroll" aria-label="Scroll down">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 5v14M19 12l-7 7-7-7"/>
+        </svg>
+      </div>
+    </main>
+
+    <!-- Features Section -->
+    <section id="features" class="features" aria-labelledby="features-title">
+      <div class="container">
+        <header class="section-header">
+          <h2 id="features-title" data-i18n="features.title">Kenapa Memilih Kami?</h2>
+          <p data-i18n="features.subtitle">Dibangun untuk trader modern yang menuntut kecepatan, keakuratan, dan kebebasan</p>
+        </header>
+        
+        <div class="features-grid">
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <h3 data-i18n="features.ai.title">AI & Machine Learning</h3>
+            <p data-i18n="features.ai.desc">Model prediktif canggih yang belajar dari data pasar global 24/7, menyesuaikan strategi secara real-time.</p>
+          </article>
+          
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+            </div>
+            <h3 data-i18n="features.speed.title">Eksekusi Sub-Milidetik</h3>
+            <p data-i18n="features.speed.desc">Infrastruktur edge computing di 12 wilayah global memastikan order terisi sebelum pasar bergerak.</p>
+          </article>
+          
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <h3 data-i18n="features.security.title">Keamanan Bank-Grade</h3>
+            <p data-i18n="features.security.desc">Enkripsi AES-256, 2FA wajib, API key read-only, dan audit keamanan berkala oleh tim keamanan terkemuka.</p>
+          </article>
+          
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M18 20V10M12 20V4M6 20v-6"/>
+              </svg>
+            </div>
+            <h3 data-i18n="features.analytics.title">Analitik Mendalam</h3>
+            <p data-i18n="features.analytics.desc">Dashboard real-time dengan 50+ indikator, backtesting historis, dan laporan performa otomatis.</p>
+          </article>
+          
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <h3 data-i18n="features.community.title">Komunitas Trader</h3>
+            <p data-i18n="features.community.desc">Akses ke komunitas 15.000+ trader Indonesia, sharing strategi, dan mentor dari trader profesional.</p>
+          </article>
+          
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </div>
+            <h3 data-i18n="features.global.title">Data Global Real-Time</h3>
+            <p data-i18n="features.global.desc">Menghisap data dari 50+ exchange, berita finansial, on-chain metrics, dan sentimen media sosial simultan.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works" aria-labelledby="how-title">
+      <div class="container">
+        <header class="section-header">
+          <h2 id="how-title" data-i18n="how.title">Cara Kerja 3 Langkah</h2>
+          <p data-i18n="how.subtitle">Mulai trading otomatis dalam hitungan menit, bukan hari</p>
+        </header>
+        
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">01</div>
+            <div class="step-content">
+              <h3 data-i18n="how.step1.title">Hubungkan Exchange</h3>
+              <p data-i18n="how.step1.desc">Masukkan API key read-only dari exchange favorit Anda. Tidak perlu deposit ke platform kami — dana tetap di exchange Anda.</p>
+            </div>
+          </div>
+          
+          <div class="step">
+            <div class="step-number">02</div>
+            <div class="step-content">
+              <h3 data-i18n="how.step2.title">Pilih Strategi</h3>
+              <p data-i18n="how.step2.desc">Pilih dari 20+ strategi bawaan (DCA, Grid, Martingale, AI Adaptive) atau buat custom strategy dengan visual builder.</p>
+            </div>
+          </div>
+          
+          <div class="step">
+            <div class="step-number">03</div>
+            <div class="step-content">
+              <h3 data-i18n="how.step3.title">Jalankan & Pantau</h3>
+              <p data-i18n="how.step3.desc">Klik start. AI mengelola posisi 24/7. Pantau performa real-time di dashboard atau dapatkan notifikasi via Telegram/Email.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="register" class="cta-section" aria-labelledby="cta-title">
+      <div class="container">
+        <div class="cta-content">
+          <h2 id="cta-title" data-i18n="cta.title">Siap Mulai Trading Gratis?</h2>
+          <p data-i18n="cta.subtitle">Gabung 15.000+ trader Indonesia yang sudah merasakan keuntungan AI trading. Tanpa risiko, tanpa biaya, kapan saja bisa berhenti.</p>
+          <form class="cta-form" id="registerForm" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="name" data-i18n="form.name">Nama Lengkap</label>
+                <input type="text" id="name" name="name" required autocomplete="name" placeholder="Nama Anda">
+              </div>
+              <div class="form-group">
+                <label for="email" data-i18n="form.email">Email</label>
+                <input type="email" id="email" name="email" required autocomplete="email" placeholder="email@anda.com">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="phone" data-i18n="form.phone">WhatsApp (Opsional)</label>
+                <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="+62 8xx xxx xxxx">
+              </div>
+              <div class="form-group">
+                <label for="experience" data-i18n="form.experience">Pengalaman Trading</label>
+                <select id="experience" name="experience">
+                  <option value="" data-i18n="form.experience.placeholder">Pilih pengalaman</option>
+                  <option value="beginner" data-i18n="form.experience.beginner">Pemula (0-6 bulan)</option>
+                  <option value="intermediate" data-i18n="form.experience.intermediate">Menengah (6-24 bulan)</option>
+                  <option value="advanced" data-i18n="form.experience.advanced">Mahir (2+ tahun)</option>
+                  <option value="pro" data-i18n="form.experience.pro">Profesional</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="terms" required>
+                <span class="checkmark"></span>
+                <span data-i18n="form.terms">Saya setuju dengan <a href="#tos">Syarat & Ketentuan</a> dan <a href="#privacy">Kebijakan Privasi</a></span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg btn-full" data-i18n="form.submit">
+              Daftar Gratis Sekarang
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+            <p class="form-note" data-i18n="form.note">✓ Gratis selamanya · ✓ Tidak perlu kartu kredit · ✓ Bisa batal kapan saja</p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="footer" role="contentinfo">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <a href="/" class="footer-logo" aria-label="AI Trading Platform Home">
+              <svg class="logo-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <rect width="32" height="32" rx="8" fill="currentColor"/>
+                <path d="M8 16L14 22L24 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>AI Trading</span>
+            </a>
+            <p data-i18n="footer.tagline">Platform trading AI pertama Indonesia yang benar-benar gratis selamanya.</p>
+            <div class="social-links" role="list" aria-label="Social media">
+              <a href="#" class="social-link" aria-label="Telegram" role="listitem">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              </a>
+              <a href="#" class="social-link" aria-label="Twitter" role="listitem">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
+              </a>
+              <a href="#" class="social-link" aria-label="GitHub" role="listitem">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.579v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+              </a>
+              <a href="#" class="social-link" aria-label="Discord" role="listitem">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.675 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.083.083 0 0 0 .031.057 19.9 19.9 0 0 0 5.994 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.007-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.1.266.21.371.292a10.101 10.101 0 0 0 .371.292.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.645.773 1.257 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.41-4.566-.443-9.013-3.548-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333 1.056-2.419 2.389-2.419 1.224 0 2.324.955 2.324 2.419 0 1.333-.974 2.419-2.556 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333 1.056-2.419 2.389-2.419 1.224 0 2.324.955 2.324 2.419 0 1.333-.974 2.419-2.556 2.419z"/></svg>
+              </a>
+              <a href="#" class="social-link" aria-label="YouTube" role="listitem">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              </a>
+            </div>
+          </div>
+          
+          <nav class="footer-nav" aria-label="Footer navigation">
+            <div class="footer-col">
+              <h4 data-i18n="footer.product">Produk</h4>
+              <ul>
+                <li><a href="#features" data-i18n="footer.features">Fitur</a></li>
+                <li><a href="#how-it-works" data-i18n="footer.how">Cara Kerja</a></li>
+                <li><a href="#demo" data-i18n="footer.demo">Demo Live</a></li>
+                <li><a href="#api" data-i18n="footer.api">API Docs</a></li>
+                <li><a href="#integrations" data-i18n="footer.integrations">Integrasi</a></li>
+              </ul>
+            </div>
+            <div class="footer-col">
+              <h4 data-i18n="footer.company">Perusahaan</h4>
+              <ul>
+                <li><a href="#about" data-i18n="footer.about">Tentang Kami</a></li>
+                <li><a href="#careers" data-i18n="footer.careers">Karir</a></li>
+                <li><a href="#blog" data-i18n="footer.blog">Blog</a></li>
+                <li><a href="#press" data-i18n="footer.press">Pers</a></li>
+                <li><a href="#contact" data-i18n="footer.contact">Kontak</a></li>
+              </ul>
+            </div>
+            <div class="footer-col">
+              <h4 data-i18n="footer.resources">Sumber Daya</h4>
+              <ul>
+                <li><a href="#docs" data-i18n="footer.docs">Dokumentasi</a></li>
+                <li><a href="#academy" data-i18n="footer.academy">Trading Academy</a></li>
+                <li><a href="#community" data-i18n="footer.community">Komunitas</a></li>
+                <li><a href="#support" data-i18n="footer.support">Bantuan</a></li>
+                <li><a href="#status" data-i18n="footer.status">Status Sistem</a></li>
+              </ul>
+            </div>
+            <div class="footer-col">
+              <h4 data-i18n="footer.legal">Legal</h4>
+              <ul>
+                <li><a href="#privacy" data-i18n="footer.privacy">Kebijakan Privasi</a></li>
+                <li><a href="#tos" data-i18n="footer.tos">Syarat & Ketentuan</a></li>
+                <li><a href="#cookies" data-i18n="footer.cookies">Kebijakan Cookie</a></li>
+                <li><a href="#disclaimer" data-i18n="footer.disclaimer">Disclaimer</a></li>
+                <li><a href="#compliance" data-i18n="footer.compliance">Kepatuhan</a></li>
+              </ul>
+            </div>
+          </nav>
+        </div>
+        
+        <div class="footer-bottom">
+          <p data-i18n="footer.copyright">© 2025 AI Trading Platform. Gratis selamanya. Dibangun dengan ❤️ untuk trader Indonesia.</p>
+          <div class="footer-badges">
+            <span class="badge" data-i18n="footer.badge.free">100% Gratis</span>
+            <span class="badge" data-i18n="footer.badge.open">Open Source</span>
+            <span class="badge" data-i18n="footer.badge.indonesia">Made in Indonesia</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Login Modal -->
+  <dialog id="loginModal" class="modal" aria-modal="true" aria-labelledby="loginTitle">
+    <div class="modal-backdrop" tabindex="-1"></div>
+    <div class="modal-content">
+      <button class="modal-close" aria-label="Tutup dialog login">&times;</button>
+      <h2 id="loginTitle" data-i18n="login.title">Masuk ke Akun Anda</h2>
+      <p class="modal-subtitle" data-i18n="login.subtitle">Atau lanjutkan dengan</p>
+      <div class="social-login">
+        <button class="btn btn-social" type="button" data-provider="google">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <span data-i18n="login.google">Google</span>
+        </button>
+        <button class="btn btn-social" type="button" data-provider="github">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.579v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+          <span data-i18n="login.github">GitHub</span>
+        </button>
+        <button class="btn btn-social" type="button" data-provider="telegram">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          <span data-i18n="login.telegram">Telegram</span>
+        </button>
+      </div>
+      <div class="modal-divider"><span data-i18n="login.or">atau</span></div>
+      <form class="login-form" id="loginForm" novalidate>
+        <div class="form-group">
+          <label for="loginEmail" data-i18n="form.email">Email</label>
+          <input type="email" id="loginEmail" name="email" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="loginPassword" data-i18n="login.password">Kata Sandi</label>
+          <input type="password" id="loginPassword" name="password" required autocomplete="current-password">
+        </div>
+        <label class="checkbox-label">
+          <input type="checkbox" name="remember">
+          <span class="checkmark"></span>
+          <span data-i18n="login.remember">Ingat saya</span>
+        </label>
+        <button type="submit" class="btn btn-primary btn-full" data-i18n="login.submit">Masuk</button>
+      </form>
+      <p class="modal-footer" data-i18n="login.noaccount">Belum punya akun? <a href="#register">Daftar gratis</a></p>
+    </div>
+  </dialog>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
