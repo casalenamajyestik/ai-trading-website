@@ -36,16 +36,25 @@
         </button>
         
         <div class="nav-actions">
-          <!-- Language Selector -->
+          <!-- Language Selector - Toggle Style -->
           <div class="language-selector" role="group" aria-label="Pilih bahasa">
-            <button class="lang-btn active" data-lang="id" aria-pressed="true" aria-label="Bahasa Indonesia">
+            <button class="lang-btn lang-toggle" data-lang="id" aria-pressed="true" aria-label="Bahasa Indonesia">
               <span class="lang-flag" aria-hidden="true">🇮🇩</span>
               <span class="lang-text">ID</span>
+              <svg class="lang-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" width="14" height="14">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
             </button>
-            <button class="lang-btn" data-lang="en" aria-pressed="false" aria-label="English">
-              <span class="lang-flag" aria-hidden="true">🇺🇸</span>
-              <span class="lang-text">EN</span>
-            </button>
+            <div class="lang-dropdown" role="listbox" aria-label="Pilih bahasa">
+              <button class="lang-dropdown-item active" data-lang="id" role="option" aria-selected="true">
+                <span class="lang-flag" aria-hidden="true">🇮🇩</span>
+                <span class="lang-text">Bahasa Indonesia</span>
+              </button>
+              <button class="lang-dropdown-item" data-lang="en" role="option" aria-selected="false">
+                <span class="lang-flag" aria-hidden="true">🇺🇸</span>
+                <span class="lang-text">English</span>
+              </button>
+            </div>
           </div>
           
           <!-- Theme Toggle -->
@@ -307,7 +316,207 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="phone" data-i18n="form.phone">WhatsApp (Opsional)</label>
-                <input type="tel" id="phone" name="phone" autocomplete="tel" data-i18n-placeholder="form.phone_placeholder">
+                <div class="phone-input-wrapper">
+                  <select id="phoneCountryCode" name="phoneCountryCode" class="phone-country-select" aria-label="Kode negara">
+                    <option value="+62" data-country="id" selected>🇮🇩 +62 (Indonesia)</option>
+                    <option value="+93" data-country="af">🇦🇫 +93 (Afghanistan)</option>
+                    <option value="+355" data-country="al">🇦🇱 +355 (Albania)</option>
+                    <option value="+213" data-country="dz">🇩🇿 +213 (Algeria)</option>
+                    <option value="+376" data-country="ad">🇦🇩 +376 (Andorra)</option>
+                    <option value="+244" data-country="ao">🇦🇴 +244 (Angola)</option>
+                    <option value="+1" data-country="ag">🇦🇬 +1 (Antigua & Barbuda)</option>
+                    <option value="+54" data-country="ar">🇦🇷 +54 (Argentina)</option>
+                    <option value="+374" data-country="am">🇦🇲 +374 (Armenia)</option>
+                    <option value="+61" data-country="au">🇦🇺 +61 (Australia)</option>
+                    <option value="+43" data-country="at">🇦🇹 +43 (Austria)</option>
+                    <option value="+994" data-country="az">🇦🇿 +994 (Azerbaijan)</option>
+                    <option value="+1" data-country="bs">🇧🇸 +1 (Bahamas)</option>
+                    <option value="+973" data-country="bh">🇧🇭 +973 (Bahrain)</option>
+                    <option value="+880" data-country="bd">🇧🇩 +880 (Bangladesh)</option>
+                    <option value="+1" data-country="bb">🇧🇧 +1 (Barbados)</option>
+                    <option value="+375" data-country="by">🇧🇾 +375 (Belarus)</option>
+                    <option value="+32" data-country="be">🇧🇪 +32 (Belgium)</option>
+                    <option value="+501" data-country="bz">🇧🇿 +501 (Belize)</option>
+                    <option value="+229" data-country="bj">🇧🇯 +229 (Benin)</option>
+                    <option value="+1" data-country="bt">🇧🇹 +1 (Bhutan)</option>
+                    <option value="+591" data-country="bo">🇧🇴 +591 (Bolivia)</option>
+                    <option value="+387" data-country="ba">🇧🇦 +387 (Bosnia & Herzegovina)</option>
+                    <option value="+267" data-country="bw">🇧🇼 +267 (Botswana)</option>
+                    <option value="+55" data-country="br">🇧🇷 +55 (Brazil)</option>
+                    <option value="+673" data-country="bn">🇧🇳 +673 (Brunei)</option>
+                    <option value="+359" data-country="bg">🇧🇬 +359 (Bulgaria)</option>
+                    <option value="+226" data-country="bf">🇧🇫 +226 (Burkina Faso)</option>
+                    <option value="+257" data-country="bi">🇧🇮 +257 (Burundi)</option>
+                    <option value="+855" data-country="kh">🇰🇭 +855 (Cambodia)</option>
+                    <option value="+237" data-country="cm">🇨🇲 +237 (Cameroon)</option>
+                    <option value="+1" data-country="ca">🇨🇦 +1 (Canada)</option>
+                    <option value="+238" data-country="cv">🇨🇻 +238 (Cape Verde)</option>
+                    <option value="+236" data-country="cf">🇨🇫 +236 (Central African Republic)</option>
+                    <option value="+235" data-country="td">🇹🇩 +235 (Chad)</option>
+                    <option value="+56" data-country="cl">🇨🇱 +56 (Chile)</option>
+                    <option value="+86" data-country="cn">🇨🇳 +86 (China)</option>
+                    <option value="+57" data-country="co">🇨🇴 +57 (Colombia)</option>
+                    <option value="+269" data-country="km">🇰🇲 +269 (Comoros)</option>
+                    <option value="+242" data-country="cg">🇨🇬 +242 (Congo)</option>
+                    <option value="+243" data-country="cd">🇨🇩 +243 (DR Congo)</option>
+                    <option value="+506" data-country="cr">🇨🇷 +506 (Costa Rica)</option>
+                    <option value="+385" data-country="hr">🇭🇷 +385 (Croatia)</option>
+                    <option value="+53" data-country="cu">🇨🇺 +53 (Cuba)</option>
+                    <option value="+357" data-country="cy">🇨🇾 +357 (Cyprus)</option>
+                    <option value="+420" data-country="cz">🇨🇿 +420 (Czech Republic)</option>
+                    <option value="+45" data-country="dk">🇩🇰 +45 (Denmark)</option>
+                    <option value="+253" data-country="dj">🇩🇯 +253 (Djibouti)</option>
+                    <option value="+1" data-country="dm">🇩🇲 +1 (Dominica)</option>
+                    <option value="+1" data-country="do">🇩🇴 +1 (Dominican Republic)</option>
+                    <option value="+593" data-country="ec">🇪🇨 +593 (Ecuador)</option>
+                    <option value="+20" data-country="eg">🇪🇬 +20 (Egypt)</option>
+                    <option value="+503" data-country="sv">🇸🇻 +503 (El Salvador)</option>
+                    <option value="+240" data-country="gq">🇬🇶 +240 (Equatorial Guinea)</option>
+                    <option value="+291" data-country="er">🇪🇷 +291 (Eritrea)</option>
+                    <option value="+372" data-country="ee">🇪🇪 +372 (Estonia)</option>
+                    <option value="+251" data-country="et">🇪🇹 +251 (Ethiopia)</option>
+                    <option value="+679" data-country="fj">🇫🇯 +679 (Fiji)</option>
+                    <option value="+358" data-country="fi">🇫🇮 +358 (Finland)</option>
+                    <option value="+33" data-country="fr">🇫🇷 +33 (France)</option>
+                    <option value="+241" data-country="ga">🇬🇦 +241 (Gabon)</option>
+                    <option value="+220" data-country="gm">🇬🇲 +220 (Gambia)</option>
+                    <option value="+995" data-country="ge">🇬🇪 +995 (Georgia)</option>
+                    <option value="+49" data-country="de">🇩🇪 +49 (Germany)</option>
+                    <option value="+233" data-country="gh">🇬🇭 +233 (Ghana)</option>
+                    <option value="+30" data-country="gr">🇬🇷 +30 (Greece)</option>
+                    <option value="+1" data-country="gd">🇬🇩 +1 (Grenada)</option>
+                    <option value="+502" data-country="gt">🇬🇹 +502 (Guatemala)</option>
+                    <option value="+224" data-country="gn">🇬🇳 +224 (Guinea)</option>
+                    <option value="+245" data-country="gw">🇬🇼 +245 (Guinea-Bissau)</option>
+                    <option value="+592" data-country="gy">🇬🇾 +592 (Guyana)</option>
+                    <option value="+509" data-country="ht">🇭🇹 +509 (Haiti)</option>
+                    <option value="+504" data-country="hn">🇭🇳 +504 (Honduras)</option>
+                    <option value="+36" data-country="hu">🇭🇺 +36 (Hungary)</option>
+                    <option value="+354" data-country="is">🇮🇸 +354 (Iceland)</option>
+                    <option value="+91" data-country="in">🇮🇳 +91 (India)</option>
+                    <option value="+62" data-country="id">🇮🇩 +62 (Indonesia)</option>
+                    <option value="+98" data-country="ir">🇮🇷 +98 (Iran)</option>
+                    <option value="+964" data-country="iq">🇮🇶 +964 (Iraq)</option>
+                    <option value="+353" data-country="ie">🇮🇪 +353 (Ireland)</option>
+                    <option value="+972" data-country="il">🇮🇱 +972 (Israel)</option>
+                    <option value="+39" data-country="it">🇮🇹 +39 (Italy)</option>
+                    <option value="+1" data-country="jm">🇯🇲 +1 (Jamaica)</option>
+                    <option value="+81" data-country="jp">🇯🇵 +81 (Japan)</option>
+                    <option value="+962" data-country="jo">🇯🇴 +962 (Jordan)</option>
+                    <option value="+7" data-country="kz">🇰🇿 +7 (Kazakhstan)</option>
+                    <option value="+254" data-country="ke">🇰🇪 +254 (Kenya)</option>
+                    <option value="+686" data-country="ki">🇰🇮 +686 (Kiribati)</option>
+                    <option value="+965" data-country="kw">🇰🇼 +965 (Kuwait)</option>
+                    <option value="+996" data-country="kg">🇰🇬 +996 (Kyrgyzstan)</option>
+                    <option value="+856" data-country="la">🇱🇦 +856 (Laos)</option>
+                    <option value="+371" data-country="lv">🇱🇻 +371 (Latvia)</option>
+                    <option value="+961" data-country="lb">🇱🇧 +961 (Lebanon)</option>
+                    <option value="+266" data-country="ls">🇱🇸 +266 (Lesotho)</option>
+                    <option value="+231" data-country="lr">🇱🇷 +231 (Liberia)</option>
+                    <option value="+218" data-country="ly">🇱🇾 +218 (Libya)</option>
+                    <option value="+423" data-country="li">🇱🇮 +423 (Liechtenstein)</option>
+                    <option value="+370" data-country="lt">🇱🇹 +370 (Lithuania)</option>
+                    <option value="+352" data-country="lu">🇱🇺 +352 (Luxembourg)</option>
+                    <option value="+389" data-country="mk">🇲🇰 +389 (North Macedonia)</option>
+                    <option value="+261" data-country="mg">🇲🇬 +261 (Madagascar)</option>
+                    <option value="+265" data-country="mw">🇲🇼 +265 (Malawi)</option>
+                    <option value="+60" data-country="my">🇲🇾 +60 (Malaysia)</option>
+                    <option value="+960" data-country="mv">🇲🇻 +960 (Maldives)</option>
+                    <option value="+223" data-country="ml">🇲🇱 +223 (Mali)</option>
+                    <option value="+356" data-country="mt">🇲🇹 +356 (Malta)</option>
+                    <option value="+692" data-country="mh">🇲🇭 +692 (Marshall Islands)</option>
+                    <option value="+222" data-country="mr">🇲🇷 +222 (Mauritania)</option>
+                    <option value="+230" data-country="mu">🇲🇺 +230 (Mauritius)</option>
+                    <option value="+52" data-country="mx">🇲🇽 +52 (Mexico)</option>
+                    <option value="+691" data-country="fm">🇫🇲 +691 (Micronesia)</option>
+                    <option value="+373" data-country="md">🇲🇩 +373 (Moldova)</option>
+                    <option value="+377" data-country="mc">🇲🇨 +377 (Monaco)</option>
+                    <option value="+976" data-country="mn">🇲🇳 +976 (Mongolia)</option>
+                    <option value="+382" data-country="me">🇲🇪 +382 (Montenegro)</option>
+                    <option value="+212" data-country="ma">🇲🇦 +212 (Morocco)</option>
+                    <option value="+258" data-country="mz">🇲🇿 +258 (Mozambique)</option>
+                    <option value="+95" data-country="mm">🇲🇲 +95 (Myanmar)</option>
+                    <option value="+264" data-country="na">🇳🇦 +264 (Namibia)</option>
+                    <option value="+674" data-country="nr">🇳🇷 +674 (Nauru)</option>
+                    <option value="+977" data-country="np">🇳🇵 +977 (Nepal)</option>
+                    <option value="+31" data-country="nl">🇳🇱 +31 (Netherlands)</option>
+                    <option value="+64" data-country="nz">🇳🇿 +64 (New Zealand)</option>
+                    <option value="+505" data-country="ni">🇳🇮 +505 (Nicaragua)</option>
+                    <option value="+227" data-country="ne">🇳🇪 +227 (Niger)</option>
+                    <option value="+234" data-country="ng">🇳🇬 +234 (Nigeria)</option>
+                    <option value="+47" data-country="no">🇳🇴 +47 (Norway)</option>
+                    <option value="+968" data-country="om">🇴🇲 +968 (Oman)</option>
+                    <option value="+92" data-country="pk">🇵🇰 +92 (Pakistan)</option>
+                    <option value="+680" data-country="pw">🇵🇼 +680 (Palau)</option>
+                    <option value="+970" data-country="ps">🇵🇸 +970 (Palestine)</option>
+                    <option value="+507" data-country="pa">🇵🇦 +507 (Panama)</option>
+                    <option value="+675" data-country="pg">🇵🇬 +675 (Papua New Guinea)</option>
+                    <option value="+595" data-country="py">🇵🇾 +595 (Paraguay)</option>
+                    <option value="+51" data-country="pe">🇵🇪 +51 (Peru)</option>
+                    <option value="+63" data-country="ph">🇵🇭 +63 (Philippines)</option>
+                    <option value="+48" data-country="pl">🇵🇱 +48 (Poland)</option>
+                    <option value="+351" data-country="pt">🇵🇹 +351 (Portugal)</option>
+                    <option value="+1" data-country="pr">🇵🇷 +1 (Puerto Rico)</option>
+                    <option value="+974" data-country="qa">🇶🇦 +974 (Qatar)</option>
+                    <option value="+40" data-country="ro">🇷🇴 +40 (Romania)</option>
+                    <option value="+7" data-country="ru">🇷🇺 +7 (Russia)</option>
+                    <option value="+250" data-country="rw">🇷🇼 +250 (Rwanda)</option>
+                    <option value="+1" data-country="kn">🇰🇳 +1 (St Kitts & Nevis)</option>
+                    <option value="+1" data-country="lc">🇱🇨 +1 (St Lucia)</option>
+                    <option value="+1" data-country="vc">🇻🇨 +1 (St Vincent & Grenadines)</option>
+                    <option value="+685" data-country="ws">🇼🇸 +685 (Samoa)</option>
+                    <option value="+378" data-country="sm">🇸🇲 +378 (San Marino)</option>
+                    <option value="+239" data-country="st">🇸🇹 +239 (Sao Tome & Principe)</option>
+                    <option value="+966" data-country="sa">🇸🇦 +966 (Saudi Arabia)</option>
+                    <option value="+221" data-country="sn">🇸🇳 +221 (Senegal)</option>
+                    <option value="+381" data-country="rs">🇷🇸 +381 (Serbia)</option>
+                    <option value="+248" data-country="sc">🇸🇨 +248 (Seychelles)</option>
+                    <option value="+232" data-country="sl">🇸🇱 +232 (Sierra Leone)</option>
+                    <option value="+65" data-country="sg">🇸🇬 +65 (Singapore)</option>
+                    <option value="+421" data-country="sk">🇸🇰 +421 (Slovakia)</option>
+                    <option value="+386" data-country="si">🇸🇮 +386 (Slovenia)</option>
+                    <option value="+677" data-country="sb">🇸🇧 +677 (Solomon Islands)</option>
+                    <option value="+252" data-country="so">🇸🇴 +252 (Somalia)</option>
+                    <option value="+27" data-country="za">🇿🇦 +27 (South Africa)</option>
+                    <option value="+82" data-country="kr">🇰🇷 +82 (South Korea)</option>
+                    <option value="+211" data-country="ss">🇸🇸 +211 (South Sudan)</option>
+                    <option value="+34" data-country="es">🇪🇸 +34 (Spain)</option>
+                    <option value="+94" data-country="lk">🇱🇰 +94 (Sri Lanka)</option>
+                    <option value="+249" data-country="sd">🇸🇩 +249 (Sudan)</option>
+                    <option value="+597" data-country="sr">🇸🇷 +597 (Suriname)</option>
+                    <option value="+46" data-country="se">🇸🇪 +46 (Sweden)</option>
+                    <option value="+41" data-country="ch">🇨🇭 +41 (Switzerland)</option>
+                    <option value="+963" data-country="sy">🇸🇾 +963 (Syria)</option>
+                    <option value="+886" data-country="tw">🇹🇼 +886 (Taiwan)</option>
+                    <option value="+992" data-country="tj">🇹🇯 +992 (Tajikistan)</option>
+                    <option value="+255" data-country="tz">🇹🇿 +255 (Tanzania)</option>
+                    <option value="+66" data-country="th">🇹🇭 +66 (Thailand)</option>
+                    <option value="+670" data-country="tl">🇹🇱 +670 (Timor-Leste)</option>
+                    <option value="+228" data-country="tg">🇹🇬 +228 (Togo)</option>
+                    <option value="+676" data-country="to">🇹🇴 +676 (Tonga)</option>
+                    <option value="+1" data-country="tt">🇹🇹 +1 (Trinidad & Tobago)</option>
+                    <option value="+216" data-country="tn">🇹🇳 +216 (Tunisia)</option>
+                    <option value="+90" data-country="tr">🇹🇷 +90 (Turkey)</option>
+                    <option value="+993" data-country="tm">🇹🇲 +993 (Turkmenistan)</option>
+                    <option value="+688" data-country="tv">🇹🇻 +688 (Tuvalu)</option>
+                    <option value="+256" data-country="ug">🇺🇬 +256 (Uganda)</option>
+                    <option value="+380" data-country="ua">🇺🇦 +380 (Ukraine)</option>
+                    <option value="+971" data-country="ae">🇦🇪 +971 (UAE)</option>
+                    <option value="+44" data-country="gb">🇬🇧 +44 (UK)</option>
+                    <option value="+1" data-country="us">🇺🇸 +1 (USA)</option>
+                    <option value="+598" data-country="uy">🇺🇾 +598 (Uruguay)</option>
+                    <option value="+998" data-country="uz">🇺🇿 +998 (Uzbekistan)</option>
+                    <option value="+678" data-country="vu">🇻🇺 +678 (Vanuatu)</option>
+                    <option value="+379" data-country="va">🇻🇦 +379 (Vatican)</option>
+                    <option value="+58" data-country="ve">🇻🇪 +58 (Venezuela)</option>
+                    <option value="+84" data-country="vn">🇻🇳 +84 (Vietnam)</option>
+                    <option value="+681" data-country="wf">🇼🇫 +681 (Wallis & Futuna)</option>
+                    <option value="+967" data-country="ye">🇾🇪 +967 (Yemen)</option>
+                    <option value="+260" data-country="zm">🇿🇲 +260 (Zambia)</option>
+                    <option value="+263" data-country="zw">🇿🇼 +263 (Zimbabwe)</option>
+                  </select>
+                  <input type="tel" id="phone" name="phone" autocomplete="tel" data-i18n-placeholder="form.phone_placeholder" placeholder="8xx xxx xxxx">
+                </div>
               </div>
               <div class="form-group">
                 <label for="experience" data-i18n="form.experience">Pengalaman Trading</label>

@@ -35,21 +35,59 @@ themeToggle.addEventListener('click', () => {
 });
 
 // ============ Language Management ============
-const langBtns = document.querySelectorAll('.lang-btn');
+const langToggle = document.querySelector('.lang-btn.lang-toggle');
+const langDropdown = document.querySelector('.lang-dropdown');
+const langDropdownItems = document.querySelectorAll('.lang-dropdown-item');
+const langFlag = langToggle?.querySelector('.lang-flag');
+const langText = langToggle?.querySelector('.lang-text');
 
 function setLanguage(lang) {
   i18next.changeLanguage(lang);
   localStorage.setItem('i18next', lang);
-  langBtns.forEach(btn => {
-    const isActive = btn.dataset.lang === lang;
-    btn.classList.toggle('active', isActive);
-    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  
+  // Update toggle button
+  if (langFlag && langText) {
+    langFlag.textContent = lang === 'id' ? '🇮🇩' : '🇺🇸';
+    langText.textContent = lang === 'id' ? 'ID' : 'EN';
+  }
+  
+  // Update dropdown items
+  langDropdownItems.forEach(item => {
+    const isActive = item.dataset.lang === lang;
+    item.classList.toggle('active', isActive);
+    item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+  
+  // Close dropdown
+  if (langDropdown) langDropdown.classList.remove('show');
+  if (langToggle) langToggle.classList.remove('active');
+}
+
+// Toggle dropdown
+if (langToggle && langDropdown) {
+  langToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = langDropdown.classList.toggle('show');
+    langToggle.classList.toggle('active', isOpen);
   });
 }
 
-langBtns.forEach(btn => {
-  btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+// Dropdown item clicks
+langDropdownItems.forEach(item => {
+  item.addEventListener('click', () => setLanguage(item.dataset.lang));
 });
+
+// Close dropdown on outside click
+document.addEventListener('click', (e) => {
+  if (langDropdown && langToggle && !langToggle.contains(e.target)) {
+    langDropdown.classList.remove('show');
+    langToggle.classList.remove('active');
+  }
+});
+
+// Initialize language from localStorage
+const savedLang = localStorage.getItem('i18next') || 'id';
+setLanguage(savedLang);
 
 // ============ Mobile Navigation ============
 const hamburger = document.getElementById('hamburger');

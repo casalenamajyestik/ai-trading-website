@@ -43,7 +43,7 @@ export const translations = {
       title: 'Cara Kerja 3 Langkah',
       subtitle: 'Mulai trading otomatis dalam hitungan menit, bukan hari',
       step1: { title: 'Daftar', desc: 'Isi formulir pendaftaran singkat. Tidak perlu kartu kredit, gratis selamanya.' },
-      step2: { title: 'Pilih Exchange', desc: 'Hubungkan exchange favorit Anda dengan API key read-only. Dana Anda tetap aman di exchange.' },
+      step2: { title: 'Pilih Exchange', desc: 'Hubungkan exchange favorit Anda. Dana Anda tetap aman di exchange.' },
       step3: { title: 'Jalankan & Pantau', desc: 'Klik start. AI mengelola posisi 24/7. Pantau performa real-time di dashboard atau dapatkan notifikasi via Telegram/Email.' }
     },
     cta: {
@@ -153,7 +153,7 @@ export const translations = {
       title: 'How It Works in 3 Steps',
       subtitle: 'Start automated trading in minutes, not days',
       step1: { title: 'Sign Up', desc: 'Fill in a short registration form. No credit card needed, free forever.' },
-      step2: { title: 'Choose Exchange', desc: 'Connect your favorite exchange with a read-only API key. Your funds stay safe on the exchange.' },
+      step2: { title: 'Choose Exchange', desc: 'Connect your favorite exchange. Your funds stay safe on the exchange.' },
       step3: { title: 'Run & Monitor', desc: 'Click start. AI manages positions 24/7. Track real-time performance on the dashboard or get notifications via Telegram/Email.' }
     },
     cta: {
