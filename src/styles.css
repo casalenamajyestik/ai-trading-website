@@ -339,11 +339,11 @@ input:focus, select:focus, textarea:focus {
 }
 
 .social-link .social-icon {
-  width: 16px;
-  height: 16px;
+  width: 16px !important;
+  height: 16px !important;
 }
 
-.btn-icon,
+.btn .btn-icon,
 .feature-icon-svg,
 .hero-scroll-icon {
   width: 24px;
