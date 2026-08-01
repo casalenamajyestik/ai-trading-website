@@ -98,10 +98,10 @@
   --bg-nav: rgba(255, 255, 255, 0.85);
   --bg-glass: rgba(255, 255, 255, 0.6);
   --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
   --border-color: rgba(79, 142, 255, 0.18);
-  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-subtle: rgba(0, 0, 0, 0.08);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.12);
@@ -111,6 +111,12 @@
   /* Light theme gradients */
   --gradient-hero: linear-gradient(160deg, #f4f6f9 0%, #e8ecf3 25%, #ffffff 50%, #f0f2f5 75%, #f4f6f9 100%);
   --gradient-card: linear-gradient(165deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 242, 245, 0.95) 100%);
+  
+  /* Light theme step numbers & trust logos visibility */
+  --step-number-color: #1e293b;
+  --trust-logo-bg: #f1f5f9;
+  --trust-logo-border: #e2e8f0;
+  --trust-logo-text: #334155;
 }
 
 /* --- Reset & Base --- */
@@ -737,6 +743,12 @@ input::placeholder, textarea::placeholder {
   transition: all var(--transition-fast);
 }
 
+[data-theme="light"] .trust-logo {
+  background: var(--trust-logo-bg);
+  border-color: var(--trust-logo-border);
+  color: var(--trust-logo-text);
+}
+
 .trust-logo:hover {
   border-color: var(--accent-primary);
   color: var(--accent-primary);
@@ -1080,6 +1092,14 @@ input::placeholder, textarea::placeholder {
   margin-bottom: 1rem;
   position: relative;
   z-index: 1;
+}
+
+[data-theme="light"] .step-number {
+  background: var(--step-number-color);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0.3;
 }
 
 .step-content {
@@ -1609,7 +1629,7 @@ dialog.modal {
   }
 
   .nav-actions .language-selector {
-    display: none;
+    display: flex;
   }
 
   .hero-stats {

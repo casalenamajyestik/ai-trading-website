@@ -19,8 +19,8 @@ export const translations = {
         fees: 'Biaya Bulanan'
       },
       cta: {
-        primary: 'Mulai Trading Gratis',
-        secondary: 'Lihat Demo Live'
+        primary: 'Mulai Gratis',
+        secondary: ''
       },
       trust: 'Dipercaya oleh trader di',
       regions: {
@@ -42,8 +42,8 @@ export const translations = {
     how: {
       title: 'Cara Kerja 3 Langkah',
       subtitle: 'Mulai trading otomatis dalam hitungan menit, bukan hari',
-      step1: { title: 'Hubungkan Exchange', desc: 'Masukkan API key read-only dari exchange favorit Anda. Tidak perlu deposit ke platform kami — dana tetap di exchange Anda.' },
-      step2: { title: 'Pilih Strategi', desc: 'Pilih dari 20+ strategi bawaan (DCA, Grid, Martingale, AI Adaptive) atau buat custom strategy dengan visual builder.' },
+      step1: { title: 'Daftar', desc: 'Isi formulir pendaftaran singkat. Tidak perlu kartu kredit, gratis selamanya.' },
+      step2: { title: 'Pilih Exchange', desc: 'Hubungkan exchange favorit Anda dengan API key read-only. Dana Anda tetap aman di exchange.' },
       step3: { title: 'Jalankan & Pantau', desc: 'Klik start. AI mengelola posisi 24/7. Pantau performa real-time di dashboard atau dapatkan notifikasi via Telegram/Email.' }
     },
     cta: {
@@ -129,8 +129,8 @@ export const translations = {
         fees: 'Monthly Fee'
       },
       cta: {
-        primary: 'Start Trading Free',
-        secondary: 'Live Demo'
+        primary: 'Start Free',
+        secondary: ''
       },
       trust: 'Trusted by traders in',
       regions: {
@@ -152,9 +152,9 @@ export const translations = {
     how: {
       title: 'How It Works in 3 Steps',
       subtitle: 'Start automated trading in minutes, not days',
-      step1: { title: 'Connect Exchange', desc: 'Enter a read-only API key from your favorite exchange. No deposit to our platform — your funds stay in your exchange.' },
-      step2: { title: 'Choose Strategy', desc: 'Choose from 20+ built-in strategies (DCA, Grid, Martingale, AI Adaptive) or build custom with our visual builder.' },
-      step3: { title: 'Run & Monitor', desc: 'Click start. AI manages positions 24/7. Monitor real-time performance on the dashboard or get notifications via Telegram/Email.' }
+      step1: { title: 'Sign Up', desc: 'Fill in a short registration form. No credit card needed, free forever.' },
+      step2: { title: 'Choose Exchange', desc: 'Connect your favorite exchange with a read-only API key. Your funds stay safe on the exchange.' },
+      step3: { title: 'Run & Monitor', desc: 'Click start. AI manages positions 24/7. Track real-time performance on the dashboard or get notifications via Telegram/Email.' }
     },
     cta: {
       title: 'Ready to Trade for Free?',
