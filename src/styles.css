@@ -477,6 +477,14 @@ input:focus, select:focus, textarea:focus {
   animation: fadeInUp 0.6s ease-out;
 }
 
+.hero-visual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
 .badge-dot {
   width: 8px;
   height: 8px;
@@ -683,12 +691,16 @@ input:focus, select:focus, textarea:focus {
 
 /* Visual Labels */
 .visual-labels {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: relative;
+  bottom: auto;
+  left: auto;
+  right: auto;
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .label-item {
@@ -724,29 +736,18 @@ input:focus, select:focus, textarea:focus {
 
 /* Scroll Indicator */
 .hero-scroll {
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1;
-  color: var(--text-muted);
-  animation: bounce 2s infinite;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(8px); }
+  display: none;
 }
 
 /* --- Features Section --- */
 .features {
-  padding: 6rem 0;
+  padding: 4rem 0;
   background: var(--bg-secondary);
 }
 
 .section-header {
   text-align: center;
-  margin-bottom: 4rem;
+  margin-bottom: 3rem;
 }
 
 .section-header h2 {
