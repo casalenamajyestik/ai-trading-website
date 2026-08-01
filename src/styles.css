@@ -1237,6 +1237,13 @@ input::placeholder, textarea::placeholder {
   margin: 0; /* Reset dialog default margins */
 }
 
+/* Force centering for dialog element */
+dialog.modal {
+  margin: auto;
+  max-width: calc(100% - 2rem);
+  max-height: calc(100% - 2rem);
+}
+
 .modal::backdrop {
   background: var(--bg-modal);
   backdrop-filter: blur(12px);

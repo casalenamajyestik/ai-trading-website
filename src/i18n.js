@@ -59,7 +59,7 @@ export const translations = {
       phone_placeholder: '+62 8xx xxx xxxx',
       experience: 'Pengalaman Trading',
       experience_placeholder: 'Pilih pengalaman',
-      experience: {
+      experience_options: {
         beginner: 'Pemula (0-6 bulan)',
         intermediate: 'Menengah (6-24 bulan)',
         advanced: 'Mahir (2+ tahun)',
@@ -169,7 +169,7 @@ export const translations = {
       phone_placeholder: '+1 xxx xxx xxxx',
       experience: 'Trading Experience',
       experience_placeholder: 'Select experience',
-      experience: {
+      experience_options: {
         beginner: 'Beginner (0-6 months)',
         intermediate: 'Intermediate (6-24 months)',
         advanced: 'Advanced (2+ years)',
