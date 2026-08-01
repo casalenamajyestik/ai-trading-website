@@ -56,7 +56,7 @@ export const translations = {
       phone: 'WhatsApp (Opsional)',
       name_placeholder: 'Nama Anda',
       email_placeholder: 'email@anda.com',
-      phone_placeholder: '+62 8xx xxx xxxx',
+      phone_placeholder: '8xx xxx xxxx',
       experience: 'Pengalaman Trading',
       experience_placeholder: 'Pilih pengalaman',
       experience_options: {
@@ -166,7 +166,7 @@ export const translations = {
       phone: 'WhatsApp (Optional)',
       name_placeholder: 'Your Name',
       email_placeholder: 'email@you.com',
-      phone_placeholder: '+1 xxx xxx xxxx',
+      phone_placeholder: 'xxx xxx xxxx',
       experience: 'Trading Experience',
       experience_placeholder: 'Select experience',
       experience_options: {
