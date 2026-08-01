@@ -589,13 +589,14 @@ input:focus, select:focus, textarea:focus {
 }
 
 .trust-logo {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  padding: 0.25rem 0.6rem;
+  padding: 0.2rem 0.5rem;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 /* Hero Visual */
