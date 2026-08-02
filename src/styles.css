@@ -1918,6 +1918,56 @@ dialog.modal {
   }
 }
 
+/* iPhone XS Max (375px) - explicit breakpoint for Safari */
+@media (max-width: 375px) {
+  .hero-container {
+    grid-template-columns: 1fr !important;
+    text-align: center;
+    gap: 1.5rem;
+  }
+
+  .hero-content {
+    max-width: 100%;
+  }
+
+  .hero-subtitle {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-stats,
+  .hero-cta,
+  .hero-trust {
+    justify-content: center;
+  }
+
+  .hero-visual {
+    min-height: 250px;
+  }
+
+  .visual-labels {
+    position: relative;
+    bottom: auto;
+    margin-top: 1.5rem;
+  }
+
+  .workstation-container {
+    width: 200px;
+    height: 200px;
+  }
+
+  .core-center {
+    width: 60px;
+    height: 60px;
+  }
+
+  .core-center .core-icon {
+    width: 30px;
+    height: 30px;
+  }
+}
+
 /* --- Reduced Motion --- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
