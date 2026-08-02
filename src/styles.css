@@ -671,6 +671,23 @@ input::placeholder, textarea::placeholder {
   margin: 1rem 0;
 }
 
+.hero-content {
+  max-width: 720px;
+  width: 100%;
+}
+
+/* Desktop wider screens - maximize content width */
+@media (min-width: 1025px) {
+  .hero-content {
+    max-width: 800px;
+  }
+  
+  .hero-visual {
+    max-width: 600px;
+    min-height: 400px;
+  }
+}
+
 /* Badge */
 .hero-badge {
   display: inline-flex;
@@ -1753,11 +1770,6 @@ dialog.modal {
 
 /* --- Responsive --- */
 @media (max-width: 1024px) {
-  .hero-content {
-    max-width: 100%;
-    padding-right: 0;
-  }
-
   .hero-subtitle {
     max-width: 100%;
     margin-left: auto;
