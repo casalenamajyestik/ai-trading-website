@@ -660,18 +660,18 @@ input::placeholder, textarea::placeholder {
   min-height: calc(100vh - var(--nav-height));
 }
 
-/* Mobile: hero-content contents flow directly, hero-visual ordered between title & subtitle */
-.hero-content {
-  display: contents;
+/* Mobile: show mobile visual, hide desktop visual */
+.hero-visual--mobile {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  min-height: 280px;
+  margin: 0.5rem 0;
 }
 
-.hero-badge { order: 1; }
-.hero-title { order: 2; }
-.hero-visual { order: 3; /* between title and subtitle */ }
-.hero-subtitle { order: 4; }
-.hero-stats { order: 5; }
-.hero-cta { order: 6; }
-.hero-trust { order: 7; }
+.hero-visual--desktop {
+  display: none;
+}
 
 /* Desktop: 2-column grid layout */
 @media (min-width: 1025px) {
@@ -685,21 +685,17 @@ input::placeholder, textarea::placeholder {
   }
 
   .hero-content {
-    display: block; /* reset display: contents */
     max-width: 560px;
     padding-right: 2rem;
   }
 
-  .hero-title,
-  .hero-subtitle,
-  .hero-stats,
-  .hero-cta,
-  .hero-trust,
-  .hero-visual {
-    order: initial; /* reset order */
+  /* Switch visuals: hide mobile, show desktop */
+  .hero-visual--mobile {
+    display: none;
   }
 
-  .hero-visual {
+  .hero-visual--desktop {
+    display: block;
     position: relative;
     min-height: 450px;
     margin: 0;
@@ -707,7 +703,7 @@ input::placeholder, textarea::placeholder {
     max-width: none;
   }
 
-  .visual-labels {
+  .hero-visual--desktop .visual-labels {
     position: absolute;
     bottom: -2rem;
     left: 50%;
