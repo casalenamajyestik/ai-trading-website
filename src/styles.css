@@ -60,7 +60,7 @@
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  --nav-height: 64px;
+  --nav-height: 64px; --cache-bust: 1785662987331387621;
   --container-max: 1200px;
 }
 
@@ -662,6 +662,7 @@ input::placeholder, textarea::placeholder {
 
 /* Mobile: show mobile visual, hide desktop visual */
 .hero-visual--mobile {
+  /* cache-bust: 1785662964788403307 */
   display: block;
   width: 100%;
   max-width: 400px;
@@ -691,6 +692,7 @@ input::placeholder, textarea::placeholder {
 
   /* Switch visuals: hide mobile, show desktop */
   .hero-visual--mobile {
+  /* cache-bust: 1785662964788403307 */
     display: none;
   }
 
