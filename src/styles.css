@@ -679,12 +679,12 @@ input::placeholder, textarea::placeholder {
 /* Desktop wider screens - maximize content width */
 @media (min-width: 1025px) {
   .hero-content {
-    max-width: 800px;
+    max-width: 100%; /* full container width (1200px) */
   }
   
   .hero-visual {
-    max-width: 600px;
-    min-height: 400px;
+    max-width: 700px;
+    min-height: 450px;
   }
 }
 
