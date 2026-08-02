@@ -686,6 +686,20 @@ input::placeholder, textarea::placeholder {
     max-width: 700px;
     min-height: 450px;
   }
+  
+  /* Ensure subtitle, stats, visual are centered and full width */
+  .hero-subtitle {
+    max-width: none;
+  }
+  
+  .hero-stats {
+    width: 100%;
+  }
+  
+  .hero-visual {
+    width: 100%;
+    max-width: 700px;
+  }
 }
 
 /* Badge */
