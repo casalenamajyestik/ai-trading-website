@@ -660,64 +660,15 @@ input::placeholder, textarea::placeholder {
   min-height: calc(100vh - var(--nav-height));
 }
 
-/* Mobile: show mobile visual, hide desktop visual */
-.hero-visual--mobile {
-  /* cache-bust: 1785662964788403307 */
-  display: block;
+.hero-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  max-width: 400px;
-  min-height: 280px;
-  margin: 0.5rem 0;
-}
-
-.hero-visual--desktop {
-  display: none;
-}
-
-/* Desktop: 2-column grid layout */
-@media (min-width: 1025px) {
-  .hero-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: center;
-    text-align: left;
-    min-height: calc(100vh - var(--nav-height));
-  }
-
-  .hero-content {
-    max-width: 560px;
-    padding-right: 2rem;
-  }
-
-  /* Switch visuals: hide mobile, show desktop */
-  .hero-visual--mobile {
-  /* cache-bust: 1785662964788403307 */
-    display: none;
-  }
-
-  .hero-visual--desktop {
-    display: block;
-    position: relative;
-    min-height: 450px;
-    margin: 0;
-    width: 100%;
-    max-width: none;
-  }
-
-  .hero-visual--desktop .visual-labels {
-    position: absolute;
-    bottom: -2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border-subtle);
-    width: 100%;
-    max-width: 500px;
-  }
+  max-width: 500px;
+  min-height: 320px;
+  margin: 1rem 0;
 }
 
 /* Badge */
@@ -1825,13 +1776,6 @@ dialog.modal {
     justify-content: center;
   }
 
-  .hero-visual {
-    width: 100%;
-    max-width: 400px;
-    min-height: 300px;
-    margin: 0.5rem 0;
-  }
-
   .visual-labels {
     position: relative;
     bottom: auto;
@@ -1954,10 +1898,6 @@ dialog.modal {
     gap: 1.5rem;
   }
 
-  .hero-visual {
-    min-height: 250px;
-  }
-
   .workstation-container {
     width: 200px;
     height: 200px;
@@ -1995,10 +1935,6 @@ dialog.modal {
   .hero-cta,
   .hero-trust {
     justify-content: center;
-  }
-
-  .hero-visual {
-    min-height: 250px;
   }
 
   .visual-labels {
