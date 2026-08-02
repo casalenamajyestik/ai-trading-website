@@ -660,6 +660,45 @@ input::placeholder, textarea::placeholder {
   min-height: calc(100vh - var(--nav-height));
 }
 
+/* Desktop: 2-column grid layout */
+@media (min-width: 1025px) {
+  .hero-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    text-align: left;
+    min-height: calc(100vh - var(--nav-height));
+  }
+
+  .hero-content {
+    max-width: 560px;
+    padding-right: 2rem;
+  }
+
+  .hero-visual {
+    position: relative;
+    min-height: 450px;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+  }
+
+  .visual-labels {
+    position: absolute;
+    bottom: -2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-subtle);
+    width: 100%;
+    max-width: 500px;
+  }
+}
+
 .hero-content {
   max-width: 560px;
   width: 100%;
@@ -1747,15 +1786,9 @@ dialog.modal {
 
 /* --- Responsive --- */
 @media (max-width: 1024px) {
-  .hero-container {
-    grid-template-columns: 1fr;
-    text-align: center;
-    gap: 2rem;
-  }
-
   .hero-content {
     max-width: 100%;
-    padding-right: 0; /* reset desktop padding */
+    padding-right: 0;
   }
 
   .hero-subtitle {
@@ -1780,6 +1813,7 @@ dialog.modal {
     width: 100%;
     max-width: 400px;
     min-height: 300px;
+    margin: 0.5rem 0;
   }
 
   .visual-labels {
