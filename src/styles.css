@@ -662,6 +662,29 @@ input::placeholder, textarea::placeholder {
 
 .hero-content {
   max-width: 560px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Desktop: hero-visual positioned absolutely in right column */
+@media (min-width: 1025px) {
+  .hero-visual {
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 45%;
+    max-width: 400px;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero-content {
+    padding-right: 2rem; /* prevent text overlap */
+  }
 }
 
 /* Badge */
@@ -1752,6 +1775,7 @@ dialog.modal {
 
   .hero-content {
     max-width: 100%;
+    padding-right: 0; /* reset desktop padding */
   }
 
   .hero-subtitle {
@@ -1773,7 +1797,12 @@ dialog.modal {
   }
 
   .hero-visual {
+    position: static !important; /* override desktop absolute */
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
     min-height: 300px;
+    order: 2; /* appears after title, before subtitle in HTML */
   }
 
   .visual-labels {
