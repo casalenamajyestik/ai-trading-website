@@ -222,9 +222,11 @@ if (ctaRegisterBtn) {
 const loginForm = document.getElementById('loginForm');
 
 console.log('Login form element:', loginForm);
+alert('DEBUG: Login form element = ' + loginForm); // PASTI KELIHATAN
 
 if (loginForm) {
   console.log('Attaching submit listener to loginForm');
+  alert('DEBUG: Attaching submit listener'); // PASTI KELIHATAN
   // Prevent autofill from triggering form submission
   loginForm.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) {
@@ -248,6 +250,7 @@ if (loginForm) {
 
   loginForm.addEventListener('submit', async (e) => {
     console.log('Login form submit event fired');
+    alert('DEBUG: Submit event fired'); // PASTI KELIHATAN
     // Block submission if it was triggered by autofill
     if (autofillDetected) {
       e.preventDefault();
