@@ -329,16 +329,16 @@ class GlobalFlowAnimation {
   }
   
   getContainerCenter() {
-    // Get the hero-container which is max-width: 1200px centered
-    const container = document.querySelector('.hero-container');
-    if (!container) return { x: this.canvas.width / 2, y: this.canvas.height / 2 };
+    // Get the hero-visual-wrapper which contains the workstation visual
+    const wrapper = document.querySelector('.hero-visual-wrapper');
+    if (!wrapper) return { x: this.canvas.width / 2, y: this.canvas.height / 2 };
     
     const canvasRect = this.canvas.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
+    const wrapperRect = wrapper.getBoundingClientRect();
     
-    // Calculate container center relative to canvas
-    const centerX = containerRect.left - canvasRect.left + containerRect.width / 2;
-    const centerY = containerRect.top - canvasRect.top + containerRect.height / 2;
+    // Calculate wrapper center relative to canvas
+    const centerX = wrapperRect.left - canvasRect.left + wrapperRect.width / 2;
+    const centerY = wrapperRect.top - canvasRect.top + wrapperRect.height / 2;
     
     return { x: centerX, y: centerY };
   }
@@ -355,12 +355,12 @@ class GlobalFlowAnimation {
     const centerX = center.x;
     const centerY = center.y;
     
-    // Calculate region positions relative to container center
-    // Regions are positioned around the center
+    // Calculate region positions relative to wrapper center
+    // Regions positioned around the workstation visual
     const regions = [
-      { x: centerX * 0.3, y: centerY * 0.4, label: 'asia', color: colors.primary },
-      { x: centerX * 1.7, y: centerY * 0.35, label: 'americas', color: colors.warm },
-      { x: centerX * 1.0, y: centerY * 1.6, label: 'emea', color: colors.secondary }
+      { x: centerX - 180, y: centerY - 120, label: 'asia', color: colors.primary },
+      { x: centerX + 220, y: centerY - 100, label: 'americas', color: colors.warm },
+      { x: centerX, y: centerY + 200, label: 'emea', color: colors.secondary }
     ];
     
     this.nodes = regions.map(r => ({
