@@ -328,6 +328,21 @@ class GlobalFlowAnimation {
     };
   }
   
+  getContainerCenter() {
+    // Get the hero-container which is max-width: 1200px centered
+    const container = document.querySelector('.hero-container');
+    if (!container) return { x: this.canvas.width / 2, y: this.canvas.height / 2 };
+    
+    const canvasRect = this.canvas.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    
+    // Calculate container center relative to canvas
+    const centerX = containerRect.left - canvasRect.left + containerRect.width / 2;
+    const centerY = containerRect.top - canvasRect.top + containerRect.height / 2;
+    
+    return { x: centerX, y: centerY };
+  }
+  
   resize() {
     const container = this.canvas.parentElement;
     this.canvas.width = container.offsetWidth;
@@ -336,20 +351,23 @@ class GlobalFlowAnimation {
   
   init() {
     const colors = this.getThemeColors();
+    const center = this.getContainerCenter();
+    const centerX = center.x;
+    const centerY = center.y;
+    
+    // Calculate region positions relative to container center
+    // Regions are positioned around the center
     const regions = [
-      { x: 0.2, y: 0.3, label: 'asia', color: colors.primary },
-      { x: 0.7, y: 0.25, label: 'americas', color: colors.warm },
-      { x: 0.5, y: 0.7, label: 'emea', color: colors.secondary }
+      { x: centerX * 0.3, y: centerY * 0.4, label: 'asia', color: colors.primary },
+      { x: centerX * 1.7, y: centerY * 0.35, label: 'americas', color: colors.warm },
+      { x: centerX * 1.0, y: centerY * 1.6, label: 'emea', color: colors.secondary }
     ];
     
     this.nodes = regions.map(r => ({
       ...r,
-      px: r.x * this.canvas.width,
-      py: r.y * this.canvas.height
+      px: r.x,
+      py: r.y
     }));
-    
-    const centerX = this.canvas.width / 2;
-    const centerY = this.canvas.height / 2;
     
     for (let i = 0; i < 120; i++) {
       const region = regions[Math.floor(Math.random() * regions.length)];
@@ -374,8 +392,9 @@ class GlobalFlowAnimation {
     
     ctx.clearRect(0, 0, w, h);
     
-    const cx = w / 2;
-    const cy = h / 2;
+    const center = this.getContainerCenter();
+    const cx = center.x;
+    const cy = center.y;
     const colors = this.getThemeColors();
     
     // Draw connection lines
