@@ -222,11 +222,9 @@ if (ctaRegisterBtn) {
 const loginForm = document.getElementById('loginForm');
 
 console.log('Login form element:', loginForm);
-alert('DEBUG: Login form element = ' + loginForm); // PASTI KELIHATAN
 
 if (loginForm) {
   console.log('Attaching submit listener to loginForm');
-  alert('DEBUG: Attaching submit listener'); // PASTI KELIHATAN
   // Prevent autofill from triggering form submission
   loginForm.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) {
@@ -250,7 +248,6 @@ if (loginForm) {
 
   loginForm.addEventListener('submit', async (e) => {
     console.log('Login form submit event fired');
-    alert('DEBUG: Submit event fired'); // PASTI KELIHATAN
     // Block submission if it was triggered by autofill
     if (autofillDetected) {
       e.preventDefault();
@@ -288,6 +285,8 @@ if (loginForm) {
     
     // Save "remember me" preference
     localStorage.setItem('auth_remember_me', rememberMe ? 'true' : 'false');
+    // Mark fresh login to prevent auto-signout on dashboard
+    sessionStorage.setItem('auth_fresh_login', 'true');
     console.log('Saved auth_remember_me:', rememberMe);
     
     showToast('Selamat datang! Login berhasil.', 'success');
@@ -1287,25 +1286,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   
   if (session) {
-    // Check "remember me" preference
-    const rememberMe = localStorage.getItem('auth_remember_me') === 'true';
-    console.log('Session check: session exists, remember_me=', rememberMe);
-    
-    if (!rememberMe) {
-      // User didn't check "remember me" - sign out to clear session
-      console.log('Session exists but remember_me=false, signing out');
-      await signOut();
-      localStorage.removeItem('auth_session');
-      localStorage.removeItem('auth_remember_me');
-      updateNavbarForAuth(null);
+    // Check if this is a fresh login (skip remember_me check)
+    const isFreshLogin = sessionStorage.getItem('auth_fresh_login') === 'true';
+    if (isFreshLogin) {
+      console.log('Fresh login detected, skipping remember_me check');
+      sessionStorage.removeItem('auth_fresh_login');
+    } else {
+      // Check "remember me" preference
+      const rememberMe = localStorage.getItem('auth_remember_me') === 'true';
+      console.log('Session check: session exists, remember_me=', rememberMe);
       
-      // Remove loading overlay and show home page
-      setTimeout(() => {
-        loadingOverlay.style.opacity = '0';
-        loadingOverlay.style.visibility = 'hidden';
-        setTimeout(() => loadingOverlay.remove(), 300);
-      }, 100);
-      return;
+      if (!rememberMe) {
+        // User didn't check "remember me" - sign out to clear session
+        console.log('Session exists but remember_me=false, signing out');
+        await signOut();
+        localStorage.removeItem('auth_session');
+        localStorage.removeItem('auth_remember_me');
+        updateNavbarForAuth(null);
+        
+        // Remove loading overlay and show home page
+        setTimeout(() => {
+          loadingOverlay.style.opacity = '0';
+          loadingOverlay.style.visibility = 'hidden';
+          setTimeout(() => loadingOverlay.remove(), 300);
+        }, 100);
+        return;
+      }
     }
     
     console.log('Auto-login: remember_me=true, redirecting to dashboard');
