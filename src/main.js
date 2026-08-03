@@ -228,6 +228,8 @@ if (loginForm) {
     const password = document.getElementById('loginPassword').value;
     const rememberMe = loginForm.querySelector('[name="remember"]')?.checked;
     
+    console.log('Login form submitted:', { email, rememberMe });
+    
     if (!email || !password) {
       showToast('Mohon isi semua field', 'error');
       return;
@@ -240,6 +242,8 @@ if (loginForm) {
     
     // Real Supabase sign in
     const { data, error } = await signIn(email, password);
+    
+    console.log('SignIn result:', { data, error });
     
     if (error) {
       showToast(error.message || 'Login gagal', 'error');
