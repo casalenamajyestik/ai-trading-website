@@ -363,13 +363,17 @@ if (registerForm) {
     // For CTA inline form, we create account with temporary password
     const tempPassword = Math.random().toString(36).slice(-12) + 'A1!';
     
+    console.log('Registering:', { email, name });
     const { data, error } = await signUp(email, tempPassword, {
       full_name: name,
       experience: 'beginner'
     });
     
+    console.log('SignUp result:', { data, error });
+    
     if (error) {
-      showToast(error.message || 'Gagal mendaftar', 'error');
+      console.error('SignUp error:', error);
+      showToast(error.message || 'Gagal mendaftar: ' + error.message, 'error');
       if (btn) {
         btn.textContent = originalText;
         btn.disabled = false;
@@ -387,7 +391,7 @@ if (registerForm) {
     
     // For inline form, we don't have password - user sets it via email link
     // Show verification info modal
-    openVerification(email, name, true); // true = emailLinkSent
+    openVerification(email, name, true);
   });
 }
 
@@ -502,13 +506,17 @@ function validateModalFormWithErrors() {
     }
     
     // Real Supabase sign up
+    console.log('Registering (modal):', { email, name });
     const { data, error } = await signUp(email, password, {
       full_name: name,
       experience: experience || 'beginner'
     });
     
+    console.log('SignUp result (modal):', { data, error });
+    
     if (error) {
-      showToast(error.message || 'Gagal mendaftar', 'error');
+      console.error('SignUp error (modal):', error);
+      showToast(error.message || 'Gagal mendaftar: ' + error.message, 'error');
       if (btn) {
         btn.textContent = originalText;
         btn.disabled = false;
