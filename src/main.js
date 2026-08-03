@@ -1187,9 +1187,27 @@ function updateNavbarForAuth(session) {
     if (dropdown) dropdown.remove();
   }
 }
-
 // Check auth on load
 document.addEventListener('DOMContentLoaded', async () => {
+  // Show loading overlay immediately to prevent flash
+  const loadingOverlay = document.createElement('div');
+  loadingOverlay.id = 'auth-loading-overlay';
+  loadingOverlay.style.cssText = `
+    position: fixed; inset: 0; background: #070b14; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  `;
+  loadingOverlay.innerHTML = '<div class="spinner" style="width: 32px; height: 32px; border: 3px solid rgba(79,142,255,0.2); border-top-color: #4f8eff; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>';
+  document.body.appendChild(loadingOverlay);
+  
+  // Add spinner keyframes if not exists
+  if (!document.getElementById('spinner-style')) {
+    const style = document.createElement('style');
+    style.id = 'spinner-style';
+    style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+  }
+
   // Listen to Supabase auth state changes
   const { data: { subscription } } = onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session) {
@@ -1241,9 +1259,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Redirect to dashboard if on home page (auto-login)
     if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
       window.location.href = '/dashboard.html';
+      return; // Don't remove overlay - page will navigate
     }
   } else {
     const localSession = getLocalSession();
     updateNavbarForAuth(localSession);
   }
+  
+  // Session check done - fade out loading overlay
+  setTimeout(() => {
+    loadingOverlay.style.opacity = '0';
+    loadingOverlay.style.visibility = 'hidden';
+    setTimeout(() => loadingOverlay.remove(), 300);
+  }, 100);
 });
