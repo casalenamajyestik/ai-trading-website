@@ -13,6 +13,10 @@ export default defineConfig({
       }
     },
     rollupOptions: {
+      input: {
+        main: 'index.html',
+        dashboard: 'dashboard.html'
+      },
       output: {
         manualChunks: undefined
       }
