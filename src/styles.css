@@ -1392,6 +1392,7 @@ input::placeholder, textarea::placeholder {
 @media (max-width: 480px) {
   .hero-title {
     font-size: 2rem;
+    text-align: center;
   }
 
   .hero-cta {
@@ -1927,6 +1928,10 @@ dialog.modal {
     gap: 0.5rem;
   }
   
+  .hero-title {
+    text-align: center;
+  }
+  
   .badge-dot {
     width: 6px;
     height: 6px;
@@ -1977,6 +1982,7 @@ dialog.modal {
 @media (max-width: 480px) {
   .hero-title {
     font-size: 2rem;
+    text-align: center;
   }
 
   .hero-cta {
@@ -2042,6 +2048,10 @@ dialog.modal {
 
   .hero-content {
     max-width: 100%;
+  }
+
+  .hero-title {
+    text-align: center;
   }
 
   .hero-badge {
