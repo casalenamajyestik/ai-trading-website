@@ -222,7 +222,34 @@ if (ctaRegisterBtn) {
 const loginForm = document.getElementById('loginForm');
 
 if (loginForm) {
+  // Prevent autofill from triggering form submission
+  loginForm.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) {
+      // Only submit if focus is on submit button
+      if (e.target.type !== 'submit' && e.target.tagName !== 'BUTTON') {
+        e.preventDefault();
+      }
+    }
+  });
+  
+  // Prevent autofill-triggered submission
+  let autofillDetected = false;
+  loginForm.querySelectorAll('input').forEach(input => {
+    input.addEventListener('animationstart', (e) => {
+      if (e.animationName === 'onAutoFillStart' || e.animationName === 'autofill') {
+        autofillDetected = true;
+        setTimeout(() => autofillDetected = false, 100);
+      }
+    });
+  });
+
   loginForm.addEventListener('submit', async (e) => {
+    // Block submission if it was triggered by autofill
+    if (autofillDetected) {
+      e.preventDefault();
+      return;
+    }
+    
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
@@ -254,6 +281,7 @@ if (loginForm) {
     
     // Save "remember me" preference
     localStorage.setItem('auth_remember_me', rememberMe ? 'true' : 'false');
+    console.log('Saved auth_remember_me:', rememberMe);
     
     showToast('Selamat datang! Login berhasil.', 'success');
     closeLogin();
@@ -1254,6 +1282,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (session) {
     // Check "remember me" preference
     const rememberMe = localStorage.getItem('auth_remember_me') === 'true';
+    console.log('Session check: session exists, remember_me=', rememberMe);
     
     if (!rememberMe) {
       // User didn't check "remember me" - sign out to clear session
@@ -1272,6 +1301,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     
+    console.log('Auto-login: remember_me=true, redirecting to dashboard');
     const userSession = {
       user: {
         email: session.user.email,
