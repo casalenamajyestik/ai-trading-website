@@ -650,17 +650,18 @@
         </button>
       </div>
       <div class="modal-divider"><span data-i18n="login.or">atau</span></div>
-      <form class="login-form" id="loginForm" novalidate>
+      <form class="login-form" id="loginForm" novalidate autocomplete="off">
+        <input type="hidden" name="prevent_autofill" autocomplete="off" style="display:none;">
         <div class="form-group">
           <label for="loginEmail" data-i18n="form.email">Email</label>
-          <input type="email" id="loginEmail" name="email" required autocomplete="email">
+          <input type="email" id="loginEmail" name="email" required autocomplete="username">
         </div>
         <div class="form-group">
           <label for="loginPassword" data-i18n="login.password">Kata Sandi</label>
           <input type="password" id="loginPassword" name="password" required autocomplete="current-password">
         </div>
         <label class="checkbox-label">
-          <input type="checkbox" name="remember">
+          <input type="checkbox" name="remember" autocomplete="off">
           <span class="checkmark"></span>
           <span data-i18n="login.remember">Ingat saya</span>
         </label>
