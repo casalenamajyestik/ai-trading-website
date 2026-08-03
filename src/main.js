@@ -227,42 +227,42 @@ if (loginForm) {
   });
 }
 
-// ============ Register Form ============
+// ============ Register Form (CTA inline) ============
 const registerForm = document.getElementById('registerForm');
 
+// Real-time validation
+const nameInput = document.getElementById('name');
+const emailInput = document.getElementById('email');
+const termsCheckbox = registerForm?.querySelector('[name="terms"]');
+const submitBtn = registerForm?.querySelector('button[type="submit"]');
+
+function validateField(input) {
+  if (!input) return true;
+  const value = input.value.trim();
+  const isValid = value.length > 0;
+  input.classList.toggle('invalid', !isValid && value.length === 0 && input !== document.activeElement);
+  input.classList.toggle('valid', isValid);
+  return isValid;
+}
+
+function validateForm() {
+  const isNameValid = validateField(nameInput);
+  const isEmailValid = validateField(emailInput);
+  const isTermsValid = termsCheckbox ? termsCheckbox.checked : true;
+  
+  if (submitBtn) {
+    submitBtn.disabled = !(isNameValid && isEmailValid && isTermsValid);
+  }
+}
+
+if (nameInput) nameInput.addEventListener('input', validateForm);
+if (emailInput) emailInput.addEventListener('input', validateForm);
+if (termsCheckbox) termsCheckbox.addEventListener('change', validateForm);
+
+// Initial state
+validateForm();
+
 if (registerForm) {
-  // Real-time validation
-  const nameInput = document.getElementById('name');
-  const emailInput = document.getElementById('email');
-  const termsCheckbox = registerForm.querySelector('[name="terms"]');
-  const submitBtn = registerForm.querySelector('button[type="submit"]');
-
-  function validateField(input) {
-    if (!input) return true;
-    const value = input.value.trim();
-    const isValid = value.length > 0;
-    input.classList.toggle('invalid', !isValid && value.length === 0 && input !== document.activeElement);
-    input.classList.toggle('valid', isValid);
-    return isValid;
-  }
-
-  function validateForm() {
-    const isNameValid = validateField(nameInput);
-    const isEmailValid = validateField(emailInput);
-    const isTermsValid = termsCheckbox ? termsCheckbox.checked : true;
-    
-    if (submitBtn) {
-      submitBtn.disabled = !(isNameValid && isEmailValid && isTermsValid);
-    }
-  }
-
-  if (nameInput) nameInput.addEventListener('input', validateForm);
-  if (emailInput) emailInput.addEventListener('input', validateForm);
-  if (termsCheckbox) termsCheckbox.addEventListener('change', validateForm);
-
-  // Initial state
-  validateForm();
-
   registerForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const name = nameInput ? nameInput.value.trim() : '';
@@ -287,16 +287,214 @@ if (registerForm) {
     }
     
     setTimeout(() => {
-      showToast('Akun berhasil dibuat! Selamat bergabung 🎉', 'success');
+      showToast('Akun berhasil dibuat! Cek email untuk verifikasi.', 'success');
       registerForm.reset();
       if (btn) {
         btn.textContent = originalText;
         btn.disabled = false;
       }
       validateForm();
+      // Show verification modal with the registered email
+      openVerification(email, name);
     }, 2000);
   });
 }
+
+// ============ Register Modal Form ============
+const registerModalForm = document.getElementById('registerModalForm');
+
+if (registerModalForm) {
+  const modalNameInput = document.getElementById('regName');
+  const modalEmailInput = document.getElementById('regEmail');
+  const modalPasswordInput = document.getElementById('regPassword');
+  const modalExperienceInput = document.getElementById('regExperience');
+  const modalTermsCheckbox = registerModalForm.querySelector('[name="terms"]');
+  const modalSubmitBtn = registerModalForm.querySelector('button[type="submit"]');
+  
+  function validateModalField(input) {
+    if (!input) return true;
+    const value = input.value.trim();
+    const isValid = value.length > 0;
+    input.classList.toggle('invalid', !isValid && value.length === 0 && input !== document.activeElement);
+    input.classList.toggle('valid', isValid);
+    return isValid;
+  }
+  
+  function validateModalForm() {
+    const isNameValid = validateModalField(modalNameInput);
+    const isEmailValid = validateModalField(modalEmailInput);
+    const isPasswordValid = validateModalField(modalPasswordInput);
+    const isTermsValid = modalTermsCheckbox ? modalTermsCheckbox.checked : true;
+    
+    if (modalSubmitBtn) {
+      modalSubmitBtn.disabled = !(isNameValid && isEmailValid && isPasswordValid && isTermsValid);
+    }
+  }
+  
+  if (modalNameInput) modalNameInput.addEventListener('input', validateModalForm);
+  if (modalEmailInput) modalEmailInput.addEventListener('input', validateModalForm);
+  if (modalPasswordInput) modalPasswordInput.addEventListener('input', validateModalForm);
+  if (modalTermsCheckbox) modalTermsCheckbox.addEventListener('change', validateModalForm);
+  
+  // Initial state
+  validateModalForm();
+  
+  registerModalForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = modalNameInput ? modalNameInput.value.trim() : '';
+    const email = modalEmailInput ? modalEmailInput.value.trim() : '';
+    const password = modalPasswordInput ? modalPasswordInput.value : '';
+    const experience = modalExperienceInput ? modalExperienceInput.value : '';
+    const terms = modalTermsCheckbox ? modalTermsCheckbox.checked : false;
+    
+    if (!name || !email || !password) {
+      showToast('Mohon isi semua field', 'error');
+      return;
+    }
+    
+    if (password.length < 6) {
+      showToast('Kata sandi minimal 6 karakter', 'error');
+      return;
+    }
+    
+    if (!terms) {
+      showToast('Harap setujui Syarat & Ketentuan', 'error');
+      return;
+    }
+    
+    const btn = modalSubmitBtn;
+    const originalText = btn ? btn.textContent : '';
+    if (btn) {
+      btn.textContent = 'Membuat Akun...';
+      btn.disabled = true;
+    }
+    
+    setTimeout(() => {
+      showToast('Akun berhasil dibuat! Cek email untuk verifikasi.', 'success');
+      closeAllModals();
+      registerModalForm.reset();
+      if (btn) {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+      validateModalForm();
+      // Show verification modal with the registered email
+      openVerification(email, name);
+    }, 2000);
+  });
+}
+
+// ============ Verification Modal ============
+const verificationModal = document.getElementById('verificationModal');
+const verificationForm = document.getElementById('verificationForm');
+const verifyCodeInput = document.getElementById('verifyCode');
+const verifyEmailDisplay = document.getElementById('verifyEmailDisplay');
+const resendCodeBtn = document.getElementById('resendCodeBtn');
+const resendContainer = document.getElementById('resendContainer');
+const resendTimer = document.getElementById('resendTimer');
+
+let verificationEmail = '';
+let verificationName = '';
+let resendCountdown = 0;
+let resendInterval = null;
+
+function openVerification(email, name) {
+  verificationEmail = email;
+  verificationName = name;
+  
+  if (verifyEmailDisplay) verifyEmailDisplay.textContent = email;
+  if (verifyCodeInput) verifyCodeInput.value = '';
+  
+  closeAllModals();
+  if (verificationModal) verificationModal.showModal();
+  if (verifyCodeInput) setTimeout(() => verifyCodeInput.focus(), 100);
+  
+  startResendTimer();
+}
+
+function closeVerification() {
+  if (verificationModal) verificationModal.close();
+  if (resendInterval) {
+    clearInterval(resendInterval);
+    resendInterval = null;
+  }
+}
+
+function startResendTimer() {
+  resendCountdown = 60;
+  if (resendContainer) resendContainer.style.display = 'none';
+  if (resendTimer) resendTimer.style.display = 'block';
+  updateResendTimer();
+  
+  if (resendInterval) clearInterval(resendInterval);
+  resendInterval = setInterval(() => {
+    resendCountdown--;
+    updateResendTimer();
+    if (resendCountdown <= 0) {
+      clearInterval(resendInterval);
+      resendInterval = null;
+      if (resendContainer) resendContainer.style.display = 'inline';
+      if (resendTimer) resendTimer.style.display = 'none';
+    }
+  }, 1000);
+}
+
+function updateResendTimer() {
+  if (resendTimer) {
+    const t = i18next.t('verification.resend_timer', { seconds: resendCountdown });
+    resendTimer.textContent = t || `Kirim ulang dalam ${resendCountdown} detik`;
+  }
+}
+
+if (resendCodeBtn) {
+  resendCodeBtn.addEventListener('click', () => {
+    showToast('Kode verifikasi baru dikirim', 'info');
+    startResendTimer();
+  });
+}
+
+if (verificationForm) {
+  verificationForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const code = verifyCodeInput ? verifyCodeInput.value.trim() : '';
+    
+    if (!code || code.length !== 6) {
+      showToast('Masukkan kode 6 digit', 'error');
+      return;
+    }
+    
+    const btn = verificationForm.querySelector('button[type="submit"]');
+    const originalText = btn ? btn.textContent : '';
+    if (btn) {
+      btn.textContent = 'Memverifikasi...';
+      btn.disabled = true;
+    }
+    
+    // Mock verification - accept any 6-digit code
+    setTimeout(() => {
+      showToast(i18next.t('verification.success') || 'Email berhasil diverifikasi! Mengarahkan ke dashboard...', 'success');
+      closeVerification();
+      verificationForm.reset();
+      if (btn) {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+      // Auto-login and redirect to dashboard
+      autoLogin(verificationEmail, verificationName);
+    }, 1500);
+  });
+}
+
+// Close verification modal on backdrop click / escape
+if (verificationModal) {
+  verificationModal.addEventListener('click', (e) => {
+    if (e.target === verificationModal) closeVerification();
+  });
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && verificationModal && verificationModal.open) closeVerification();
+});
 
 // ============ Toast Notification ============
 function showToast(message, type = 'info') {
@@ -619,4 +817,163 @@ i18next.on('languageChanged', (lng) => {
     }
     if (text) el.placeholder = text;
   });
+});
+
+// ============ Auth Session Management ============
+function autoLogin(email, name) {
+  // Create mock session
+  const session = {
+    user: {
+      email: email,
+      name: name,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4f8eff&color=fff&size=128`
+    },
+    token: 'mock-jwt-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    isVerified: true
+  };
+  
+  localStorage.setItem('auth_session', JSON.stringify(session));
+  
+  // Redirect to dashboard
+  window.location.href = '/dashboard.html';
+}
+
+function getSession() {
+  try {
+    const session = JSON.parse(localStorage.getItem('auth_session'));
+    if (!session) return null;
+    if (Date.now() > session.expiresAt) {
+      localStorage.removeItem('auth_session');
+      return null;
+    }
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+function logout() {
+  localStorage.removeItem('auth_session');
+  window.location.href = '/';
+}
+
+function requireAuth() {
+  const session = getSession();
+  if (!session) {
+    window.location.href = '/';
+    return null;
+  }
+  return session;
+}
+
+function updateNavbarForAuth(session) {
+  const navActions = document.querySelector('.nav-actions');
+  if (!navActions) return;
+  
+  if (session) {
+    // Replace login button with user dropdown
+    const loginBtn = navActions.querySelector('.btn-login');
+    if (loginBtn) loginBtn.remove();
+    
+    // Check if dropdown already exists
+    if (navActions.querySelector('.user-dropdown')) return;
+    
+    const dropdown = document.createElement('div');
+    dropdown.className = 'user-dropdown';
+    dropdown.innerHTML = `
+      <button class="user-avatar-btn" aria-label="User menu" aria-expanded="false" aria-haspopup="true">
+        <img src="${session.user.avatar}" alt="" class="user-avatar" width="32" height="32">
+        <svg class="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="user-dropdown-menu" role="menu" hidden>
+        <div class="user-info">
+          <img src="${session.user.avatar}" alt="" class="user-avatar-sm" width="40" height="40">
+          <div>
+            <span class="user-name">${session.user.name}</span>
+            <span class="user-email">${session.user.email}</span>
+          </div>
+        </div>
+        <hr class="dropdown-divider">
+        <a href="/dashboard.html" class="dropdown-item" role="menuitem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span data-i18n="nav.dashboard">Dashboard</span>
+        </a>
+        <a href="/settings.html" class="dropdown-item" role="menuitem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 21.4a1.65 1.65 0 0 0-1.96.36l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.36-1.96l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.96-.36l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.96.36l-.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-.33 1.82V15a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-.36 1.96l-.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.36-1.96l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.36-1.96l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82-.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.96-.36l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82V9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.36-1.96l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82-.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.96-.36l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82V9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.36-1.96l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82-.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.96-.36l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82V9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.36-1.96l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82-.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51"/></svg>
+          <span data-i18n="nav.settings">Pengaturan</span>
+        </a>
+        <button class="dropdown-item btn-logout" role="menuitem" id="logoutBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span data-i18n="nav.logout">Keluar</span>
+        </button>
+      </div>
+    `;
+    navActions.insertBefore(dropdown, navActions.querySelector('.theme-toggle'));
+    
+    // Dropdown toggle
+    const avatarBtn = dropdown.querySelector('.user-avatar-btn');
+    const dropdownMenu = dropdown.querySelector('.user-dropdown-menu');
+    
+    avatarBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = dropdownMenu.hidden = !dropdownMenu.hidden;
+      avatarBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target)) {
+        dropdownMenu.hidden = true;
+        avatarBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+    
+    // Logout button
+    const logoutBtn = dropdown.querySelector('#logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        logout();
+      });
+    }
+    
+    // Update i18n for new elements
+    if (typeof i18next !== 'undefined') {
+      dropdown.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        const parts = key.split('.');
+        let text = translations[i18next.language]?.[parts[0]];
+        for (let i = 1; i < parts.length; i++) {
+          text = text?.[parts[i]];
+        }
+        if (text) el.textContent = text;
+      });
+    }
+  } else {
+    // Not logged in - ensure login button exists
+    if (!navActions.querySelector('.btn-login')) {
+      const loginBtn = document.createElement('a');
+      loginBtn.href = '#login';
+      loginBtn.className = 'btn btn-primary btn-login';
+      loginBtn.dataset.i18n = 'nav.login';
+      loginBtn.textContent = 'Masuk';
+      navActions.insertBefore(loginBtn, navActions.querySelector('.theme-toggle'));
+      
+      // Re-attach click handler
+      loginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openLogin();
+      });
+    }
+    
+    // Remove user dropdown if exists
+    const dropdown = navActions.querySelector('.user-dropdown');
+    if (dropdown) dropdown.remove();
+  }
+}
+
+// Check auth on load
+document.addEventListener('DOMContentLoaded', () => {
+  const session = getSession();
+  updateNavbarForAuth(session);
 });

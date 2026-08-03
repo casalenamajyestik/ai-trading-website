@@ -6,7 +6,10 @@ export const translations = {
       features: 'Fitur',
       about: 'Tentang',
       contact: 'Kontak',
-      login: 'Masuk'
+      login: 'Masuk',
+      dashboard: 'Dashboard',
+      settings: 'Pengaturan',
+      logout: 'Keluar'
     },
     hero: {
       badge: 'Gratis Selamanya · No Credit Card · Setup 5 Menit',
@@ -78,7 +81,30 @@ export const translations = {
       password: 'Kata Sandi',
       remember: 'Ingat saya',
       submit: 'Masuk',
-      noaccount: 'Belum punya akun? <a href="#register">Daftar gratis</a>'
+      noaccount: 'Belum punya akun? <a href="#" id="openRegisterLink">Daftar gratis</a>'
+    },
+    register: {
+      title: 'Buat Akun Gratis',
+      subtitle: 'Atau lanjutkan dengan',
+      google: 'Google',
+      github: 'GitHub',
+      telegram: 'Telegram',
+      or: 'atau',
+      password: 'Kata Sandi',
+      submit: 'Daftar Gratis Sekarang',
+      hasaccount: 'Sudah punya akun? <a href="#" id="openLoginLink">Masuk di sini</a>'
+    },
+    verification: {
+      title: 'Verifikasi Email',
+      subtitle: 'Kami telah mengirimkan kode verifikasi ke',
+      code_label: 'Masukkan Kode 6 Digit',
+      code_placeholder: '000000',
+      resend: 'Kirim ulang kode',
+      resend_timer: 'Kirim ulang dalam {seconds} detik',
+      verify: 'Verifikasi & Masuk',
+      success: 'Email berhasil diverifikasi! Mengarahkan ke dashboard...',
+      error: 'Kode tidak valid atau sudah kadaluarsa',
+      no_email: 'Tidak menerima email? Periksa folder spam atau'
     },
     footer: {
       tagline: 'Platform trading AI pertama Indonesia yang benar-benar gratis selamanya.',
@@ -115,7 +141,10 @@ export const translations = {
       features: 'Features',
       about: 'About',
       contact: 'Contact',
-      login: 'Login'
+      login: 'Login',
+      dashboard: 'Dashboard',
+      settings: 'Settings',
+      logout: 'Logout'
     },
     hero: {
       badge: 'Free Forever · No Credit Card · 5-Min Setup',
@@ -187,7 +216,30 @@ export const translations = {
       password: 'Password',
       remember: 'Remember me',
       submit: 'Sign In',
-      noaccount: 'No account? <a href="#register">Sign up free</a>'
+      noaccount: 'No account? <a href="#" id="openRegisterLink">Sign up free</a>'
+    },
+    register: {
+      title: 'Create Free Account',
+      subtitle: 'Or continue with',
+      google: 'Google',
+      github: 'GitHub',
+      telegram: 'Telegram',
+      or: 'or',
+      password: 'Password',
+      submit: 'Sign Up Free Now',
+      hasaccount: 'Already have an account? <a href="#" id="openLoginLink">Sign in here</a>'
+    },
+    verification: {
+      title: 'Verify Email',
+      subtitle: 'We\'ve sent a verification code to',
+      code_label: 'Enter 6-Digit Code',
+      code_placeholder: '000000',
+      resend: 'Resend code',
+      resend_timer: 'Resend in {seconds} seconds',
+      verify: 'Verify & Sign In',
+      success: 'Email verified! Redirecting to dashboard...',
+      error: 'Invalid or expired code',
+      no_email: 'Didn\'t receive email? Check spam folder or'
     },
     footer: {
       tagline: 'The first AI trading platform in Indonesia that is truly free forever.',

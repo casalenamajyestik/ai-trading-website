@@ -722,6 +722,29 @@
     </div>
   </dialog>
 
+  <!-- Verification Modal -->
+  <dialog id="verificationModal" class="modal" aria-modal="true" aria-labelledby="verificationTitle">
+    <div class="modal-content">
+      <button class="modal-close" aria-label="Tutup dialog verifikasi">&times;</button>
+      <h2 id="verificationTitle" data-i18n="verification.title">Verifikasi Email</h2>
+      <p class="modal-subtitle" data-i18n="verification.subtitle">Kami telah mengirimkan kode verifikasi ke <span id="verifyEmailDisplay"></span></p>
+      <form class="verification-form" id="verificationForm" novalidate>
+        <div class="form-group">
+          <label for="verifyCode" data-i18n="verification.code_label">Masukkan Kode 6 Digit</label>
+          <input type="text" id="verifyCode" name="code" required autocomplete="one-time-code" maxlength="6" placeholder="000000" inputmode="numeric" pattern="[0-9]{6}">
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" data-i18n="verification.verify">Verifikasi & Masuk</button>
+      </form>
+      <p class="modal-footer">
+        <span id="resendContainer">
+          <span data-i18n="verification.no_email">Tidak menerima email? Periksa folder spam atau </span>
+          <button type="button" id="resendCodeBtn" class="btn-link" data-i18n="verification.resend">Kirim ulang kode</button>
+        </span>
+      </p>
+      <p id="resendTimer" class="modal-footer" style="display: none;"></p>
+    </div>
+  </dialog>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
