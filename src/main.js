@@ -1240,8 +1240,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
   
-  // Check initial session
-  const { data: { session } } = await getSupabaseSession();
+  // Check initial session with timeout fallback
+  let session = null;
+  try {
+    // Timeout after 5 seconds
+    const sessionPromise = getSupabaseSession();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Session check timeout')), 5000)
+    );
+    const result = await Promise.race([sessionPromise, timeoutPromise]);
+    session = result.data?.session;
+  } catch (err) {
+    console.warn('Supabase session check failed/timed out, falling back to localStorage:', err);
+    session = null;
+  }
+  
   if (session) {
     const userSession = {
       user: {
