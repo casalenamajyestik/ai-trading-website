@@ -1288,17 +1288,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (session) {
     // Check if this is a fresh login (skip remember_me check)
     const isFreshLogin = sessionStorage.getItem('auth_fresh_login') === 'true';
+    console.log('Session check: session exists, isFreshLogin=', isFreshLogin);
+    
     if (isFreshLogin) {
       console.log('Fresh login detected, skipping remember_me check');
       sessionStorage.removeItem('auth_fresh_login');
     } else {
       // Check "remember me" preference
-      const rememberMe = localStorage.getItem('auth_remember_me') === 'true';
-      console.log('Session check: session exists, remember_me=', rememberMe);
+      const rememberMeRaw = localStorage.getItem('auth_remember_me');
+      const rememberMe = rememberMeRaw === 'true';
+      console.log('Cold start: auth_remember_me raw=', rememberMeRaw, '→ parsed=', rememberMe);
       
       if (!rememberMe) {
         // User didn't check "remember me" - sign out to clear session
-        console.log('Session exists but remember_me=false, signing out');
+        console.log('Cold start: remember_me=false, signing out');
         await signOut();
         localStorage.removeItem('auth_session');
         localStorage.removeItem('auth_remember_me');
@@ -1311,6 +1314,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           setTimeout(() => loadingOverlay.remove(), 300);
         }, 100);
         return;
+      } else {
+        console.log('Cold start: remember_me=true, allowing auto-login');
       }
     }
     
