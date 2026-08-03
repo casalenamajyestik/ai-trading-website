@@ -221,7 +221,10 @@ if (ctaRegisterBtn) {
 // ============ Login Form ============
 const loginForm = document.getElementById('loginForm');
 
+console.log('Login form element:', loginForm);
+
 if (loginForm) {
+  console.log('Attaching submit listener to loginForm');
   // Prevent autofill from triggering form submission
   loginForm.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) {
@@ -244,6 +247,7 @@ if (loginForm) {
   });
 
   loginForm.addEventListener('submit', async (e) => {
+    console.log('Login form submit event fired');
     // Block submission if it was triggered by autofill
     if (autofillDetected) {
       e.preventDefault();
