@@ -269,23 +269,62 @@ const emailInput = document.getElementById('email');
 const termsCheckbox = registerForm?.querySelector('[name="terms"]');
 const submitBtn = registerForm?.querySelector('button[type="submit"]');
 
-function validateField(input) {
+function validateField(input, showError = false) {
   if (!input) return true;
   const value = input.value.trim();
   const isValid = value.length > 0;
-  input.classList.toggle('invalid', !isValid && value.length === 0 && input !== document.activeElement);
+  input.classList.toggle('invalid', !isValid && showError);
   input.classList.toggle('valid', isValid);
+  
+  // Show/hide error feedback
+  const feedback = input.parentElement.querySelector('.invalid-feedback');
+  if (feedback) {
+    feedback.classList.toggle('show', !isValid && showError);
+  }
+  
+  // Shake animation on invalid
+  if (!isValid && showError) {
+    input.style.animation = 'shake 0.4s ease-in-out';
+    setTimeout(() => { input.style.animation = ''; }, 400);
+  }
+  
   return isValid;
 }
 
 function validateForm() {
-  const isNameValid = validateField(nameInput);
-  const isEmailValid = validateField(emailInput);
+  const isNameValid = validateField(nameInput, false);
+  const isEmailValid = validateField(emailInput, false);
   const isTermsValid = termsCheckbox ? termsCheckbox.checked : true;
   
   if (submitBtn) {
     submitBtn.disabled = !(isNameValid && isEmailValid && isTermsValid);
   }
+}
+
+function validateFormWithErrors() {
+  const isNameValid = validateField(nameInput, true);
+  const isEmailValid = validateField(emailInput, true);
+  const isTermsValid = termsCheckbox ? termsCheckbox.checked : true;
+  
+  if (!isTermsValid && termsCheckbox) {
+    termsCheckbox.classList.add('invalid');
+    termsCheckbox.style.animation = 'shake 0.4s ease-in-out';
+    setTimeout(() => { termsCheckbox.style.animation = ''; }, 400);
+  } else if (termsCheckbox) {
+    termsCheckbox.classList.remove('invalid');
+  }
+  
+  // Shake the form if invalid
+  if (!isNameValid || !isEmailValid || !isTermsValid) {
+    registerForm.style.animation = 'shake 0.4s ease-in-out';
+    setTimeout(() => { registerForm.style.animation = ''; }, 400);
+  }
+  
+  if (submitBtn) {
+    submitBtn.disabled = !(isNameValid && isEmailValid && isTermsValid);
+  }
+  
+  return isNameValid && isEmailValid && isTermsValid;
 }
 
 if (nameInput) nameInput.addEventListener('input', validateForm);
@@ -302,13 +341,8 @@ if (registerForm) {
     const email = emailInput ? emailInput.value.trim() : '';
     const terms = termsCheckbox ? termsCheckbox.checked : false;
     
-    if (!name || !email) {
-      showToast('Mohon isi nama dan email', 'error');
-      return;
-    }
-    
-    if (!terms) {
-      showToast('Harap setujui Syarat & Ketentuan', 'error');
+    // Validate with error display
+    if (!validateFormWithErrors()) {
       return;
     }
     
@@ -362,25 +396,62 @@ if (registerModalForm) {
   const modalTermsCheckbox = registerModalForm.querySelector('[name="terms"]');
   const modalSubmitBtn = registerModalForm.querySelector('button[type="submit"]');
   
-  function validateModalField(input) {
-    if (!input) return true;
-    const value = input.value.trim();
-    const isValid = value.length > 0;
-    input.classList.toggle('invalid', !isValid && value.length === 0 && input !== document.activeElement);
-    input.classList.toggle('valid', isValid);
-    return isValid;
+  function validateModalField(input, showError = false) {
+  if (!input) return true;
+  const value = input.value.trim();
+  const isValid = value.length > 0;
+  input.classList.toggle('invalid', !isValid && showError);
+  input.classList.toggle('valid', isValid);
+  
+  const feedback = input.parentElement.querySelector('.invalid-feedback');
+  if (feedback) {
+    feedback.classList.toggle('show', !isValid && showError);
   }
   
-  function validateModalForm() {
-    const isNameValid = validateModalField(modalNameInput);
-    const isEmailValid = validateModalField(modalEmailInput);
-    const isPasswordValid = validateModalField(modalPasswordInput);
-    const isTermsValid = modalTermsCheckbox ? modalTermsCheckbox.checked : true;
-    
-    if (modalSubmitBtn) {
-      modalSubmitBtn.disabled = !(isNameValid && isEmailValid && isPasswordValid && isTermsValid);
-    }
+  if (!isValid && showError) {
+    input.style.animation = 'shake 0.4s ease-in-out';
+    setTimeout(() => { input.style.animation = ''; }, 400);
   }
+  
+  return isValid;
+}
+
+function validateModalForm() {
+  const isNameValid = validateModalField(modalNameInput, false);
+  const isEmailValid = validateModalField(modalEmailInput, false);
+  const isPasswordValid = validateModalField(modalPasswordInput, false);
+  const isTermsValid = modalTermsCheckbox ? modalTermsCheckbox.checked : true;
+  
+  if (modalSubmitBtn) {
+    modalSubmitBtn.disabled = !(isNameValid && isEmailValid && isPasswordValid && isTermsValid);
+  }
+}
+
+function validateModalFormWithErrors() {
+  const isNameValid = validateModalField(modalNameInput, true);
+  const isEmailValid = validateModalField(modalEmailInput, true);
+  const isPasswordValid = validateModalField(modalPasswordInput, true);
+  const isTermsValid = modalTermsCheckbox ? modalTermsCheckbox.checked : true;
+  
+  if (!isTermsValid && modalTermsCheckbox) {
+    modalTermsCheckbox.classList.add('invalid');
+    modalTermsCheckbox.style.animation = 'shake 0.4s ease-in-out';
+    setTimeout(() => { modalTermsCheckbox.style.animation = ''; }, 400);
+  } else if (modalTermsCheckbox) {
+    modalTermsCheckbox.classList.remove('invalid');
+  }
+  
+  if (!isNameValid || !isEmailValid || !isPasswordValid || !isTermsValid) {
+    registerModalForm.style.animation = 'shake 0.4s ease-in-out';
+    setTimeout(() => { registerModalForm.style.animation = ''; }, 400);
+  }
+  
+  if (modalSubmitBtn) {
+    modalSubmitBtn.disabled = !(isNameValid && isEmailValid && isPasswordValid && isTermsValid);
+  }
+  
+  return isNameValid && isEmailValid && isPasswordValid && isTermsValid;
+}
   
   if (modalNameInput) modalNameInput.addEventListener('input', validateModalForm);
   if (modalEmailInput) modalEmailInput.addEventListener('input', validateModalForm);
@@ -398,18 +469,16 @@ if (registerModalForm) {
     const experience = modalExperienceInput ? modalExperienceInput.value : '';
     const terms = modalTermsCheckbox ? modalTermsCheckbox.checked : false;
     
-    if (!name || !email || !password) {
-      showToast('Mohon isi semua field', 'error');
+    if (!validateModalFormWithErrors()) {
       return;
     }
     
     if (password.length < 6) {
       showToast('Kata sandi minimal 6 karakter', 'error');
-      return;
-    }
-    
-    if (!terms) {
-      showToast('Harap setujui Syarat & Ketentuan', 'error');
+      if (modalPasswordInput) {
+        modalPasswordInput.style.animation = 'shake 0.4s ease-in-out';
+        setTimeout(() => { modalPasswordInput.style.animation = ''; }, 400);
+      }
       return;
     }
     

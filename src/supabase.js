@@ -14,12 +14,13 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 // Auth helpers
 export async function signUp(email, password, metadata = {}) {
+  const redirectUrl = `${window.location.origin}/dashboard.html`;
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: metadata,
-      emailRedirectTo: window.location.origin + '/dashboard.html'
+      emailRedirectTo: redirectUrl
     }
   });
   return { data, error };
@@ -34,10 +35,11 @@ export async function signIn(email, password) {
 }
 
 export async function signInWithOAuth(provider) {
+  const redirectUrl = `${window.location.origin}/dashboard.html`;
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: window.location.origin + '/dashboard.html'
+      redirectTo: redirectUrl
     }
   });
   return { data, error };

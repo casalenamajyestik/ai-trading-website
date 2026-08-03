@@ -1554,6 +1554,7 @@ input::placeholder, textarea::placeholder {
 
 .form-error.visible {
   display: block;
+  animation: fadeInUp 0.2s ease-out;
 }
 
 .checkbox-label {
@@ -1626,6 +1627,53 @@ dialog.modal {
 @keyframes modalIn {
   from { opacity: 0; transform: scale(0.95) translateY(10px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+@keyframes shakeModal {
+  0%, 100% { transform: translateX(0) scale(1); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px) scale(1); }
+  20%, 40%, 60%, 80% { transform: translateX(8px) scale(1); }
+}
+
+.form-group input.invalid,
+.form-group select.invalid,
+.form-group textarea.invalid {
+  border-color: var(--accent-danger);
+  box-shadow: 0 0 0 3px rgba(240, 78, 78, 0.15);
+  animation: shake 0.4s ease-in-out;
+}
+
+.form-group input.valid,
+.form-group select.valid,
+.form-group textarea.valid {
+  border-color: var(--accent-secondary);
+}
+
+.modal-content.shake {
+  animation: shakeModal 0.4s ease-in-out;
+}
+
+.invalid-feedback {
+  display: none;
+  font-size: 0.75rem;
+  color: var(--accent-danger);
+  margin-top: 0.25rem;
+}
+
+.invalid-feedback.show {
+  display: block;
+  animation: fadeInUp 0.2s ease-out;
+}
+
+.checkbox-label input.invalid + .checkmark {
+  border-color: var(--accent-danger);
+  box-shadow: 0 0 0 2px rgba(240, 78, 78, 0.2);
 }
 
 .modal-close {
