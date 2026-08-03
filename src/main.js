@@ -118,20 +118,31 @@ window.addEventListener('scroll', () => {
   }
 }, { passive: true });
 
-// ============ Login Modal ============
+// ============ Modal Management ============
 const loginModal = document.getElementById('loginModal');
+const registerModal = document.getElementById('registerModal');
 const loginLink = document.querySelector('.btn-login');
 const modalClose = document.querySelector('.modal-close');
 const modalBackdrop = document.querySelector('.modal-backdrop');
+const openRegisterLink = document.getElementById('openRegisterLink');
+const openLoginLink = document.getElementById('openLoginLink');
 
 function openLogin() {
+  if (registerModal && registerModal.open) registerModal.close();
   if (loginModal) loginModal.showModal();
 }
 
-function closeLogin() {
-  if (loginModal) loginModal.close();
+function openRegister() {
+  if (loginModal && loginModal.open) loginModal.close();
+  if (registerModal) registerModal.showModal();
 }
 
+function closeAllModals() {
+  if (loginModal && loginModal.open) loginModal.close();
+  if (registerModal && registerModal.open) registerModal.close();
+}
+
+// Login modal triggers
 if (loginLink) {
   loginLink.addEventListener('click', (e) => {
     e.preventDefault();
@@ -139,13 +150,53 @@ if (loginLink) {
   });
 }
 
-if (modalClose) modalClose.addEventListener('click', closeLogin);
-if (modalBackdrop) modalBackdrop.addEventListener('click', closeLogin);
+// Register link inside login modal
+if (openRegisterLink) {
+  openRegisterLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    openRegister();
+  });
+}
+
+// Login link inside register modal
+if (openLoginLink) {
+  openLoginLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    openLogin();
+  });
+}
+
+// Close buttons (both modals)
+document.querySelectorAll('.modal-close').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const modal = btn.closest('dialog');
+    if (modal) modal.close();
+  });
+});
+
+// Backdrop click (close any open modal)
+document.querySelectorAll('.modal').forEach(modal => {
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.close();
+  });
+});
 
 // Close on Escape
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && loginModal && loginModal.open) closeLogin();
+  if (e.key === 'Escape') {
+    if (loginModal && loginModal.open) loginModal.close();
+    if (registerModal && registerModal.open) registerModal.close();
+  }
 });
+
+// ============ CTA Register Button ============
+const ctaRegisterBtn = document.querySelector('.hero-cta .btn[href="#register"]');
+if (ctaRegisterBtn) {
+  ctaRegisterBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    openRegister();
+  });
+}
 
 // ============ Login Form ============
 const loginForm = document.getElementById('loginForm');
