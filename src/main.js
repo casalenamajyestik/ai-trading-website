@@ -284,7 +284,7 @@ if (loginForm) {
     console.log('Saved auth_remember_me:', rememberMe);
     
     showToast('Selamat datang! Login berhasil.', 'success');
-    closeLogin();
+    closeAllModals();
     loginForm.reset();
     btn.textContent = originalText;
     btn.disabled = false;
