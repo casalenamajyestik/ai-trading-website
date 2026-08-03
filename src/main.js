@@ -186,7 +186,27 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (loginModal && loginModal.open) loginModal.close();
     if (registerModal && registerModal.open) registerModal.close();
+    if (verificationModal && verificationModal.open) closeVerification();
   }
+});
+
+// ============ Social Login Buttons ============
+document.querySelectorAll('.btn-social[data-provider]').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const provider = btn.dataset.provider;
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"/></svg>`;
+    
+    const { error } = await signInWithOAuth(provider);
+    
+    if (error) {
+      showToast(error.message || `Gagal login dengan ${provider}`, 'error');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+    // Success handled by onAuthStateChange redirect
+  });
 });
 
 // ============ CTA Register Button ============
@@ -202,7 +222,7 @@ if (ctaRegisterBtn) {
 const loginForm = document.getElementById('loginForm');
 
 if (loginForm) {
-  loginForm.addEventListener('submit', (e) => {
+  loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
@@ -217,18 +237,28 @@ if (loginForm) {
     btn.textContent = 'Masuk...';
     btn.disabled = true;
     
-    setTimeout(() => {
-      showToast('Selamat datang! Login berhasil.', 'success');
-      closeLogin();
-      loginForm.reset();
+    // Real Supabase sign in
+    const { data, error } = await signIn(email, password);
+    
+    if (error) {
+      showToast(error.message || 'Login gagal', 'error');
       btn.textContent = originalText;
       btn.disabled = false;
-    }, 1500);
+      return;
+    }
+    
+    showToast('Selamat datang! Login berhasil.', 'success');
+    closeLogin();
+    loginForm.reset();
+    btn.textContent = originalText;
+    btn.disabled = false;
+    
+    // Session will be set by onAuthStateChange listener
   });
 }
 
 // ============ Supabase Auth ============
-import { signUp, signIn, signInWithOAuth, signOut, getSession, getUser, onAuthStateChange, resendVerification } from './supabase.js';
+import { signUp, signIn, signInWithOAuth, signOut, getSession as getSupabaseSession, getUser, onAuthStateChange, resendVerification } from './supabase.js';
 
 // ============ Register Form (CTA inline) ============
 const registerForm = document.getElementById('registerForm');
@@ -360,7 +390,7 @@ if (registerModalForm) {
   // Initial state
   validateModalForm();
   
-  registerModalForm.addEventListener('submit', (e) => {
+  registerModalForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = modalNameInput ? modalNameInput.value.trim() : '';
     const email = modalEmailInput ? modalEmailInput.value.trim() : '';
@@ -390,18 +420,32 @@ if (registerModalForm) {
       btn.disabled = true;
     }
     
-    setTimeout(() => {
-      showToast('Akun berhasil dibuat! Cek email untuk verifikasi.', 'success');
-      closeAllModals();
-      registerModalForm.reset();
+    // Real Supabase sign up
+    const { data, error } = await signUp(email, password, {
+      full_name: name,
+      experience: experience || 'beginner'
+    });
+    
+    if (error) {
+      showToast(error.message || 'Gagal mendaftar', 'error');
       if (btn) {
         btn.textContent = originalText;
         btn.disabled = false;
       }
-      validateModalForm();
-      // Show verification modal with the registered email
-      openVerification(email, name);
-    }, 2000);
+      return;
+    }
+    
+    showToast('Akun berhasil dibuat! Cek email untuk verifikasi.', 'success');
+    closeAllModals();
+    registerModalForm.reset();
+    if (btn) {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+    validateModalForm();
+    
+    // Show verification info (email link sent)
+    openVerification(email, name, true);
   });
 }
 
@@ -419,7 +463,7 @@ let verificationName = '';
 let resendCountdown = 0;
 let resendInterval = null;
 
-function openVerification(email, name) {
+function openVerification(email, name, emailLinkSent = false) {
   verificationEmail = email;
   verificationName = name;
   
@@ -428,9 +472,51 @@ function openVerification(email, name) {
   
   closeAllModals();
   if (verificationModal) verificationModal.showModal();
-  if (verifyCodeInput) setTimeout(() => verifyCodeInput.focus(), 100);
   
-  startResendTimer();
+  if (emailLinkSent) {
+    // Supabase sends magic link email, no code entry needed
+    if (verificationForm) verificationForm.style.display = 'none';
+    if (resendContainer) resendContainer.style.display = 'none';
+    if (resendTimer) resendTimer.style.display = 'none';
+    
+    // Show info message
+    const existingInfo = verificationModal.querySelector('.verification-info');
+    if (existingInfo) existingInfo.remove();
+    
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'verification-info';
+    infoDiv.style.cssText = 'text-align:center;padding:1.5rem;color:var(--text-secondary);';
+    infoDiv.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48" style="color:var(--accent-primary);margin-bottom:1rem;">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+      <h3 style="margin-bottom:0.5rem;">Cek Email Anda</h3>
+      <p>Kami telah mengirimkan tautan verifikasi ke <strong>${email}</strong></p>
+      <p style="font-size:0.85rem;margin-top:0.5rem;">Klik tautan di email untuk menyelesaikan pendaftaran.</p>
+      <button type="button" class="btn-link" id="resendEmailLinkBtn" style="margin-top:1rem;" data-i18n="verification.resend">Kirim ulang email</button>
+    `;
+    verificationModal.querySelector('.modal-content').appendChild(infoDiv);
+    
+    // Re-attach resend handler
+    const resendLinkBtn = document.getElementById('resendEmailLinkBtn');
+    if (resendLinkBtn) {
+      resendLinkBtn.addEventListener('click', async () => {
+        const { error } = await resendVerification(email);
+        if (error) showToast('Gagal kirim ulang: ' + error.message, 'error');
+        else showToast('Email verifikasi dikirim ulang', 'success');
+      });
+    }
+  } else {
+    // Fallback for old code-based flow
+    if (verificationForm) verificationForm.style.display = 'flex';
+    if (resendContainer) resendContainer.style.display = 'inline';
+    if (resendTimer) resendTimer.style.display = 'block';
+    const existingInfo = verificationModal.querySelector('.verification-info');
+    if (existingInfo) existingInfo.remove();
+    startResendTimer();
+    if (verifyCodeInput) setTimeout(() => verifyCodeInput.focus(), 100);
+  }
 }
 
 function closeVerification() {
@@ -874,8 +960,10 @@ function getLocalSession() {
 }
 
 function logout() {
-  localStorage.removeItem('auth_session');
-  window.location.href = '/';
+  signOut().then(() => {
+    localStorage.removeItem('auth_session');
+    window.location.href = '/';
+  });
 }
 
 function requireAuth() {
@@ -993,7 +1081,56 @@ function updateNavbarForAuth(session) {
 }
 
 // Check auth on load
-document.addEventListener('DOMContentLoaded', () => {
-  const session = getLocalSession();
-  updateNavbarForAuth(session);
+document.addEventListener('DOMContentLoaded', async () => {
+  // Listen to Supabase auth state changes
+  const { data: { subscription } } = onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      // User signed in - update UI
+      const userSession = {
+        user: {
+          email: session.user.email,
+          name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user.user_metadata?.full_name || session.user.email)}&background=4f8eff&color=fff&size=128`
+        },
+        token: session.access_token,
+        expiresAt: Date.now() + session.expires_in * 1000,
+        isVerified: session.user.email_confirmed_at !== null
+      };
+      localStorage.setItem('auth_session', JSON.stringify(userSession));
+      updateNavbarForAuth(userSession);
+      
+      // Redirect to dashboard if on login/register page
+      if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+        window.location.href = '/dashboard.html';
+      }
+    } else if (event === 'SIGNED_OUT') {
+      localStorage.removeItem('auth_session');
+      updateNavbarForAuth(null);
+      
+      // Redirect to home if on dashboard
+      if (window.location.pathname === '/dashboard.html') {
+        window.location.href = '/';
+      }
+    }
+  });
+  
+  // Check initial session
+  const { data: { session } } = await getSupabaseSession();
+  if (session) {
+    const userSession = {
+      user: {
+        email: session.user.email,
+        name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user.user_metadata?.full_name || session.user.email)}&background=4f8eff&color=fff&size=128`
+      },
+      token: session.access_token,
+      expiresAt: Date.now() + session.expires_in * 1000,
+      isVerified: session.user.email_confirmed_at !== null
+    };
+    localStorage.setItem('auth_session', JSON.stringify(userSession));
+    updateNavbarForAuth(userSession);
+  } else {
+    const localSession = getLocalSession();
+    updateNavbarForAuth(localSession);
+  }
 });
