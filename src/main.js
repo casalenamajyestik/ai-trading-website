@@ -227,6 +227,9 @@ if (loginForm) {
   });
 }
 
+// ============ Supabase Auth ============
+import { signUp, signIn, signInWithOAuth, signOut, getSession, getUser, onAuthStateChange, resendVerification } from './supabase.js';
+
 // ============ Register Form (CTA inline) ============
 const registerForm = document.getElementById('registerForm');
 
@@ -263,7 +266,7 @@ if (termsCheckbox) termsCheckbox.addEventListener('change', validateForm);
 validateForm();
 
 if (registerForm) {
-  registerForm.addEventListener('submit', (e) => {
+  registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = nameInput ? nameInput.value.trim() : '';
     const email = emailInput ? emailInput.value.trim() : '';
@@ -286,17 +289,35 @@ if (registerForm) {
       btn.disabled = true;
     }
     
-    setTimeout(() => {
-      showToast('Akun berhasil dibuat! Cek email untuk verifikasi.', 'success');
-      registerForm.reset();
+    // Real Supabase sign up (password will be asked in verification step)
+    // For CTA inline form, we create account with temporary password
+    const tempPassword = Math.random().toString(36).slice(-12) + 'A1!';
+    
+    const { data, error } = await signUp(email, tempPassword, {
+      full_name: name,
+      experience: 'beginner'
+    });
+    
+    if (error) {
+      showToast(error.message || 'Gagal mendaftar', 'error');
       if (btn) {
         btn.textContent = originalText;
         btn.disabled = false;
       }
-      validateForm();
-      // Show verification modal with the registered email
-      openVerification(email, name);
-    }, 2000);
+      return;
+    }
+    
+    showToast('Akun berhasil dibuat! Cek email untuk verifikasi.', 'success');
+    registerForm.reset();
+    if (btn) {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+    validateForm();
+    
+    // For inline form, we don't have password - user sets it via email link
+    // Show verification info modal
+    openVerification(email, name, true); // true = emailLinkSent
   });
 }
 
@@ -819,9 +840,11 @@ i18next.on('languageChanged', (lng) => {
   });
 });
 
+// ============ Supabase Auth ============
+import { supabase } from './supabase.js';
+
 // ============ Auth Session Management ============
 function autoLogin(email, name) {
-  // Create mock session
   const session = {
     user: {
       email: email,
@@ -829,17 +852,14 @@ function autoLogin(email, name) {
       avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4f8eff&color=fff&size=128`
     },
     token: 'mock-jwt-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
     isVerified: true
   };
-  
   localStorage.setItem('auth_session', JSON.stringify(session));
-  
-  // Redirect to dashboard
   window.location.href = '/dashboard.html';
 }
 
-function getSession() {
+function getLocalSession() {
   try {
     const session = JSON.parse(localStorage.getItem('auth_session'));
     if (!session) return null;
@@ -859,7 +879,7 @@ function logout() {
 }
 
 function requireAuth() {
-  const session = getSession();
+  const session = getLocalSession();
   if (!session) {
     window.location.href = '/';
     return null;
@@ -974,6 +994,6 @@ function updateNavbarForAuth(session) {
 
 // Check auth on load
 document.addEventListener('DOMContentLoaded', () => {
-  const session = getSession();
+  const session = getLocalSession();
   updateNavbarForAuth(session);
 });
