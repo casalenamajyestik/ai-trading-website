@@ -1237,6 +1237,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     localStorage.setItem('auth_session', JSON.stringify(userSession));
     updateNavbarForAuth(userSession);
+
+    // Redirect to dashboard if on home page (auto-login)
+    if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+      window.location.href = '/dashboard.html';
+    }
   } else {
     const localSession = getLocalSession();
     updateNavbarForAuth(localSession);
