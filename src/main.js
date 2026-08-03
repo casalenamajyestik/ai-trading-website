@@ -254,9 +254,8 @@ if (loginForm) {
     
     // Handle "Remember me" - Supabase persists session automatically
     // but we can extend localStorage session if checked
-    if (rememberMe && data.session) {
-      // Session will be saved by onAuthStateChange listener
-      // Remember me is acknowledged - Supabase handles persistence
+    // data.session might be null if email not confirmed
+    if (rememberMe && data?.session) {
       console.log('Remember me checked - session will persist');
     }
     
@@ -1120,6 +1119,10 @@ function updateNavbarForAuth(session) {
       </div>
     `;
     navActions.insertBefore(dropdown, navActions.querySelector('.theme-toggle'));
+    
+    // Dropdown elements
+    const avatarBtn = dropdown.querySelector('.user-avatar-btn');
+    const dropdownMenu = dropdown.querySelector('.user-dropdown-menu');
     
     // Dropdown toggle - with touch support for mobile
     const toggleDropdown = (e) => {
