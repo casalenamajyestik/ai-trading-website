@@ -1219,6 +1219,14 @@ function updateNavbarForAuth(session) {
 }
 // Check auth on load
 document.addEventListener('DOMContentLoaded', async () => {
+  // EARLY DEBUG: Check localStorage immediately
+  const earlyRememberMe = localStorage.getItem('auth_remember_me');
+  const earlyFreshLogin = sessionStorage.getItem('auth_fresh_login');
+  console.log('=== AUTH INIT DEBUG ===');
+  console.log('localStorage.auth_remember_me:', earlyRememberMe);
+  console.log('sessionStorage.auth_fresh_login:', earlyFreshLogin);
+  console.log('pathname:', window.location.pathname);
+  
   // Show loading overlay immediately to prevent flash
   const loadingOverlay = document.createElement('div');
   loadingOverlay.id = 'auth-loading-overlay';
