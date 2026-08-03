@@ -297,10 +297,12 @@
               <div class="form-group">
                 <label for="name" data-i18n="form.name">Nama Lengkap</label>
                 <input type="text" id="name" name="name" required autocomplete="name" data-i18n-placeholder="form.name_placeholder">
+                <span class="invalid-feedback">Nama wajib diisi</span>
               </div>
               <div class="form-group">
                 <label for="email" data-i18n="form.email">Email</label>
                 <input type="email" id="email" name="email" required autocomplete="email" data-i18n-placeholder="form.email_placeholder">
+                <span class="invalid-feedback">Format email tidak valid</span>
               </div>
             </div>
             <div class="form-row">
@@ -525,6 +527,7 @@
                 <span class="checkmark"></span>
                 <span data-i18n="form.terms">Saya setuju dengan <a href="#tos">Syarat & Ketentuan</a> dan <a href="#privacy">Kebijakan Privasi</a></span>
               </label>
+              <span class="invalid-feedback">Harap setujui Syarat & Ketentuan</span>
             </div>
             <button type="submit" class="btn btn-primary btn-lg btn-full" data-i18n="form.submit">
               Daftar Gratis Sekarang
@@ -692,14 +695,17 @@
         <div class="form-group">
           <label for="regName" data-i18n="form.name">Nama Lengkap</label>
           <input type="text" id="regName" name="name" required autocomplete="name">
+          <span class="invalid-feedback">Nama wajib diisi</span>
         </div>
         <div class="form-group">
           <label for="regEmail" data-i18n="form.email">Email</label>
           <input type="email" id="regEmail" name="email" required autocomplete="email">
+          <span class="invalid-feedback">Format email tidak valid</span>
         </div>
         <div class="form-group">
           <label for="regPassword" data-i18n="register.password">Kata Sandi</label>
           <input type="password" id="regPassword" name="password" required autocomplete="new-password" minlength="6">
+          <span class="invalid-feedback">Minimal 6 karakter</span>
         </div>
         <div class="form-group">
           <label for="regExperience" data-i18n="form.experience">Pengalaman Trading</label>
@@ -716,6 +722,7 @@
           <span class="checkmark"></span>
           <span data-i18n="form.terms">Saya setuju dengan <a href="#tos">Syarat & Ketentuan</a> dan <a href="#privacy">Kebijakan Privasi</a></span>
         </label>
+        <span class="invalid-feedback">Harap setujui Syarat & Ketentuan</span>
         <button type="submit" class="btn btn-primary btn-full" data-i18n="form.submit">Daftar Gratis Sekarang</button>
       </form>
       <p class="modal-footer">Sudah punya akun? <a href="#" id="openLoginLink">Masuk di sini</a></p>

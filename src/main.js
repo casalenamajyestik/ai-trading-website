@@ -272,9 +272,15 @@ const submitBtn = registerForm?.querySelector('button[type="submit"]');
 function validateField(input, showError = false) {
   if (!input) return true;
   const value = input.value.trim();
-  const isValid = value.length > 0;
+  
+  // Email format validation
+  let isValid = value.length > 0;
+  if (input.type === 'email' && value.length > 0) {
+    isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+  
   input.classList.toggle('invalid', !isValid && showError);
-  input.classList.toggle('valid', isValid);
+  input.classList.toggle('valid', isValid && value.length > 0);
   
   // Show/hide error feedback
   const feedback = input.parentElement.querySelector('.invalid-feedback');
@@ -399,9 +405,15 @@ if (registerModalForm) {
   function validateModalField(input, showError = false) {
   if (!input) return true;
   const value = input.value.trim();
-  const isValid = value.length > 0;
+  
+  // Email format validation
+  let isValid = value.length > 0;
+  if (input.type === 'email' && value.length > 0) {
+    isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+  
   input.classList.toggle('invalid', !isValid && showError);
-  input.classList.toggle('valid', isValid);
+  input.classList.toggle('valid', isValid && value.length > 0);
   
   const feedback = input.parentElement.querySelector('.invalid-feedback');
   if (feedback) {
