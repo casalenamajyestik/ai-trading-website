@@ -226,6 +226,7 @@ if (loginForm) {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
+    const rememberMe = loginForm.querySelector('[name="remember"]')?.checked;
     
     if (!email || !password) {
       showToast('Mohon isi semua field', 'error');
@@ -245,6 +246,14 @@ if (loginForm) {
       btn.textContent = originalText;
       btn.disabled = false;
       return;
+    }
+    
+    // Handle "Remember me" - Supabase persists session automatically
+    // but we can extend localStorage session if checked
+    if (rememberMe && data.session) {
+      // Session will be saved by onAuthStateChange listener
+      // Remember me is acknowledged - Supabase handles persistence
+      console.log('Remember me checked - session will persist');
     }
     
     showToast('Selamat datang! Login berhasil.', 'success');
@@ -1108,14 +1117,17 @@ function updateNavbarForAuth(session) {
     `;
     navActions.insertBefore(dropdown, navActions.querySelector('.theme-toggle'));
     
-    // Dropdown toggle
-    const avatarBtn = dropdown.querySelector('.user-avatar-btn');
-    const dropdownMenu = dropdown.querySelector('.user-dropdown-menu');
-    
-    avatarBtn.addEventListener('click', (e) => {
+    // Dropdown toggle - with touch support for mobile
+    const toggleDropdown = (e) => {
       e.stopPropagation();
       const isOpen = dropdownMenu.hidden = !dropdownMenu.hidden;
       avatarBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    };
+    
+    avatarBtn.addEventListener('click', toggleDropdown);
+    avatarBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      toggleDropdown(e);
     });
     
     // Close on outside click
