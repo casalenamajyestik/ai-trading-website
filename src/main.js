@@ -252,12 +252,8 @@ if (loginForm) {
       return;
     }
     
-    // Handle "Remember me" - Supabase persists session automatically
-    // but we can extend localStorage session if checked
-    // data.session might be null if email not confirmed
-    if (rememberMe && data?.session) {
-      console.log('Remember me checked - session will persist');
-    }
+    // Save "remember me" preference
+    localStorage.setItem('auth_remember_me', rememberMe ? 'true' : 'false');
     
     showToast('Selamat datang! Login berhasil.', 'success');
     closeLogin();
@@ -1256,6 +1252,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   
   if (session) {
+    // Check "remember me" preference
+    const rememberMe = localStorage.getItem('auth_remember_me') === 'true';
+    
+    if (!rememberMe) {
+      // User didn't check "remember me" - sign out to clear session
+      console.log('Session exists but remember_me=false, signing out');
+      await signOut();
+      localStorage.removeItem('auth_session');
+      localStorage.removeItem('auth_remember_me');
+      updateNavbarForAuth(null);
+      
+      // Remove loading overlay and show home page
+      setTimeout(() => {
+        loadingOverlay.style.opacity = '0';
+        loadingOverlay.style.visibility = 'hidden';
+        setTimeout(() => loadingOverlay.remove(), 300);
+      }, 100);
+      return;
+    }
+    
     const userSession = {
       user: {
         email: session.user.email,
