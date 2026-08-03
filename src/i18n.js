@@ -106,6 +106,16 @@ export const translations = {
       error: 'Kode tidak valid atau sudah kadaluarsa',
       no_email: 'Tidak menerima email? Periksa folder spam atau'
     },
+    dash: {
+      nav: {
+        overview: 'Overview',
+        bots: 'Bots',
+        trades: 'Trades',
+        performance: 'Performance',
+        portfolio: 'Portfolio',
+        settings: 'Pengaturan'
+      }
+    },
     footer: {
       tagline: 'Platform trading AI pertama Indonesia yang benar-benar gratis selamanya.',
       product: 'Produk',
@@ -240,6 +250,16 @@ export const translations = {
       success: 'Email verified! Redirecting to dashboard...',
       error: 'Invalid or expired code',
       no_email: 'Didn\'t receive email? Check spam folder or'
+    },
+    dash: {
+      nav: {
+        overview: 'Overview',
+        bots: 'Bots',
+        trades: 'Trades',
+        performance: 'Performance',
+        portfolio: 'Portfolio',
+        settings: 'Settings'
+      }
     },
     footer: {
       tagline: 'The first AI trading platform in Indonesia that is truly free forever.',
