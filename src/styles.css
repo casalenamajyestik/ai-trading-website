@@ -222,13 +222,13 @@ input::placeholder, textarea::placeholder {
 }
 
 .nav-container {
-  max-width: var(--container-max);
+  width: 100%;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 2rem;
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: center; /* center the whole nav */
+  justify-content: space-between; /* logo kiri, actions kanan */
   gap: 2rem;
 }
 
