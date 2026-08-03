@@ -849,6 +849,10 @@ input::placeholder, textarea::placeholder {
   -webkit-text-fill-color: var(--text-secondary);
 }
 
+.stat-item.no-plus .stat-number::after {
+  content: none;
+}
+
 .stat-label {
   font-size: 0.75rem;
   color: var(--text-muted);
