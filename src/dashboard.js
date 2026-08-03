@@ -1,4 +1,5 @@
 import i18next from './i18n.js';
+import { signOut } from './supabase.js';
 
 // ============ Auth Guard ============
 function requireAuth() {
@@ -232,6 +233,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const pageContent = document.getElementById('pageContent');
 
   function navigateTo(pageName) {
+    if (pageName === 'logout') {
+      // Handle logout
+      signOut().then(() => {
+        localStorage.removeItem('auth_session');
+        window.location.href = '/';
+      });
+      return;
+    }
+    
     navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageName));
     const pg = pages[pageName];
     if (pg) {

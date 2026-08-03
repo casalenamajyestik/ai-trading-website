@@ -113,7 +113,8 @@ export const translations = {
         trades: 'Trades',
         performance: 'Performance',
         portfolio: 'Portfolio',
-        settings: 'Pengaturan'
+        settings: 'Pengaturan',
+        logout: 'Keluar'
       }
     },
     footer: {
@@ -258,7 +259,8 @@ export const translations = {
         trades: 'Trades',
         performance: 'Performance',
         portfolio: 'Portfolio',
-        settings: 'Settings'
+        settings: 'Settings',
+        logout: 'Logout'
       }
     },
     footer: {
