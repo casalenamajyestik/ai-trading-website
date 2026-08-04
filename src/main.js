@@ -1248,6 +1248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Listen to Supabase auth state changes
   const { data: { subscription } } = onAuthStateChange((event, session) => {
+    console.log('[AUTH STATE CHANGE]', event, session ? 'session exists' : 'no session');
     if (event === 'SIGNED_IN' && session) {
       // User signed in - update UI
       const userSession = {
@@ -1265,9 +1266,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       // Redirect to dashboard if on login/register page
       if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+        console.log('[AUTH] Redirecting to dashboard...');
         window.location.href = '/dashboard.html';
       }
     } else if (event === 'SIGNED_OUT') {
+      console.log('[AUTH] Signed out');
       localStorage.removeItem('auth_session');
       updateNavbarForAuth(null);
       
