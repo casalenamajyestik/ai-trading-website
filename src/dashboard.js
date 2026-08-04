@@ -1,14 +1,13 @@
 import i18next from './i18n.js';
 import { signOut } from './supabase.js';
+import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
 
 // ============ Auth Guard ============
-function requireAuth() {
-  try {
-    const session = JSON.parse(localStorage.getItem('auth_session'));
-    if (!session) { window.location.href = '/'; return null; }
-    if (Date.now() > session.expiresAt) { localStorage.removeItem('auth_session'); window.location.href = '/'; return null; }
-    return session;
-  } catch { window.location.href = '/'; return null; }
+async function requireAuthWrapper() {
+  // Wait for auth init to complete (sets localStorage from Supabase session)
+  await initAuth();
+  
+  return requireAuth();
 }
 
 // ============ Page Content ============
@@ -202,8 +201,8 @@ function formatIDR(num) {
 }
 
 // ============ Init ============
-document.addEventListener('DOMContentLoaded', () => {
-  const session = requireAuth();
+document.addEventListener('DOMContentLoaded', async () => {
+  const session = await requireAuthWrapper();
   if (!session) return;
 
   // Update topbar
