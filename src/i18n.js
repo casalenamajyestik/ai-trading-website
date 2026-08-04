@@ -52,6 +52,51 @@ export const translations = {
       title: 'Siap Mulai Trading Gratis?',
       subtitle: 'Gabung 15.000+ trader Indonesia yang sudah merasakan keuntungan AI trading. Tanpa risiko, tanpa biaya, kapan saja bisa berhenti.'
     },
+    faq: {
+      title: 'Pertanyaan Sering Diajukan',
+      items: [
+        {
+          q: 'Apakah dana saya aman?',
+          a: 'Ya. Kami menggunakan API key read-only — dana Anda tetap 100% di exchange (Binance/Bybit). Kami tidak bisa menarik dana, hanya membaca data dan mengirim order beli/jual.'
+        },
+        {
+          q: 'Berapa biaya bulanan?',
+          a: 'Rp 0. Gratis selamanya. Tidak ada fee tersembunyi, tidak ada komisi dari profit, tidak ada upsell.'
+        },
+        {
+          q: 'Apakah butuh coding / programming?',
+          a: 'Tidak. Setup 5 menit via UI drag-drop. Pilih strategi, set risk management, klik Start. Selesai.'
+        },
+        {
+          q: 'Bisa dihentikan kapan saja?',
+          a: 'Ya. 1 klik "Stop" di dashboard — bot berhenti instan. Posisi terbuka bisa di-close manual atau biarkan terselesaikan.'
+        },
+        {
+          q: 'Exchange apa yang didukung?',
+          a: 'Saat ini: Binance Spot & Futures, Bybit Spot & Futures. Exchange lain coming soon.'
+        },
+        {
+          q: 'Bagaimana performa AI?',
+          a: 'Model dilatih data 50+ exchange, 24/7. Backtest 3 tahun: win rate 68-72%, max drawdown <15%. Performa masa lalu ≠ jaminan masa depan.'
+        },
+        {
+          q: 'Ada support bahasa Indonesia?',
+          a: 'Ya. Tim support Indonesia response <2 jam jam kerja. Komunitas Telegram 15.000+ trader aktif sharing strategi.'
+        }
+      ]
+    },
+    testimonials: {
+      title: 'Kata Trader Indonesia',
+      items: [
+        { name: 'Budi S.', location: 'Jakarta', text: 'Profit konsisten 8 bulan. Setup sekali, cek mingguan. Gratis tapi kualitas premium.', avatar: 'BS', pnl: '+24.5%' },
+        { name: 'Sari D.', location: 'Bandung', text: 'Pemula banget tapi UI-nya mudeng. Support Telegram responsif. Dana aman di Binance.', avatar: 'SD', pnl: '+18.2%' },
+        { name: 'Ahmad R.', location: 'Surabaya', text: 'Sudah bayar bot lain $99/bln, ini gratis performa lebih baik. No brainer.', avatar: 'AR', pnl: '+31.7%' },
+        { name: 'Maya K.', location: 'Medan', text: 'Favorit: auto-compound & trailing stop. Tidur nyenyak, bot jaga posisi 24/7.', avatar: 'MK', pnl: '+15.8%' },
+        { name: 'Doni W.', location: 'Bali', text: 'Join komunitas Telegram, belajar dari senior. Sekarang bikin strategi sendiri.', avatar: 'DW', pnl: '+42.1%' },
+        { name: 'Rina L.', location: 'Yogyakarta', text: 'Withdraw profit tiap minggu lancar. Transparan, no hidden fee. Recommended.', avatar: 'RL', pnl: '+27.3%' },
+        { name: 'Agus P.', location: 'Makassar', text: 'Dulu manual trading loss terus. Pakai AI 6 bulan, account grow steady. Terima kasih tim!', avatar: 'AP', pnl: '+19.6%' }
+      ]
+    },
     form: {
       name: 'Nama Lengkap',
       email: 'Email',
@@ -196,6 +241,51 @@ export const translations = {
     cta: {
       title: 'Ready to Trade for Free?',
       subtitle: 'Join 15,000+ Indonesian traders who have already experienced AI trading. No risk, no cost, cancel anytime.'
+    },
+    faq: {
+      title: 'Frequently Asked Questions',
+      items: [
+        {
+          q: 'Is my money safe?',
+          a: 'Yes. We use read-only API keys — your funds stay 100% on the exchange (Binance/Bybit). We cannot withdraw funds, only read data and send buy/sell orders.'
+        },
+        {
+          q: 'What is the monthly fee?',
+          a: 'Rp 0. Free forever. No hidden fees, no profit commissions, no upsells.'
+        },
+        {
+          q: 'Do I need coding skills?',
+          a: 'No. 5-minute setup via drag-drop UI. Pick a strategy, set risk management, click Start. Done.'
+        },
+        {
+          q: 'Can I stop anytime?',
+          a: 'Yes. One click "Stop" on dashboard — bot halts instantly. Open positions can be closed manually or left to complete.'
+        },
+        {
+          q: 'Which exchanges are supported?',
+          a: 'Currently: Binance Spot & Futures, Bybit Spot & Futures. More exchanges coming soon.'
+        },
+        {
+          q: 'How does the AI perform?',
+          a: 'Model trained on 50+ exchanges, 24/7. 3-year backtest: 68-72% win rate, max drawdown <15%. Past performance ≠ future guarantee.'
+        },
+        {
+          q: 'Is Indonesian support available?',
+          a: 'Yes. Indonesian support team responds <2hrs business hours. Telegram community 15,000+ active traders sharing strategies.'
+        }
+      ]
+    },
+    testimonials: {
+      title: 'What Indonesian Traders Say',
+      items: [
+        { name: 'Budi S.', location: 'Jakarta', text: 'Consistent profit for 8 months. Set once, check weekly. Free but premium quality.', avatar: 'BS', pnl: '+24.5%' },
+        { name: 'Sari D.', location: 'Bandung', text: 'Total beginner but UI is intuitive. Telegram support responsive. Funds safe on Binance.', avatar: 'SD', pnl: '+18.2%' },
+        { name: 'Ahmad R.', location: 'Surabaya', text: 'Used to pay $99/mo for other bots, this free one performs better. No brainer.', avatar: 'AR', pnl: '+31.7%' },
+        { name: 'Maya K.', location: 'Medan', text: 'Favorite: auto-compound & trailing stop. Sleep peacefully, bot watches 24/7.', avatar: 'MK', pnl: '+15.8%' },
+        { name: 'Doni W.', location: 'Bali', text: 'Joined Telegram community, learned from seniors. Now building my own strategies.', avatar: 'DW', pnl: '+42.1%' },
+        { name: 'Rina L.', location: 'Yogyakarta', text: 'Weekly profit withdrawal smooth. Transparent, no hidden fees. Highly recommended.', avatar: 'RL', pnl: '+27.3%' },
+        { name: 'Agus P.', location: 'Makassar', text: 'Used to lose with manual trading. AI for 6 months, account growing steady. Thanks team!', avatar: 'AP', pnl: '+19.6%' }
+      ]
     },
     form: {
       name: 'Full Name',

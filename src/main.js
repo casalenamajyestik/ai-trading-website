@@ -1039,6 +1039,12 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Init counters
   initCounters();
+
+  // Init FAQ accordion
+  initFAQ();
+  
+  // Init Testimonials carousel
+  initTestimonialsCarousel();
 });
 
 // Re-translate when language changes
@@ -1065,59 +1071,206 @@ i18next.on('languageChanged', (lng) => {
   });
 });
 
-// ============ Supabase Auth ============
-import { supabase } from './supabase.js';
+// ============ FAQ Accordion ============
+function initFAQ() {
+  const faqGrid = document.getElementById('faqGrid');
+  if (!faqGrid) return;
+  
+  const faqData = translations[i18next.language]?.faq?.items || [];
+  if (!faqData.length) return;
+  
+  faqGrid.innerHTML = faqData.map((item, index) => `
+    <div class="faq-item" data-index="${index}">
+      <button class="faq-question" type="button" aria-expanded="false" aria-controls="faq-answer-${index}">
+        <span>${item.q}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </button>
+      <div class="faq-answer" id="faq-answer-${index}" role="region" aria-labelledby="faq-question-${index}">
+        <p>${item.a}</p>
+      </div>
+    </div>
+  `).join('');
+  
+  // Add click handlers
+  faqGrid.querySelectorAll('.faq-question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq-item');
+      const isActive = item.classList.toggle('active');
+      btn.setAttribute('aria-expanded', isActive);
+    });
+  });
+}
 
-// ============ Auth Session Management ============
-function autoLogin(email, name) {
-  const session = {
-    user: {
-      email: email,
-      name: name,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4f8eff&color=fff&size=128`
-    },
-    token: 'mock-jwt-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
-    isVerified: true
-  };
-  localStorage.setItem('auth_session', JSON.stringify(session));
-    window.location.href = '/dashboard.html';
+// ============ Testimonials Carousel ============
+function initTestimonialsCarousel() {
+  const track = document.getElementById('testimonialsTrack');
+  const dotsContainer = document.getElementById('testimonialDots');
+  const prevBtn = document.getElementById('testimonialPrev');
+  const nextBtn = document.getElementById('testimonialNext');
+  
+  if (!track || !dotsContainer) return;
+  
+  const testimonials = translations[i18next.language]?.testimonials?.items || [];
+  if (!testimonials.length) return;
+  
+  // Render testimonials
+  track.innerHTML = testimonials.map(t => `
+    <div class="testimonial-card">
+      <div class="testimonial-inner">
+        <div class="testimonial-header">
+          <div class="testimonial-avatar">${t.avatar}</div>
+          <div class="testimonial-info">
+            <div class="testimonial-name">${t.name}</div>
+            <div class="testimonial-location">${t.location}</div>
+          </div>
+          <div class="testimonial-pnl">${t.pnl}</div>
+        </div>
+        <div class="testimonial-quote">"</div>
+        <p class="testimonial-text">${t.text}</p>
+      </div>
+    </div>
+  `).join('');
+  
+  // Render dots
+  dotsContainer.innerHTML = testimonials.map((_, i) => `
+    <button class="carousel-dot ${i === 0 ? 'active' : ''}" 
+            role="tab" 
+            aria-label="Testimonial ${i + 1}" 
+            aria-selected="${i === 0}"
+            data-index="${i}"
+            type="button"></button>
+  `).join('');
+  
+  // Carousel state
+  let currentIndex = 0;
+  const cards = track.querySelectorAll('.testimonial-card');
+  const dots = dotsContainer.querySelectorAll('.carousel-dot');
+  const cardsPerView = getCardsPerView();
+  const maxIndex = Math.max(0, cards.length - cardsPerView);
+  
+  function getCardsPerView() {
+    if (window.innerWidth >= 1024) return 3;
+    if (window.innerWidth >= 640) return 2;
+    return 1;
+  }
+  
+  function updateCarousel() {
+    const cardWidth = cards[0]?.offsetWidth || 0;
+    const gap = 24; // 1rem * 2 (padding on each card)
+    const translateX = -(currentIndex * (cardWidth + gap));
+    track.style.transform = `translateX(${translateX}px)`;
+    
+    // Update dots
+    dots.forEach((dot, i) => {
+      const isActive = i === currentIndex;
+      dot.classList.toggle('active', isActive);
+      dot.setAttribute('aria-selected', isActive);
+    });
+    
+    // Update buttons
+    if (prevBtn) prevBtn.disabled = currentIndex === 0;
+    if (nextBtn) nextBtn.disabled = currentIndex >= maxIndex;
+  }
+  
+  function goToSlide(index) {
+    currentIndex = Math.max(0, Math.min(index, maxIndex));
+    updateCarousel();
+  }
+  
+  function nextSlide() {
+    goToSlide(currentIndex + 1);
+  }
+  
+  function prevSlide() {
+    goToSlide(currentIndex - 1);
+  }
+  
+  // Auto-slide
+  let autoSlideInterval = setInterval(nextSlide, 5000);
+  
+  function resetAutoSlide() {
+    clearInterval(autoSlideInterval);
+    autoSlideInterval = setInterval(nextSlide, 5000);
+  }
+  
+  // Event listeners
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      prevSlide();
+      resetAutoSlide();
+    });
+  }
+  
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      nextSlide();
+      resetAutoSlide();
+    });
+  }
+  
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      goToSlide(parseInt(dot.dataset.index));
+      resetAutoSlide();
+    });
+  });
+  
+  // Pause on hover
+  const carousel = document.getElementById('testimonialsCarousel');
+  if (carousel) {
+    carousel.addEventListener('mouseenter', () => clearInterval(autoSlideInterval));
+    carousel.addEventListener('mouseleave', resetAutoSlide);
+  }
+  
+  // Touch/swipe support
+  let touchStartX = 0;
+  let touchEndX = 0;
+  
+  track.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+  
+  track.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) nextSlide();
+      else prevSlide();
+      resetAutoSlide();
+    }
+  }, { passive: true });
+  
+  // Handle resize
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      const newCardsPerView = getCardsPerView();
+      if (newCardsPerView !== cardsPerView) {
+        // Recalculate maxIndex
+        const newMaxIndex = Math.max(0, cards.length - newCardsPerView);
+        if (currentIndex > newMaxIndex) {
+          currentIndex = newMaxIndex;
+        }
+        updateCarousel();
+      }
+    }, 250);
+  });
+  
+  // Keyboard navigation
+  track.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') {
+      prevSlide();
+      resetAutoSlide();
+    } else if (e.key === 'ArrowRight') {
+      nextSlide();
+      resetAutoSlide();
+    }
+  });
+  
+  // Initial render
+  updateCarousel();
   }
 
-  // ============ Init ============
-  document.addEventListener('DOMContentLoaded', async () => {
-  // EARLY DEBUG: Check localStorage immediately
-  const earlyFreshLogin = sessionStorage.getItem('auth_fresh_login');
-  console.log('=== AUTH INIT DEBUG ===');
-  console.log('sessionStorage.auth_fresh_login:', earlyFreshLogin);
-  console.log('pathname:', window.location.pathname);
-  
-  // Show loading overlay immediately to prevent flash
-  const loadingOverlay = document.createElement('div');
-  loadingOverlay.id = 'auth-loading-overlay';
-  loadingOverlay.style.cssText = `
-    position: fixed; inset: 0; background: #070b14; z-index: 9999;
-    display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-  `;
-  loadingOverlay.innerHTML = '<div class="spinner" style="width: 32px; height: 32px; border: 3px solid rgba(79,142,255,0.2); border-top-color: #4f8eff; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>';
-  document.body.appendChild(loadingOverlay);
-  
-  // Add spinner keyframes if not exists
-  if (!document.getElementById('spinner-style')) {
-    const style = document.createElement('style');
-    style.id = 'spinner-style';
-    style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
-    document.head.appendChild(style);
-  }
-
-  // Initialize shared auth listener (handles onAuthStateChange + initial session)
-  await initAuth();
-
-  // Session check done - fade out loading overlay
-  setTimeout(() => {
-    loadingOverlay.style.opacity = '0';
-    loadingOverlay.style.visibility = 'hidden';
-    setTimeout(() => loadingOverlay.remove(), 300);
-  }, 100);
-});
