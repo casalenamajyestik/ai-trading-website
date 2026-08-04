@@ -198,14 +198,17 @@ document.querySelectorAll('.btn-social[data-provider]').forEach(btn => {
     const originalText = btn.innerHTML;
     btn.innerHTML = `<svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"/></svg>`;
     
-    const { error } = await signInWithOAuth(provider);
+    const { data, error } = await signInWithOAuth(provider);
     
     if (error) {
       showToast(error.message || `Gagal login dengan ${provider}`, 'error');
       btn.disabled = false;
       btn.innerHTML = originalText;
+    } else if (data?.url) {
+      // Redirect to OAuth provider (Google, Apple, Twitter, Facebook)
+      window.location.href = data.url;
     }
-    // Success handled by onAuthStateChange redirect
+    // Success handled by onAuthStateChange redirect after callback
   });
 });
 
