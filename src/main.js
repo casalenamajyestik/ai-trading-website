@@ -255,13 +255,12 @@ if (loginForm) {
     }
     
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const rememberMe = loginForm.querySelector('[name="remember"]')?.checked;
-    
-    console.log('Login form submitted:', { email, rememberMe });
-    
-    if (!email || !password) {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        console.log('Login form submitted:', { email });
+
+        if (!email || !password) {
       showToast('Mohon isi semua field', 'error');
       return;
     }
@@ -283,12 +282,12 @@ if (loginForm) {
       return;
     }
     
-    // Save "remember me" preference
-    localStorage.setItem('auth_remember_me', rememberMe ? 'true' : 'false');
+    // Always save "remember me" as true (default behavior - auto-login)
+    localStorage.setItem('auth_remember_me', 'true');
     // Mark fresh login to prevent auto-signout on dashboard
     sessionStorage.setItem('auth_fresh_login', 'true');
-    console.log('Saved auth_remember_me:', rememberMe);
-    
+    console.log('Saved auth_remember_me: true');
+
     showToast('Selamat datang! Login berhasil.', 'success');
     closeAllModals();
     loginForm.reset();
@@ -1220,10 +1219,8 @@ function updateNavbarForAuth(session) {
 // Check auth on load
 document.addEventListener('DOMContentLoaded', async () => {
   // EARLY DEBUG: Check localStorage immediately
-  const earlyRememberMe = localStorage.getItem('auth_remember_me');
   const earlyFreshLogin = sessionStorage.getItem('auth_fresh_login');
   console.log('=== AUTH INIT DEBUG ===');
-  console.log('localStorage.auth_remember_me:', earlyRememberMe);
   console.log('sessionStorage.auth_fresh_login:', earlyFreshLogin);
   console.log('pathname:', window.location.pathname);
   
@@ -1294,37 +1291,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   
   if (session) {
-    // Check if this is a fresh login (skip remember_me check)
+    // Fresh login - skip remember_me check (always auto-login)
     const isFreshLogin = sessionStorage.getItem('auth_fresh_login') === 'true';
-    console.log('Session check: session exists, isFreshLogin=', isFreshLogin);
-    
     if (isFreshLogin) {
-      console.log('Fresh login detected, skipping remember_me check');
+      console.log('Fresh login detected, skipping remember_me check (always auto-login)');
       sessionStorage.removeItem('auth_fresh_login');
     } else {
-      // Check "remember me" preference
-      const rememberMeRaw = localStorage.getItem('auth_remember_me');
-      const rememberMe = rememberMeRaw === 'true';
-      console.log('Cold start: auth_remember_me raw=', rememberMeRaw, '→ parsed=', rememberMe);
-      
-      if (!rememberMe) {
-        // User didn't check "remember me" - sign out to clear session
-        console.log('Cold start: remember_me=false, signing out');
-        await signOut();
-        localStorage.removeItem('auth_session');
-        localStorage.removeItem('auth_remember_me');
-        updateNavbarForAuth(null);
-        
-        // Remove loading overlay and show home page
-        setTimeout(() => {
-          loadingOverlay.style.opacity = '0';
-          loadingOverlay.style.visibility = 'hidden';
-          setTimeout(() => loadingOverlay.remove(), 300);
-        }, 100);
-        return;
-      } else {
-        console.log('Cold start: remember_me=true, allowing auto-login');
-      }
+      // Always allow auto-login (remember_me is always true by default)
+      console.log('Cold start: allowing auto-login (remember_me always true)');
     }
     
     console.log('Auto-login: remember_me=true, redirecting to dashboard');

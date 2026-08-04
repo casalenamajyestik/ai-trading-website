@@ -79,7 +79,6 @@ export const translations = {
       telegram: 'Telegram',
       or: 'atau',
       password: 'Kata Sandi',
-      remember: 'Ingat saya',
       submit: 'Masuk',
       noaccount: 'Belum punya akun? <a href="#" id="openRegisterLink">Daftar gratis</a>'
     },
@@ -225,7 +224,6 @@ export const translations = {
       telegram: 'Telegram',
       or: 'or',
       password: 'Password',
-      remember: 'Remember me',
       submit: 'Sign In',
       noaccount: 'No account? <a href="#" id="openRegisterLink">Sign up free</a>'
     },
