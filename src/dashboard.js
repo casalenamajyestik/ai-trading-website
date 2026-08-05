@@ -196,7 +196,7 @@ const pages = {
   }
 };
 
-function attachSettingsSaveHandler() {
+function attachSettingsSaveHandler(session) {
   const saveBtn = document.getElementById('settingsSaveBtn');
   const nameInput = document.getElementById('settingsName');
   const emailInput = document.getElementById('settingsEmail');
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       // Attach settings save handler if on settings page
       if (pageName === 'settings') {
-        attachSettingsSaveHandler();
+        attachSettingsSaveHandler(session);
       }
     }
     if (sidebar) sidebar.classList.remove('open');
