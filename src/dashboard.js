@@ -189,19 +189,44 @@ const pages = {
         <div style="display:flex;flex-direction:column;gap:1rem;">
           <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Nama</label><input type="text" id="settingsName" value="${session.user?.name || ''}" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
           <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Email</label><input type="email" id="settingsEmail" value="${session.user?.email || ''}" ${session.user?.email ? 'readonly' : ''} style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;${session.user?.email ? 'opacity:0.6;cursor:not-allowed;' : ''}"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">WhatsApp</label><input type="tel" id="settingsWhatsApp" value="${session.user?.whatsapp || ''}" placeholder="+62 8xx xxxx xxxx" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Username Telegram</label><input type="text" id="settingsTelegram" value="${session.user?.telegram || ''}" placeholder="@username (tanpa @)" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Notification</label><select id="settingsNotification" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"><option>Telegram</option><option>Email</option><option>Both</option></select></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">WhatsApp</label><div style="display:flex;gap:0.5rem;"><select id="settingsWhatsAppCountry" style="width:120px;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;flex-shrink:0;">${getCountryOptions(session.user?.whatsappCountry || 'ID')}</select><input type="tel" id="settingsWhatsApp" value="${session.user?.whatsapp || ''}" placeholder="81234567890" style="flex:1;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Username Telegram</label><input type="text" id="settingsTelegram" value="${session.user?.telegram || ''}" placeholder="username (tanpa @)" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Notifikasi</label><select id="settingsNotification" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"><option value="">Pilih notifikasi</option><option value="telegram" ${session.user?.notification === 'telegram' ? 'selected' : ''}>Telegram</option></select></div>
           <button class="btn btn-primary" id="settingsSaveBtn" style="margin-top:0.5rem;">Simpan Perubahan</button>
         </div>
       </div>`
   }
 };
 
+function getCountryOptions(selectedCode = 'ID') {
+  const countries = [
+    { code: 'ID', name: 'Indonesia (+62)', dialCode: '+62' },
+    { code: 'US', name: 'United States (+1)', dialCode: '+1' },
+    { code: 'SG', name: 'Singapore (+65)', dialCode: '+65' },
+    { code: 'MY', name: 'Malaysia (+60)', dialCode: '+60' },
+    { code: 'AU', name: 'Australia (+61)', dialCode: '+61' },
+    { code: 'JP', name: 'Japan (+81)', dialCode: '+81' },
+    { code: 'KR', name: 'South Korea (+82)', dialCode: '+82' },
+    { code: 'CN', name: 'China (+86)', dialCode: '+86' },
+    { code: 'IN', name: 'India (+91)', dialCode: '+91' },
+    { code: 'GB', name: 'United Kingdom (+44)', dialCode: '+44' },
+    { code: 'DE', name: 'Germany (+49)', dialCode: '+49' },
+    { code: 'FR', name: 'France (+33)', dialCode: '+33' },
+    { code: 'NL', name: 'Netherlands (+31)', dialCode: '+31' },
+    { code: 'CA', name: 'Canada (+1)', dialCode: '+1' },
+    { code: 'OTHER', name: 'Other', dialCode: '' }
+  ];
+  
+  return countries.map(c => 
+    `<option value="${c.code}" ${c.code === selectedCode ? 'selected' : ''} data-dial="${c.dialCode}">${c.name}</option>`
+  ).join('');
+}
+
 function attachSettingsSaveHandler(session) {
   const saveBtn = document.getElementById('settingsSaveBtn');
   const nameInput = document.getElementById('settingsName');
   const emailInput = document.getElementById('settingsEmail');
+  const whatsappCountrySelect = document.getElementById('settingsWhatsAppCountry');
   const whatsappInput = document.getElementById('settingsWhatsApp');
   const telegramInput = document.getElementById('settingsTelegram');
   const notificationSelect = document.getElementById('settingsNotification');
@@ -209,6 +234,7 @@ function attachSettingsSaveHandler(session) {
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
       const newName = nameInput?.value?.trim();
+      const newWhatsAppCountry = whatsappCountrySelect?.value;
       const newWhatsApp = whatsappInput?.value?.trim();
       const newTelegram = telegramInput?.value?.trim();
       const newNotification = notificationSelect?.value;
@@ -226,8 +252,10 @@ function attachSettingsSaveHandler(session) {
       try {
         // Update session locally
         session.user.name = newName;
+        session.user.whatsappCountry = newWhatsAppCountry;
         session.user.whatsapp = newWhatsApp;
         session.user.telegram = newTelegram;
+        session.user.notification = newNotification;
         // Note: Email is not updated if it already exists (locked)
         localStorage.setItem('auth_session', JSON.stringify(session));
         
