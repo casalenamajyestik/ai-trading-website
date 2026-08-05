@@ -164,12 +164,16 @@ const { data: { subscription } } = onAuthStateChange(async (event, session) => {
       console.warn('Failed to fetch profile:', err);
     }
     
+    // Priority: profiles table > Supabase Auth metadata > email fallback
+    const displayName = profile?.full_name || session.user.user_metadata?.full_name || session.user.email.split('@')[0];
+    const avatarName = profile?.full_name || session.user.user_metadata?.full_name || session.user.email;
+    
     const userSession = {
       user: {
         id: session.user.id,
         email: session.user.email,
-        name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user.user_metadata?.full_name || session.user.email)}&background=4f8eff&color=fff&size=128`,
+        name: displayName,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=4f8eff&color=fff&size=128`,
         // Merge profile data from database
         whatsappCountry: profile?.whatsapp_country || 'ID',
         whatsapp: profile?.whatsapp || '',
@@ -225,12 +229,16 @@ export async function initAuth() {
       console.warn('Failed to fetch profile:', err);
     }
     
+    // Priority: profiles table > Supabase Auth metadata > email fallback
+    const displayName = profile?.full_name || session.user.user_metadata?.full_name || session.user.email.split('@')[0];
+    const avatarName = profile?.full_name || session.user.user_metadata?.full_name || session.user.email;
+    
     const userSession = {
       user: {
         id: session.user.id,
         email: session.user.email,
-        name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user.user_metadata?.full_name || session.user.email)}&background=4f8eff&color=fff&size=128`,
+        name: displayName,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=4f8eff&color=fff&size=128`,
         // Merge profile data from database
         whatsappCountry: profile?.whatsapp_country || 'ID',
         whatsapp: profile?.whatsapp || '',
