@@ -189,6 +189,8 @@ const pages = {
         <div style="display:flex;flex-direction:column;gap:1rem;">
           <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Nama</label><input type="text" id="settingsName" value="${session.user?.name || ''}" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
           <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Email</label><input type="email" id="settingsEmail" value="${session.user?.email || ''}" ${session.user?.email ? 'readonly' : ''} style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;${session.user?.email ? 'opacity:0.6;cursor:not-allowed;' : ''}"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">WhatsApp</label><input type="tel" id="settingsWhatsApp" value="${session.user?.whatsapp || ''}" placeholder="+62 8xx xxxx xxxx" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Username Telegram</label><input type="text" id="settingsTelegram" value="${session.user?.telegram || ''}" placeholder="@username (tanpa @)" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
           <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Notification</label><select id="settingsNotification" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"><option>Telegram</option><option>Email</option><option>Both</option></select></div>
           <button class="btn btn-primary" id="settingsSaveBtn" style="margin-top:0.5rem;">Simpan Perubahan</button>
         </div>
@@ -200,11 +202,15 @@ function attachSettingsSaveHandler(session) {
   const saveBtn = document.getElementById('settingsSaveBtn');
   const nameInput = document.getElementById('settingsName');
   const emailInput = document.getElementById('settingsEmail');
+  const whatsappInput = document.getElementById('settingsWhatsApp');
+  const telegramInput = document.getElementById('settingsTelegram');
   const notificationSelect = document.getElementById('settingsNotification');
   
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
       const newName = nameInput?.value?.trim();
+      const newWhatsApp = whatsappInput?.value?.trim();
+      const newTelegram = telegramInput?.value?.trim();
       const newNotification = notificationSelect?.value;
       
       if (!newName) {
@@ -220,6 +226,8 @@ function attachSettingsSaveHandler(session) {
       try {
         // Update session locally
         session.user.name = newName;
+        session.user.whatsapp = newWhatsApp;
+        session.user.telegram = newTelegram;
         // Note: Email is not updated if it already exists (locked)
         localStorage.setItem('auth_session', JSON.stringify(session));
         
