@@ -1,5 +1,5 @@
 import i18next from './i18n.js';
-import { signOut } from './supabase.js';
+import { signOut, upsertProfile } from './supabase.js';
 import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
 
 // ============ Auth Guard ============
@@ -250,13 +250,25 @@ function attachSettingsSaveHandler(session) {
       saveBtn.disabled = true;
       
       try {
+        // Update to Supabase database
+        const profileData = {
+          id: session.user.id, // This will be set from auth context
+          full_name: newName,
+          whatsapp_country: newWhatsAppCountry,
+          whatsapp: newWhatsApp,
+          telegram: newTelegram,
+          notification: newNotification || 'telegram'
+        };
+        
+        const { error } = await upsertProfile(profileData);
+        if (error) throw error;
+        
         // Update session locally
         session.user.name = newName;
         session.user.whatsappCountry = newWhatsAppCountry;
         session.user.whatsapp = newWhatsApp;
         session.user.telegram = newTelegram;
-        session.user.notification = newNotification;
-        // Note: Email is not updated if it already exists (locked)
+        session.user.notification = newNotification || 'telegram';
         localStorage.setItem('auth_session', JSON.stringify(session));
         
         // Update topbar name

@@ -1,5 +1,5 @@
 // Shared auth state listener & utils — load on BOTH index.html and dashboard.html
-import { onAuthStateChange, getSession as getSupabaseSession, signOut } from './supabase.js';
+import { onAuthStateChange, getSession as getSupabaseSession, signOut, getProfile } from './supabase.js';
 import i18next from 'i18next';
 import { translations } from './i18n.js';
 
@@ -152,14 +152,29 @@ export function setOpenLoginRef(fn) { openLoginRef = fn; }
 function openLogin() { if (openLoginRef) openLoginRef(); }
 
 // ============ Auth State Listener ============
-const { data: { subscription } } = onAuthStateChange((event, session) => {
+const { data: { subscription } } = onAuthStateChange(async (event, session) => {
   console.log('[AUTH STATE CHANGE]', event, session ? 'session exists' : 'no session');
   if (event === 'SIGNED_IN' && session) {
+    // Fetch profile from Supabase database
+    let profile = null;
+    try {
+      const { data: profileData } = await getProfile(session.user.id);
+      profile = profileData;
+    } catch (err) {
+      console.warn('Failed to fetch profile:', err);
+    }
+    
     const userSession = {
       user: {
+        id: session.user.id,
         email: session.user.email,
         name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user.user_metadata?.full_name || session.user.email)}&background=4f8eff&color=fff&size=128`
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user.user_metadata?.full_name || session.user.email)}&background=4f8eff&color=fff&size=128`,
+        // Merge profile data from database
+        whatsappCountry: profile?.whatsapp_country || 'ID',
+        whatsapp: profile?.whatsapp || '',
+        telegram: profile?.telegram || '',
+        notification: profile?.notification || 'telegram'
       },
       token: session.access_token,
       expiresAt: Date.now() + session.expires_in * 1000,
@@ -201,11 +216,26 @@ export async function initAuth() {
   }
   
   if (session) {
+    // Fetch profile from Supabase database
+    let profile = null;
+    try {
+      const { data: profileData } = await getProfile(session.user.id);
+      profile = profileData;
+    } catch (err) {
+      console.warn('Failed to fetch profile:', err);
+    }
+    
     const userSession = {
       user: {
+        id: session.user.id,
         email: session.user.email,
         name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user.user_metadata?.full_name || session.user.email)}&background=4f8eff&color=fff&size=128`
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user.user_metadata?.full_name || session.user.email)}&background=4f8eff&color=fff&size=128`,
+        // Merge profile data from database
+        whatsappCountry: profile?.whatsapp_country || 'ID',
+        whatsapp: profile?.whatsapp || '',
+        telegram: profile?.telegram || '',
+        notification: profile?.notification || 'telegram'
       },
       token: session.access_token,
       expiresAt: Date.now() + session.expires_in * 1000,

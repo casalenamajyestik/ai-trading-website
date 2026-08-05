@@ -80,3 +80,22 @@ export async function resetPassword(email) {
   });
   return { data, error };
 }
+
+// ============ Profile Helpers ============
+export async function getProfile(userId) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  return { data, error };
+}
+
+export async function upsertProfile(profile) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert(profile, { onConflict: 'id' })
+    .select()
+    .single();
+  return { data, error };
+}
