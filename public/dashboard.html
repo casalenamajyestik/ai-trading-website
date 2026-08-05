@@ -189,22 +189,13 @@
       .stats-grid { grid-template-columns: 1fr 1fr; }
     }
     /* Settings Tabs */
-    .card-header { 
-      display: flex; 
-      flex-direction: column; 
-      align-items: flex-start; 
-      justify-content: flex-start; 
-      margin-bottom: 1rem; 
-      gap: 1rem;
-      width: 100%;
-    }
-    .settings-tabs {
+    .settings-tabs-container {
       display: flex;
       gap: 0;
       border-bottom: 2px solid var(--border-color);
       padding-bottom: 0;
       width: 100%;
-      margin-left: 0;
+      margin-bottom: 1rem;
     }
     .settings-tab {
       background: none;
@@ -238,6 +229,15 @@
     .settings-tab:focus {
       outline: 2px solid var(--accent-primary);
       outline-offset: -2px;
+    }
+    
+    .card-header { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      margin-bottom: 1.5rem; 
+      flex-wrap: wrap;
+      gap: 1rem;
     }
     .settings-tab-content {
       width: 100%;

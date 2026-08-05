@@ -183,131 +183,134 @@ const pages = {
       </div>`
   },
   settings: {
-    title: 'Pengaturan',
-    render: (session) => {
-          const exchangeKey = session.exchangeKey || {};
-      
-          return `
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">Account Settings</span>
-              <div class="settings-tabs" role="tablist">
-                <button class="settings-tab active" role="tab" data-tab="profile" aria-selected="true">Profil</button>
-                <button class="settings-tab" role="tab" data-tab="exchange" aria-selected="false">Exchange</button>
-              </div>
+      title: 'Pengaturan',
+      render: (session) => {
+            const exchangeKey = session.exchangeKey || {};
+     
+            return `
+            <!-- Tabs Navigation (outside card) -->
+            <div class="settings-tabs-container" role="tablist">
+              <button class="settings-tab active" role="tab" data-tab="profile" aria-selected="true">Profil</button>
+              <button class="settings-tab" role="tab" data-tab="exchange" aria-selected="false">Exchange</button>
             </div>
-            <div class="settings-tab-content">
-              <!-- PROFIL TAB -->
-              <div class="settings-panel active" role="tabpanel" data-tab="profile">
-                <div style="display:flex;flex-direction:column;gap:1rem;">
-                  <div><label>Nama</label><input type="text" id="settingsName" value="${session.user?.name || ''}" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
-                  <div><label>Email</label><input type="email" id="settingsEmail" value="${session.user?.email || ''}" ${session.user?.email ? 'readonly' : ''} style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;${session.user?.email ? 'opacity:0.6;cursor:not-allowed;' : ''}"></div>
-                  <div><label>WhatsApp</label><div class="input-row"><select id="settingsWhatsAppCountry" style="width:130px;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;flex-shrink:0;">${getCountryOptions(session.user?.whatsappCountry || 'ID')}</select><input type="tel" id="settingsWhatsApp" value="${session.user?.whatsapp || ''}" placeholder="81234567890" style="flex:1;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div></div>
-                  <div><label>Username Telegram</label><input type="text" id="settingsTelegram" value="${session.user?.telegram || ''}" placeholder="username (tanpa @)" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
-                  <div><label>Notifikasi</label><select id="settingsNotification" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"><option value="">Pilih notifikasi</option><option value="telegram" ${session.user?.notification === 'telegram' ? 'selected' : ''}>Telegram</option></select></div>
-                  <button class="btn btn-primary" id="settingsSaveBtn" style="margin-top:0.5rem;padding:0.75rem 1.5rem;">Simpan Perubahan</button>
-                </div>
-              </div>
           
-              <!-- EXCHANGE TAB -->
-              <div class="settings-panel" role="tabpanel" data-tab="exchange" hidden>
-                <div class="info-banner">
-                  <div class="info-title">🔑 Kunci API Binance</div>
-                  Kunci API untuk AI Trading Bot. Simpan dengan aman — Secret Key tidak akan ditampilkan kembali secara penuh.
-                </div>
-            
-                <div class="exchange-section">
-                  <div class="exchange-section-title">Koneksi</div>
-              
-                  <div class="exchange-field">
-                    <label>API Key</label>
-                    <div class="input-row">
-                      <input type="text" id="exchangeApiKey" value="${exchangeKey.api_key || ''}" placeholder="Masukkan API Key Binance">
-                      <button type="button" class="btn btn-secondary" id="testApiBtn">Test Koneksi</button>
-                    </div>
-                  </div>
-              
-                  <div class="exchange-field">
-                    <label>Secret Key</label>
-                    <div class="input-row">
-                      <input type="password" id="exchangeSecretKey" value="${exchangeKey.secret_key || ''}" placeholder="Masukkan Secret Key Binance">
-                      <button type="button" class="btn btn-secondary" id="toggleSecretBtn">👁 Tampilkan</button>
-                    </div>
+            <!-- Card Content -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Account Settings</span>
+              </div>
+              <div class="settings-tab-content">
+                <!-- PROFIL TAB -->
+                <div class="settings-panel active" role="tabpanel" data-tab="profile">
+                  <div style="display:flex;flex-direction:column;gap:1rem;">
+                    <div><label>Nama</label><input type="text" id="settingsName" value="${session.user?.name || ''}" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
+                    <div><label>Email</label><input type="email" id="settingsEmail" value="${session.user?.email || ''}" ${session.user?.email ? 'readonly' : ''} style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;${session.user?.email ? 'opacity:0.6;cursor:not-allowed;' : ''}"></div>
+                    <div><label>WhatsApp</label><div class="input-row"><select id="settingsWhatsAppCountry" style="width:130px;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;flex-shrink:0;">${getCountryOptions(session.user?.whatsappCountry || 'ID')}</select><input type="tel" id="settingsWhatsApp" value="${session.user?.whatsapp || ''}" placeholder="81234567890" style="flex:1;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div></div>
+                    <div><label>Username Telegram</label><input type="text" id="settingsTelegram" value="${session.user?.telegram || ''}" placeholder="username (tanpa @)" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
+                    <div><label>Notifikasi</label><select id="settingsNotification" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"><option value="">Pilih notifikasi</option><option value="telegram" ${session.user?.notification === 'telegram' ? 'selected' : ''}>Telegram</option></select></div>
+                    <button class="btn btn-primary" id="settingsSaveBtn" style="margin-top:0.5rem;padding:0.75rem 1.5rem;">Simpan Perubahan</button>
                   </div>
                 </div>
-            
-                <div class="exchange-section">
-                  <div class="exchange-section-title">Konfigurasi</div>
-              
-                  <div class="exchange-field">
-                    <div class="toggle-row">
-                      <label class="toggle-switch">
-                        <input type="checkbox" id="exchangeTestnet" ${exchangeKey.testnet ? 'checked' : ''}>
-                        <span class="toggle-slider"></span>
-                      </label>
-                      <span style="font-size:0.875rem;">Mode Testnet (Simulasi — tidak melakukan trading nyata)</span>
+          
+                <!-- EXCHANGE TAB -->
+                <div class="settings-panel" role="tabpanel" data-tab="exchange" hidden>
+                  <div class="info-banner">
+                    <div class="info-title">🔑 Kunci API Binance</div>
+                    Kunci API untuk AI Trading Bot. Simpan dengan aman — Secret Key tidak akan ditampilkan kembali secara penuh.
+                  </div>
+           
+                  <div class="exchange-section">
+                    <div class="exchange-section-title">Koneksi</div>
+             
+                    <div class="exchange-field">
+                      <label>API Key</label>
+                      <div class="input-row">
+                        <input type="text" id="exchangeApiKey" value="${exchangeKey.api_key || ''}" placeholder="Masukkan API Key Binance">
+                        <button type="button" class="btn btn-secondary" id="testApiBtn">Test Koneksi</button>
+                      </div>
+                    </div>
+             
+                    <div class="exchange-field">
+                      <label>Secret Key</label>
+                      <div class="input-row">
+                        <input type="password" id="exchangeSecretKey" value="${exchangeKey.secret_key || ''}" placeholder="Masukkan Secret Key Binance">
+                        <button type="button" class="btn btn-secondary" id="toggleSecretBtn">👁 Tampilkan</button>
+                      </div>
                     </div>
                   </div>
-              
-                  <div class="exchange-field">
-                    <label>Trading Type</label>
-                    <div class="radio-group">
-                      <label class="radio-option">
-                        <input type="radio" name="exchangeTradingType" value="spot" ${exchangeKey.trading_type === 'spot' ? 'checked' : ''}>
-                        <span>Spot</span>
-                      </label>
-                      <label class="radio-option">
-                        <input type="radio" name="exchangeTradingType" value="futures" ${exchangeKey.trading_type === 'futures' ? 'checked' : ''}>
-                        <span>Futures</span>
-                      </label>
-                      <label class="radio-option">
-                        <input type="radio" name="exchangeTradingType" value="both" ${exchangeKey.trading_type === 'both' ? 'checked' : ''}>
-                        <span>Keduanya</span>
-                      </label>
+           
+                  <div class="exchange-section">
+                    <div class="exchange-section-title">Konfigurasi</div>
+             
+                    <div class="exchange-field">
+                      <div class="toggle-row">
+                        <label class="toggle-switch">
+                          <input type="checkbox" id="exchangeTestnet" ${exchangeKey.testnet ? 'checked' : ''}>
+                          <span class="toggle-slider"></span>
+                        </label>
+                        <span style="font-size:0.875rem;">Mode Testnet (Simulasi — tidak melakukan trading nyata)</span>
+                      </div>
+                    </div>
+             
+                    <div class="exchange-field">
+                      <label>Trading Type</label>
+                      <div class="radio-group">
+                        <label class="radio-option">
+                          <input type="radio" name="exchangeTradingType" value="spot" ${exchangeKey.trading_type === 'spot' ? 'checked' : ''}>
+                          <span>Spot</span>
+                        </label>
+                        <label class="radio-option">
+                          <input type="radio" name="exchangeTradingType" value="futures" ${exchangeKey.trading_type === 'futures' ? 'checked' : ''}>
+                          <span>Futures</span>
+                        </label>
+                        <label class="radio-option">
+                          <input type="radio" name="exchangeTradingType" value="both" ${exchangeKey.trading_type === 'both' ? 'checked' : ''}>
+                          <span>Keduanya</span>
+                        </label>
+                      </div>
+                    </div>
+             
+                    <div class="exchange-field">
+                      <label>Izin API</label>
+                      <div class="checkbox-group">
+                        <label class="checkbox-option">
+                          <input type="checkbox" name="exchangePermissions" value="read" ${(exchangeKey.permissions || []).includes('read') ? 'checked' : ''}>
+                          <span>Read (Baca data)</span>
+                        </label>
+                        <label class="checkbox-option">
+                          <input type="checkbox" name="exchangePermissions" value="trade" ${(exchangeKey.permissions || []).includes('trade') ? 'checked' : ''}>
+                          <span>Trade (Trading)</span>
+                        </label>
+                        <label class="checkbox-option">
+                          <input type="checkbox" name="exchangePermissions" value="withdraw" ${(exchangeKey.permissions || []).includes('withdraw') ? 'checked' : ''}>
+                          <span>Withdraw (Tarik dana)</span>
+                        </label>
+                      </div>
+                    </div>
+             
+                    <div class="exchange-field">
+                      <label>IP Whitelist (Opsional)</label>
+                      <input type="text" id="exchangeIpWhitelist" value="${exchangeKey.ip_whitelist || ''}" placeholder="Contoh: 192.168.1.1, 10.0.0.1 (pisahkan koma)" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+                      <div class="hint">Kosongkan untuk allow all IP. Disarankan isi IP server bot Anda untuk keamanan.</div>
+                    </div>
+             
+                    <div class="exchange-field">
+                      <label>Label</label>
+                      <input type="text" id="exchangeLabel" value="${exchangeKey.label || 'Main Account'}" placeholder="Contoh: Main Account, Sub Bot 1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
                     </div>
                   </div>
-              
-                  <div class="exchange-field">
-                    <label>Izin API</label>
-                    <div class="checkbox-group">
-                      <label class="checkbox-option">
-                        <input type="checkbox" name="exchangePermissions" value="read" ${(exchangeKey.permissions || []).includes('read') ? 'checked' : ''}>
-                        <span>Read (Baca data)</span>
-                      </label>
-                      <label class="checkbox-option">
-                        <input type="checkbox" name="exchangePermissions" value="trade" ${(exchangeKey.permissions || []).includes('trade') ? 'checked' : ''}>
-                        <span>Trade (Trading)</span>
-                      </label>
-                      <label class="checkbox-option">
-                        <input type="checkbox" name="exchangePermissions" value="withdraw" ${(exchangeKey.permissions || []).includes('withdraw') ? 'checked' : ''}>
-                        <span>Withdraw (Tarik dana)</span>
-                      </label>
-                    </div>
+           
+                  <div id="exchangeTestResult" class="test-result" style="display:none;"></div>
+           
+                  <div class="action-row">
+                    <button class="btn btn-primary" id="exchangeSaveBtn">Simpan Exchange</button>
+                    <button class="btn btn-danger" id="exchangeDeleteBtn" style="display:${exchangeKey.api_key ? 'inline-flex' : 'none'}">Hapus Kunci</button>
                   </div>
-              
-                  <div class="exchange-field">
-                    <label>IP Whitelist (Opsional)</label>
-                    <input type="text" id="exchangeIpWhitelist" value="${exchangeKey.ip_whitelist || ''}" placeholder="Contoh: 192.168.1.1, 10.0.0.1 (pisahkan koma)" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-                    <div class="hint">Kosongkan untuk allow all IP. Disarankan isi IP server bot Anda untuk keamanan.</div>
-                  </div>
-              
-                  <div class="exchange-field">
-                    <label>Label</label>
-                    <input type="text" id="exchangeLabel" value="${exchangeKey.label || 'Main Account'}" placeholder="Contoh: Main Account, Sub Bot 1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-                  </div>
-                </div>
-            
-                <div id="exchangeTestResult" class="test-result" style="display:none;"></div>
-            
-                <div class="action-row">
-                  <button class="btn btn-primary" id="exchangeSaveBtn">Simpan Exchange</button>
-                  <button class="btn btn-danger" id="exchangeDeleteBtn" style="display:${exchangeKey.api_key ? 'inline-flex' : 'none'}">Hapus Kunci</button>
                 </div>
               </div>
-            </div>
-          </div>`;
+            </div>`;
+          }
         }
-      }
 };
 
 function getCountryOptions(selectedCode = 'ID') {
