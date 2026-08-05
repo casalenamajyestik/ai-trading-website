@@ -1,5 +1,6 @@
 import i18next from './i18n.js';
-import { signOut, upsertProfile } from './supabase.js';
+import { signOut, upsertProfile, getExchangeKey, upsertExchangeKey, updateExchangeKeyTestResult } from './supabase.js';
+import { supabase } from './supabase.js';
 import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
 
 // ============ Auth Guard ============
@@ -183,18 +184,113 @@ const pages = {
   },
   settings: {
     title: 'Pengaturan',
-    render: (session) => `
+    render: (session) => {
+      // Fetch existing exchange key for Binance
+      const exchangeKey = session.exchangeKey || {};
+      
+      return `
       <div class="card">
-        <div class="card-header"><span class="card-title">Account Settings</span></div>
-        <div style="display:flex;flex-direction:column;gap:1rem;">
-          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Nama</label><input type="text" id="settingsName" value="${session.user?.name || ''}" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Email</label><input type="email" id="settingsEmail" value="${session.user?.email || ''}" ${session.user?.email ? 'readonly' : ''} style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;${session.user?.email ? 'opacity:0.6;cursor:not-allowed;' : ''}"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">WhatsApp</label><div style="display:flex;gap:0.5rem;"><select id="settingsWhatsAppCountry" style="width:120px;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;flex-shrink:0;">${getCountryOptions(session.user?.whatsappCountry || 'ID')}</select><input type="tel" id="settingsWhatsApp" value="${session.user?.whatsapp || ''}" placeholder="81234567890" style="flex:1;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Username Telegram</label><input type="text" id="settingsTelegram" value="${session.user?.telegram || ''}" placeholder="username (tanpa @)" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Notifikasi</label><select id="settingsNotification" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"><option value="">Pilih notifikasi</option><option value="telegram" ${session.user?.notification === 'telegram' ? 'selected' : ''}>Telegram</option></select></div>
-          <button class="btn btn-primary" id="settingsSaveBtn" style="margin-top:0.5rem;">Simpan Perubahan</button>
+        <div class="card-header">
+          <span class="card-title">Account Settings</span>
+          <div class="settings-tabs" role="tablist">
+            <button class="settings-tab active" role="tab" data-tab="profile" aria-selected="true">Profil</button>
+            <button class="settings-tab" role="tab" data-tab="exchange" aria-selected="false">Exchange</button>
+          </div>
         </div>
-      </div>`
+        <div class="settings-tab-content">
+          <!-- PROFIL TAB -->
+          <div class="settings-panel active" role="tabpanel" data-tab="profile" aria-labelledby="profile-tab">
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+              <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Nama</label><input type="text" id="settingsName" value="${session.user?.name || ''}" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
+              <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Email</label><input type="email" id="settingsEmail" value="${session.user?.email || ''}" ${session.user?.email ? 'readonly' : ''} style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;${session.user?.email ? 'opacity:0.6;cursor:not-allowed;' : ''}"></div>
+              <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">WhatsApp</label><div style="display:flex;gap:0.5rem;"><select id="settingsWhatsAppCountry" style="width:120px;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;flex-shrink:0;">${getCountryOptions(session.user?.whatsappCountry || 'ID')}</select><input type="tel" id="settingsWhatsApp" value="${session.user?.whatsapp || ''}" placeholder="81234567890" style="flex:1;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div></div>
+              <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Username Telegram</label><input type="text" id="settingsTelegram" value="${session.user?.telegram || ''}" placeholder="username (tanpa @)" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
+              <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Notifikasi</label><select id="settingsNotification" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"><option value="">Pilih notifikasi</option><option value="telegram" ${session.user?.notification === 'telegram' ? 'selected' : ''}>Telegram</option></select></div>
+              <button class="btn btn-primary" id="settingsSaveBtn" style="margin-top:0.5rem;">Simpan Perubahan</button>
+            </div>
+          </div>
+          
+          <!-- EXCHANGE TAB -->
+          <div class="settings-panel" role="tabpanel" data-tab="exchange" aria-labelledby="exchange-tab" hidden>
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+              <div style="font-size:0.8rem;color:var(--text-muted);">Kunci API Binance untuk AI Trading Bot. Simpan dengan aman - tidak akan ditampilkan kembali penuh.</div>
+              
+              <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">API Key</label>
+                <div style="display:flex;gap:0.5rem;">
+                  <input type="text" id="exchangeApiKey" value="${exchangeKey.api_key || ''}" placeholder="Masukkan API Key Binance" style="flex:1;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+                  <button type="button" class="btn btn-secondary" id="testApiBtn" style="padding:0.625rem 1rem;white-space:nowrap;">Test Koneksi</button>
+                </div>
+              </div>
+              
+              <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Secret Key</label>
+                <div style="display:flex;gap:0.5rem;">
+                  <input type="password" id="exchangeSecretKey" value="${exchangeKey.secret_key || ''}" placeholder="Masukkan Secret Key Binance" style="flex:1;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+                  <button type="button" class="btn btn-secondary" id="toggleSecretBtn" style="padding:0.625rem 1rem;white-space:nowrap;">👁 Tampilkan</button>
+                </div>
+              </div>
+              
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Mode</label>
+                  <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                    <input type="checkbox" id="exchangeTestnet" ${exchangeKey.testnet ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent-primary);">
+                    <span style="font-size:0.875rem;">Testnet (Simulasi)</span>
+                  </label>
+                </div>
+                <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Trading Type</label>
+                  <div style="display:flex;gap:1rem;">
+                    <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                      <input type="radio" name="exchangeTradingType" value="spot" ${exchangeKey.trading_type === 'spot' ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent-primary);">
+                      <span style="font-size:0.875rem;">Spot</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                      <input type="radio" name="exchangeTradingType" value="futures" ${exchangeKey.trading_type === 'futures' ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent-primary);">
+                      <span style="font-size:0.875rem;">Futures</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                      <input type="radio" name="exchangeTradingType" value="both" ${exchangeKey.trading_type === 'both' ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent-primary);">
+                      <span style="font-size:0.875rem;">Keduanya</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Izin API</label>
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                  <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                    <input type="checkbox" name="exchangePermissions" value="read" ${(exchangeKey.permissions || []).includes('read') ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent-primary);">
+                    <span style="font-size:0.875rem;">Read (Baca)</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                    <input type="checkbox" name="exchangePermissions" value="trade" ${(exchangeKey.permissions || []).includes('trade') ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent-primary);">
+                    <span style="font-size:0.875rem;">Trade (Trading)</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                    <input type="checkbox" name="exchangePermissions" value="withdraw" ${(exchangeKey.permissions || []).includes('withdraw') ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent-primary);">
+                    <span style="font-size:0.875rem;">Withdraw (Tarik)</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">IP Whitelist (Opsional)</label>
+                <input type="text" id="exchangeIpWhitelist" value="${exchangeKey.ip_whitelist || ''}" placeholder="Contoh: 192.168.1.1, 10.0.0.1 (pisahkan koma)" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Kosongkan untuk allow all IP. Disarankan isi IP server bot Anda.</div>
+              </div>
+              
+              <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Label</label>
+                <input type="text" id="exchangeLabel" value="${exchangeKey.label || 'Main Account'}" placeholder="Contoh: Main Account, Sub Bot 1" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+              </div>
+              
+              <div id="exchangeTestResult" style="display:none;padding:0.75rem;border-radius:var(--radius-md);font-size:0.8rem;"></div>
+              
+              <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+                <button class="btn btn-primary" id="exchangeSaveBtn">Simpan Exchange</button>
+                <button class="btn btn-danger" id="exchangeDeleteBtn" style="display:${exchangeKey.api_key ? 'inline-flex' : 'none'}">Hapus</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
   }
 };
 
@@ -252,7 +348,7 @@ function attachSettingsSaveHandler(session) {
       try {
         // Update to Supabase database
         const profileData = {
-          id: session.user.id, // This will be set from auth context
+          id: session.user.id,
           full_name: newName,
           whatsapp_country: newWhatsAppCountry,
           whatsapp: newWhatsApp,
@@ -307,6 +403,334 @@ function attachSettingsSaveHandler(session) {
   }
 }
 
+// ============ Exchange Tab Handlers ============
+function attachExchangeTabHandlers(session) {
+  // Tab switching
+  const tabButtons = document.querySelectorAll('.settings-tab');
+  const tabPanels = document.querySelectorAll('.settings-panel');
+  
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      
+      tabButtons.forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === tab);
+        b.setAttribute('aria-selected', b.dataset.tab === tab);
+      });
+      
+      tabPanels.forEach(p => {
+        const isActive = p.dataset.tab === tab;
+        p.classList.toggle('active', isActive);
+        p.hidden = !isActive;
+        
+        // Load exchange key when switching to exchange tab
+        if (isActive && tab === 'exchange' && !p.dataset.loaded) {
+          loadExchangeKey(session);
+          p.dataset.loaded = 'true';
+        }
+      });
+    });
+  });
+  
+  // Toggle secret key visibility
+  const toggleSecretBtn = document.getElementById('toggleSecretBtn');
+  const secretInput = document.getElementById('exchangeSecretKey');
+  
+  if (toggleSecretBtn && secretInput) {
+    toggleSecretBtn.addEventListener('click', () => {
+      const isPassword = secretInput.type === 'password';
+      secretInput.type = isPassword ? 'text' : 'password';
+      toggleSecretBtn.textContent = isPassword ? '🙈 Sembunyikan' : '👁 Tampilkan';
+    });
+  }
+  
+  // Test API connection
+  const testApiBtn = document.getElementById('testApiBtn');
+  if (testApiBtn) {
+    testApiBtn.addEventListener('click', async () => {
+      await testBinanceConnection(session);
+    });
+  }
+  
+  // Save exchange key
+  const exchangeSaveBtn = document.getElementById('exchangeSaveBtn');
+  if (exchangeSaveBtn) {
+    exchangeSaveBtn.addEventListener('click', async () => {
+      await saveExchangeKey(session);
+    });
+  }
+  
+  // Delete exchange key
+  const exchangeDeleteBtn = document.getElementById('exchangeDeleteBtn');
+  if (exchangeDeleteBtn) {
+    exchangeDeleteBtn.addEventListener('click', async () => {
+      if (confirm('Yakin ingin menghapus kunci API Binance?')) {
+        await deleteExchangeKey(session);
+      }
+    });
+  }
+}
+
+async function loadExchangeKey(session) {
+  try {
+    const { data, error } = await getExchangeKey(session.user.id, 'binance');
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows found
+    
+    if (data) {
+      // Populate form
+      const apiKeyInput = document.getElementById('exchangeApiKey');
+      const secretInput = document.getElementById('exchangeSecretKey');
+      const testnetInput = document.getElementById('exchangeTestnet');
+      const tradingTypeInputs = document.querySelectorAll('input[name="exchangeTradingType"]');
+      const permissionInputs = document.querySelectorAll('input[name="exchangePermissions"]');
+      const ipWhitelistInput = document.getElementById('exchangeIpWhitelist');
+      const labelInput = document.getElementById('exchangeLabel');
+      const deleteBtn = document.getElementById('exchangeDeleteBtn');
+      
+      if (apiKeyInput) apiKeyInput.value = data.api_key || '';
+      if (secretInput) secretInput.value = data.secret_key || '';
+      if (testnetInput) testnetInput.checked = data.testnet || false;
+      
+      tradingTypeInputs.forEach(input => {
+        input.checked = input.value === (data.trading_type || 'spot');
+      });
+      
+      permissionInputs.forEach(input => {
+        input.checked = (data.permissions || []).includes(input.value);
+      });
+      
+      if (ipWhitelistInput) ipWhitelistInput.value = data.ip_whitelist || '';
+      if (labelInput) labelInput.value = data.label || 'Main Account';
+      if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+    }
+  } catch (err) {
+    console.error('Failed to load exchange key:', err);
+  }
+}
+
+async function testBinanceConnection(session) {
+  const testBtn = document.getElementById('testApiBtn');
+  const resultDiv = document.getElementById('exchangeTestResult');
+  const apiKey = document.getElementById('exchangeApiKey')?.value?.trim();
+  const secretKey = document.getElementById('exchangeSecretKey')?.value?.trim();
+  const testnet = document.getElementById('exchangeTestnet')?.checked;
+  
+  if (!apiKey || !secretKey) {
+    showTestResult(resultDiv, 'error', 'API Key dan Secret Key wajib diisi');
+    return;
+  }
+  
+  testBtn.disabled = true;
+  testBtn.textContent = 'Testing...';
+  resultDiv.style.display = 'none';
+  
+  try {
+    // Test dengan Binance API
+    const baseUrl = testnet 
+      ? 'https://testnet.binance.vision' 
+      : 'https://api.binance.com';
+    
+    // Buat signature untuk GET /api/v3/account
+    const timestamp = Date.now();
+    const queryString = `timestamp=${timestamp}`;
+    
+    // HMAC SHA256 signature
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secretKey);
+    const messageData = encoder.encode(queryString);
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+    );
+    const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
+    const signatureHex = Array.from(new Uint8Array(signature))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    const url = `${baseUrl}/api/v3/account?${queryString}&signature=${signatureHex}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-MBX-APIKEY': apiKey,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.msg || `HTTP ${response.status}`);
+    }
+    
+    // Success - update test result in database
+    await updateExchangeKeyTestResult(session.user.id, 'binance', {
+      status: 'success',
+      message: 'Koneksi berhasil! Balance: ' + (data.totalWalletBalance || 'N/A') + ' USDT'
+    });
+    
+    showTestResult(resultDiv, 'success', '✅ Koneksi berhasil! API Key valid dan bisa akses account.');
+    
+  } catch (err) {
+    console.error('Binance test failed:', err);
+    
+    let msg = err.message;
+    if (msg.includes('Invalid API-key')) msg = 'API Key tidak valid';
+    else if (msg.includes('Signature')) msg = 'Secret Key tidak cocok';
+    else if (msg.includes('IP')) msg = 'IP tidak diizinkan (cek IP Whitelist di Binance)';
+    else if (msg.includes('timestamp')) msg = 'Waktu server tidak sinkron';
+    
+    await updateExchangeKeyTestResult(session.user.id, 'binance', {
+      status: 'failed',
+      message: msg
+    });
+    
+    showTestResult(resultDiv, 'error', '❌ ' + msg);
+  } finally {
+    testBtn.disabled = false;
+    testBtn.textContent = 'Test Koneksi';
+  }
+}
+
+function showTestResult(container, type, message) {
+  container.style.display = 'block';
+  container.textContent = message;
+  container.style.background = type === 'success' 
+    ? 'rgba(34, 211, 167, 0.15)' 
+    : 'rgba(240, 78, 78, 0.15)';
+  container.style.color = type === 'success' 
+    ? 'var(--accent-secondary)' 
+    : 'var(--accent-danger)';
+  container.style.border = type === 'success' 
+    ? '1px solid var(--accent-secondary)' 
+    : '1px solid var(--accent-danger)';
+}
+
+async function saveExchangeKey(session) {
+  const saveBtn = document.getElementById('exchangeSaveBtn');
+  const apiKey = document.getElementById('exchangeApiKey')?.value?.trim();
+  const secretKey = document.getElementById('exchangeSecretKey')?.value?.trim();
+  const testnet = document.getElementById('exchangeTestnet')?.checked;
+  const tradingType = document.querySelector('input[name="exchangeTradingType"]:checked')?.value || 'spot';
+  const permissions = Array.from(document.querySelectorAll('input[name="exchangePermissions"]:checked'))
+    .map(input => input.value);
+  const ipWhitelist = document.getElementById('exchangeIpWhitelist')?.value?.trim();
+  const label = document.getElementById('exchangeLabel')?.value?.trim() || 'Main Account';
+  
+  if (!apiKey || !secretKey) {
+    alert('API Key dan Secret Key wajib diisi');
+    return;
+  }
+  
+  if (permissions.length === 0) {
+    alert('Pilih minimal satu izin API');
+    return;
+  }
+  
+  const originalText = saveBtn.textContent;
+  saveBtn.textContent = 'Menyimpan...';
+  saveBtn.disabled = true;
+  
+  try {
+    const { error } = await upsertExchangeKey({
+      user_id: session.user.id,
+      exchange: 'binance',
+      api_key: apiKey,
+      secret_key: secretKey,
+      testnet,
+      trading_type: tradingType,
+      permissions,
+      ip_whitelist: ipWhitelist,
+      label,
+      is_active: true
+    });
+    
+    if (error) throw error;
+    
+    // Update session with exchange key
+    session.exchangeKey = {
+      api_key: apiKey,
+      secret_key: secretKey,
+      testnet,
+      trading_type: tradingType,
+      permissions,
+      ip_whitelist: ipWhitelist,
+      label
+    };
+    localStorage.setItem('auth_session', JSON.stringify(session));
+    
+    // Show success
+    saveBtn.textContent = 'Tersimpan!';
+    saveBtn.style.background = 'var(--accent-secondary)';
+    saveBtn.style.borderColor = 'var(--accent-secondary)';
+    
+    const deleteBtn = document.getElementById('exchangeDeleteBtn');
+    if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+    
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.style.background = '';
+      saveBtn.style.borderColor = '';
+    }, 2000);
+    
+  } catch (err) {
+    console.error('Failed to save exchange key:', err);
+    saveBtn.textContent = 'Gagal, coba lagi';
+    saveBtn.style.background = 'var(--accent-danger)';
+    saveBtn.style.borderColor = 'var(--accent-danger)';
+    setTimeout(() => {
+      saveBtn.textContent = originalText;
+      saveBtn.style.background = '';
+      saveBtn.style.borderColor = '';
+    }, 2000);
+  } finally {
+    saveBtn.disabled = false;
+  }
+}
+
+async function deleteExchangeKey(session) {
+  const deleteBtn = document.getElementById('exchangeDeleteBtn');
+  const originalText = deleteBtn.textContent;
+  deleteBtn.textContent = 'Menghapus...';
+  deleteBtn.disabled = true;
+  
+  try {
+    const { error } = await deleteExchangeKeyFn(session.user.id, 'binance');
+    if (error) throw error;
+    
+    // Clear form
+    document.getElementById('exchangeApiKey').value = '';
+    document.getElementById('exchangeSecretKey').value = '';
+    document.getElementById('exchangeTestnet').checked = false;
+    document.querySelector('input[name="exchangeTradingType"][value="spot"]').checked = true;
+    document.querySelectorAll('input[name="exchangePermissions"]').forEach(cb => cb.checked = false);
+    document.getElementById('exchangeIpWhitelist').value = '';
+    document.getElementById('exchangeLabel').value = 'Main Account';
+    deleteBtn.style.display = 'none';
+    
+    // Clear session
+    session.exchangeKey = {};
+    localStorage.setItem('auth_session', JSON.stringify(session));
+    
+    alert('Kunci API berhasil dihapus');
+    
+  } catch (err) {
+    console.error('Failed to delete exchange key:', err);
+    alert('Gagal menghapus: ' + err.message);
+  } finally {
+    deleteBtn.textContent = originalText;
+    deleteBtn.disabled = false;
+  }
+}
+
+// Rename to avoid conflict with imported function
+async function deleteExchangeKeyFn(userId, exchange) {
+  const { error } = await supabase
+    .from('exchange_keys')
+    .delete()
+    .eq('user_id', userId)
+    .eq('exchange', exchange);
+  return { error };
+}
+
 function formatIDR(num) {
   return 'Rp ' + Math.floor(num).toLocaleString('id-ID');
 }
@@ -356,11 +780,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pg = pages[pageName];
     if (pg) {
       if (pageTitle) pageTitle.textContent = pg.title;
-      if (pageContent) pageContent.innerHTML = pg.render(session);
       
-      // Attach settings save handler if on settings page
+      // For settings page, fetch exchange key first
       if (pageName === 'settings') {
-        attachSettingsSaveHandler(session);
+        // Fetch exchange key for Binance
+        getExchangeKey(session.user.id, 'binance').then(({ data }) => {
+          session.exchangeKey = data || {};
+          if (pageContent) pageContent.innerHTML = pg.render(session);
+          
+          // Attach handlers
+          attachSettingsSaveHandler(session);
+          attachExchangeTabHandlers(session);
+        }).catch(err => {
+          console.error('Failed to fetch exchange key:', err);
+          session.exchangeKey = {};
+          if (pageContent) pageContent.innerHTML = pg.render(session);
+          attachSettingsSaveHandler(session);
+          attachExchangeTabHandlers(session);
+        });
+      } else {
+        if (pageContent) pageContent.innerHTML = pg.render(session);
       }
     }
     if (sidebar) sidebar.classList.remove('open');

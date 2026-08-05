@@ -99,3 +99,56 @@ export async function upsertProfile(profile) {
     .single();
   return { data, error };
 }
+
+// ============ Exchange Keys Helpers ============
+export async function getExchangeKeys(userId) {
+  const { data, error } = await supabase
+    .from('exchange_keys')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  return { data, error };
+}
+
+export async function getExchangeKey(userId, exchange) {
+  const { data, error } = await supabase
+    .from('exchange_keys')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('exchange', exchange)
+    .single();
+  return { data, error };
+}
+
+export async function upsertExchangeKey(keyData) {
+  const { data, error } = await supabase
+    .from('exchange_keys')
+    .upsert(keyData, { onConflict: 'user_id,exchange' })
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function deleteExchangeKey(userId, exchange) {
+  const { error } = await supabase
+    .from('exchange_keys')
+    .delete()
+    .eq('user_id', userId)
+    .eq('exchange', exchange);
+  return { error };
+}
+
+export async function updateExchangeKeyTestResult(userId, exchange, result) {
+  const { data, error } = await supabase
+    .from('exchange_keys')
+    .update({
+      last_tested_at: new Date().toISOString(),
+      last_test_status: result.status,
+      last_test_message: result.message
+    })
+    .eq('user_id', userId)
+    .eq('exchange', exchange)
+    .select()
+    .single();
+  return { data, error };
+}
