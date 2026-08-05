@@ -191,46 +191,53 @@
     /* Settings Tabs */
     .card-header { 
       display: flex; 
-      align-items: center; 
-      justify-content: space-between; 
-      margin-bottom: 1.5rem; 
-      flex-wrap: wrap;
+      flex-direction: column; 
+      align-items: flex-start; 
+      justify-content: flex-start; 
+      margin-bottom: 1rem; 
       gap: 1rem;
+      width: 100%;
     }
     .settings-tabs {
       display: flex;
-      gap: 0.75rem;
+      gap: 0;
       border-bottom: 2px solid var(--border-color);
-      padding-bottom: 0.75rem;
-      margin-left: auto;
+      padding-bottom: 0;
+      width: 100%;
+      margin-left: 0;
     }
     .settings-tab {
       background: none;
-      border: 1px solid transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
       color: var(--text-secondary);
-      font-size: 0.9rem;
+      font-size: 0.9375rem;
       font-weight: 600;
-      padding: 0.625rem 1.5rem;
-      border-radius: var(--radius-md);
+      padding: 0.75rem 1.5rem;
+      border-radius: 0;
       cursor: pointer;
       transition: all var(--transition-fast);
       font-family: inherit;
       letter-spacing: 0.02em;
+      flex: 1;
+      text-align: center;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .settings-tab:hover {
       color: var(--text-primary);
       background: var(--bg-tertiary);
-      border-color: var(--border-color);
     }
     .settings-tab.active {
       color: var(--accent-primary);
-      background: var(--accent-primary-glow);
-      border-color: rgba(79, 142, 255, 0.3);
-      box-shadow: 0 0 12px rgba(79, 142, 255, 0.15);
+      border-bottom-color: var(--accent-primary);
+      background: transparent;
     }
     .settings-tab:focus {
       outline: 2px solid var(--accent-primary);
-      outline-offset: 2px;
+      outline-offset: -2px;
     }
     .settings-tab-content {
       width: 100%;
