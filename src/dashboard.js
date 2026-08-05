@@ -187,14 +187,77 @@ const pages = {
       <div class="card">
         <div class="card-header"><span class="card-title">Account Settings</span></div>
         <div style="display:flex;flex-direction:column;gap:1rem;">
-          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Nama</label><input type="text" value="${session.user?.name || ''}" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Email</label><input type="email" value="${session.user?.email || ''}" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
-          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Notification</label><select style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"><option>Telegram</option><option>Email</option><option>Both</option></select></div>
-          <button class="btn btn-primary" style="margin-top:0.5rem;">Simpan Perubahan</button>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Nama</label><input type="text" id="settingsName" value="${session.user?.name || ''}" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Email</label><input type="email" id="settingsEmail" value="${session.user?.email || ''}" ${session.user?.email ? 'readonly' : ''} style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;${session.user?.email ? 'opacity:0.6;cursor:not-allowed;' : ''}"></div>
+          <div><label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:0.25rem;">Notification</label><select id="settingsNotification" style="width:100%;padding:0.625rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"><option>Telegram</option><option>Email</option><option>Both</option></select></div>
+          <button class="btn btn-primary" id="settingsSaveBtn" style="margin-top:0.5rem;">Simpan Perubahan</button>
         </div>
       </div>`
   }
 };
+
+function attachSettingsSaveHandler() {
+  const saveBtn = document.getElementById('settingsSaveBtn');
+  const nameInput = document.getElementById('settingsName');
+  const emailInput = document.getElementById('settingsEmail');
+  const notificationSelect = document.getElementById('settingsNotification');
+  
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      const newName = nameInput?.value?.trim();
+      const newNotification = notificationSelect?.value;
+      
+      if (!newName) {
+        alert('Nama tidak boleh kosong');
+        return;
+      }
+      
+      // Show loading state
+      const originalText = saveBtn.textContent;
+      saveBtn.textContent = 'Menyimpan...';
+      saveBtn.disabled = true;
+      
+      try {
+        // Update session locally
+        session.user.name = newName;
+        // Note: Email is not updated if it already exists (locked)
+        localStorage.setItem('auth_session', JSON.stringify(session));
+        
+        // Update topbar name
+        const topbarName = document.getElementById('topbarName');
+        if (topbarName) topbarName.textContent = newName;
+        
+        // Update dropdown name if exists
+        const dropdownName = document.querySelector('.user-dropdown .user-name');
+        if (dropdownName) dropdownName.textContent = newName;
+        
+        // Show success
+        saveBtn.textContent = 'Tersimpan!';
+        saveBtn.style.background = 'var(--accent-secondary)';
+        saveBtn.style.borderColor = 'var(--accent-secondary)';
+        
+        setTimeout(() => {
+          saveBtn.textContent = originalText;
+          saveBtn.style.background = '';
+          saveBtn.style.borderColor = '';
+        }, 2000);
+        
+      } catch (err) {
+        console.error('Failed to save settings:', err);
+        saveBtn.textContent = 'Gagal, coba lagi';
+        saveBtn.style.background = 'var(--accent-danger)';
+        saveBtn.style.borderColor = 'var(--accent-danger)';
+        setTimeout(() => {
+          saveBtn.textContent = originalText;
+          saveBtn.style.background = '';
+          saveBtn.style.borderColor = '';
+        }, 2000);
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+  }
+}
 
 function formatIDR(num) {
   return 'Rp ' + Math.floor(num).toLocaleString('id-ID');
@@ -246,6 +309,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (pg) {
       if (pageTitle) pageTitle.textContent = pg.title;
       if (pageContent) pageContent.innerHTML = pg.render(session);
+      
+      // Attach settings save handler if on settings page
+      if (pageName === 'settings') {
+        attachSettingsSaveHandler();
+      }
     }
     if (sidebar) sidebar.classList.remove('open');
     if (overlay) overlay.classList.remove('active');
