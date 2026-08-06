@@ -1269,8 +1269,19 @@ function initTestimonialsCarousel() {
       resetAutoSlide();
     }
   });
-  
+
   // Initial render
   updateCarousel();
+}
+
+// ============ Dynamic Footer Year ============
+function updateFooterYear() {
+  const yearEl = document.getElementById('footerCopyright');
+  if (yearEl) {
+    const currentYear = new Date().getFullYear();
+    yearEl.textContent = yearEl.textContent.replace(/\d{4}/, currentYear);
   }
+}
+
+updateFooterYear();
 
