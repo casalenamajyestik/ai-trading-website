@@ -1,5 +1,5 @@
 -- ============================================
--- TABEL EXCHANGE KEYS + RLS
+-- TABEL EXCHANGE KEYS + RLS (VERSI BERSIH)
 -- Jalankan di Supabase Dashboard → SQL Editor → Run
 -- ============================================
 
@@ -11,18 +11,13 @@ CREATE TABLE IF NOT EXISTS public.exchange_keys (
     api_key TEXT NOT NULL,
     secret_key TEXT NOT NULL,  -- Pertimbangkan enkripsi di aplikasi
     passphrase TEXT,           -- Untuk OKX, KuCoin
-    testnet BOOLEAN DEFAULT false,
     trading_type TEXT DEFAULT 'spot',  -- 'spot', 'futures', 'both'
-    permissions TEXT[] DEFAULT ARRAY['read', 'trade'],  -- 'read', 'trade', 'withdraw'
     ip_whitelist TEXT,         -- Comma-separated IPs
     is_active BOOLEAN DEFAULT true,
     label TEXT,                -- Label user: "Main Account", "Sub Bot 1"
-    last_tested_at TIMESTAMPTZ,
-    last_test_status TEXT,     -- 'success', 'failed', 'invalid_key', 'ip_blocked'
-    last_test_message TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    
+
     -- Unique: 1 exchange per user (untuk MVP, bisa dihapus nanti untuk multi-account)
     UNIQUE(user_id, exchange)
 );
