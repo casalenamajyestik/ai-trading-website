@@ -1,5 +1,5 @@
 import i18next from './i18n.js';
-import { signOut, upsertProfile, getExchangeKey, upsertExchangeKey, updateExchangeKeyTestResult } from './supabase.js';
+import { signOut, upsertProfile, getExchangeKey, upsertExchangeKey } from './supabase.js';
 import { supabase } from './supabase.js';
 import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
 import './styles/settings-tabs.css';
@@ -217,7 +217,7 @@ const pages = {
                 <div class="settings-panel" role="tabpanel" data-tab="exchange" hidden>
                   <div class="info-banner">
                     <div class="info-title">🔑 Kunci API Binance</div>
-                    Kunci API untuk AI Trading Bot. Simpan dengan aman — Secret Key tidak akan ditampilkan kembali secara penuh.
+                    Kunci API untuk Aplikasi AI Trading. Simpan dengan aman — Secret Key tidak akan ditampilkan kembali secara penuh.
                   </div>
            
                   <div class="exchange-section">
@@ -227,7 +227,6 @@ const pages = {
                       <label>API Key</label>
                       <div class="input-row">
                         <input type="text" id="exchangeApiKey" value="${exchangeKey.api_key || ''}" placeholder="Masukkan API Key Binance">
-                        <button type="button" class="btn btn-secondary" id="testApiBtn">Test Koneksi</button>
                       </div>
                     </div>
              
@@ -242,17 +241,7 @@ const pages = {
            
                   <div class="exchange-section">
                     <div class="exchange-section-title">Konfigurasi</div>
-             
-                    <div class="exchange-field">
-                      <div class="toggle-row">
-                        <label class="toggle-switch">
-                          <input type="checkbox" id="exchangeTestnet" ${exchangeKey.testnet ? 'checked' : ''}>
-                          <span class="toggle-slider"></span>
-                        </label>
-                        <span style="font-size:0.875rem;">Mode Testnet (Simulasi — tidak melakukan trading nyata)</span>
-                      </div>
-                    </div>
-             
+            
                     <div class="exchange-field">
                       <label>Trading Type</label>
                       <div class="radio-group">
@@ -272,24 +261,6 @@ const pages = {
                     </div>
              
                     <div class="exchange-field">
-                      <label>Izin API</label>
-                      <div class="checkbox-group">
-                        <label class="checkbox-option">
-                          <input type="checkbox" name="exchangePermissions" value="read" ${(exchangeKey.permissions || []).includes('read') ? 'checked' : ''}>
-                          <span>Read (Baca data)</span>
-                        </label>
-                        <label class="checkbox-option">
-                          <input type="checkbox" name="exchangePermissions" value="trade" ${(exchangeKey.permissions || []).includes('trade') ? 'checked' : ''}>
-                          <span>Trade (Trading)</span>
-                        </label>
-                        <label class="checkbox-option">
-                          <input type="checkbox" name="exchangePermissions" value="withdraw" ${(exchangeKey.permissions || []).includes('withdraw') ? 'checked' : ''}>
-                          <span>Withdraw (Tarik dana)</span>
-                        </label>
-                      </div>
-                    </div>
-             
-                    <div class="exchange-field">
                       <label>IP Whitelist (Opsional)</label>
                       <input type="text" id="exchangeIpWhitelist" value="${exchangeKey.ip_whitelist || ''}" placeholder="Contoh: 192.168.1.1, 10.0.0.1 (pisahkan koma)" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
                       <div class="hint">Kosongkan untuk allow all IP. Disarankan isi IP server bot Anda untuk keamanan.</div>
@@ -300,8 +271,6 @@ const pages = {
                       <input type="text" id="exchangeLabel" value="${exchangeKey.label || 'Main Account'}" placeholder="Contoh: Main Account, Sub Bot 1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
                     </div>
                   </div>
-           
-                  <div id="exchangeTestResult" class="test-result" style="display:none;"></div>
            
                   <div class="action-row">
                     <button class="btn btn-primary" id="exchangeSaveBtn">Simpan Exchange</button>
@@ -316,25 +285,25 @@ const pages = {
 
 function getCountryOptions(selectedCode = 'ID') {
   const countries = [
-    { code: 'ID', name: 'Indonesia (+62)', dialCode: '+62' },
-    { code: 'US', name: 'United States (+1)', dialCode: '+1' },
-    { code: 'SG', name: 'Singapore (+65)', dialCode: '+65' },
-    { code: 'MY', name: 'Malaysia (+60)', dialCode: '+60' },
-    { code: 'AU', name: 'Australia (+61)', dialCode: '+61' },
-    { code: 'JP', name: 'Japan (+81)', dialCode: '+81' },
-    { code: 'KR', name: 'South Korea (+82)', dialCode: '+82' },
-    { code: 'CN', name: 'China (+86)', dialCode: '+86' },
-    { code: 'IN', name: 'India (+91)', dialCode: '+91' },
-    { code: 'GB', name: 'United Kingdom (+44)', dialCode: '+44' },
-    { code: 'DE', name: 'Germany (+49)', dialCode: '+49' },
-    { code: 'FR', name: 'France (+33)', dialCode: '+33' },
-    { code: 'NL', name: 'Netherlands (+31)', dialCode: '+31' },
-    { code: 'CA', name: 'Canada (+1)', dialCode: '+1' },
-    { code: 'OTHER', name: 'Other', dialCode: '' }
+    { code: 'ID', name: 'Indonesia (+62)', dialCode: '+62', flag: '🇮🇩' },
+    { code: 'US', name: 'United States (+1)', dialCode: '+1', flag: '🇺🇸' },
+    { code: 'SG', name: 'Singapore (+65)', dialCode: '+65', flag: '🇸🇬' },
+    { code: 'MY', name: 'Malaysia (+60)', dialCode: '+60', flag: '🇲🇾' },
+    { code: 'AU', name: 'Australia (+61)', dialCode: '+61', flag: '🇦🇺' },
+    { code: 'JP', name: 'Japan (+81)', dialCode: '+81', flag: '🇯🇵' },
+    { code: 'KR', name: 'South Korea (+82)', dialCode: '+82', flag: '🇰🇷' },
+    { code: 'CN', name: 'China (+86)', dialCode: '+86', flag: '🇨🇳' },
+    { code: 'IN', name: 'India (+91)', dialCode: '+91', flag: '🇮🇳' },
+    { code: 'GB', name: 'United Kingdom (+44)', dialCode: '+44', flag: '🇬🇧' },
+    { code: 'DE', name: 'Germany (+49)', dialCode: '+49', flag: '🇩🇪' },
+    { code: 'FR', name: 'France (+33)', dialCode: '+33', flag: '🇫🇷' },
+    { code: 'NL', name: 'Netherlands (+31)', dialCode: '+31', flag: '🇳🇱' },
+    { code: 'CA', name: 'Canada (+1)', dialCode: '+1', flag: '🇨🇦' },
+    { code: 'OTHER', name: 'Other', dialCode: '', flag: '🌐' }
   ];
   
   return countries.map(c => 
-    `<option value="${c.code}" ${c.code === selectedCode ? 'selected' : ''} data-dial="${c.dialCode}">${c.name}</option>`
+    `<option value="${c.code}" ${c.code === selectedCode ? 'selected' : ''} data-dial="${c.dialCode}">${c.flag} ${c.name}</option>`
   ).join('');
 }
 
@@ -464,14 +433,6 @@ function attachExchangeTabHandlers(session) {
     });
   }
   
-  // Test API connection
-  const testApiBtn = document.getElementById('testApiBtn');
-  if (testApiBtn) {
-    testApiBtn.addEventListener('click', async () => {
-      await testBinanceConnection(session);
-    });
-  }
-  
   // Save exchange key
   const exchangeSaveBtn = document.getElementById('exchangeSaveBtn');
   if (exchangeSaveBtn) {
@@ -500,23 +461,16 @@ async function loadExchangeKey(session) {
       // Populate form
       const apiKeyInput = document.getElementById('exchangeApiKey');
       const secretInput = document.getElementById('exchangeSecretKey');
-      const testnetInput = document.getElementById('exchangeTestnet');
       const tradingTypeInputs = document.querySelectorAll('input[name="exchangeTradingType"]');
-      const permissionInputs = document.querySelectorAll('input[name="exchangePermissions"]');
       const ipWhitelistInput = document.getElementById('exchangeIpWhitelist');
       const labelInput = document.getElementById('exchangeLabel');
       const deleteBtn = document.getElementById('exchangeDeleteBtn');
       
       if (apiKeyInput) apiKeyInput.value = data.api_key || '';
       if (secretInput) secretInput.value = data.secret_key || '';
-      if (testnetInput) testnetInput.checked = data.testnet || false;
       
       tradingTypeInputs.forEach(input => {
         input.checked = input.value === (data.trading_type || 'spot');
-      });
-      
-      permissionInputs.forEach(input => {
-        input.checked = (data.permissions || []).includes(input.value);
       });
       
       if (ipWhitelistInput) ipWhitelistInput.value = data.ip_whitelist || '';
@@ -528,120 +482,16 @@ async function loadExchangeKey(session) {
   }
 }
 
-async function testBinanceConnection(session) {
-  const testBtn = document.getElementById('testApiBtn');
-  const resultDiv = document.getElementById('exchangeTestResult');
-  const apiKey = document.getElementById('exchangeApiKey')?.value?.trim();
-  const secretKey = document.getElementById('exchangeSecretKey')?.value?.trim();
-  const testnet = document.getElementById('exchangeTestnet')?.checked;
-  
-  if (!apiKey || !secretKey) {
-    showTestResult(resultDiv, 'error', 'API Key dan Secret Key wajib diisi');
-    return;
-  }
-  
-  testBtn.disabled = true;
-  testBtn.textContent = 'Testing...';
-  resultDiv.style.display = 'none';
-  
-  try {
-    // Test dengan Binance API
-    const baseUrl = testnet 
-      ? 'https://testnet.binance.vision' 
-      : 'https://api.binance.com';
-    
-    // Buat signature untuk GET /api/v3/account
-    const timestamp = Date.now();
-    const queryString = `timestamp=${timestamp}`;
-    
-    // HMAC SHA256 signature
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(secretKey);
-    const messageData = encoder.encode(queryString);
-    const cryptoKey = await crypto.subtle.importKey(
-      'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-    );
-    const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
-    const signatureHex = Array.from(new Uint8Array(signature))
-      .map(b => b.toString(16).padStart(2, '0')).join('');
-    
-    const url = `${baseUrl}/api/v3/account?${queryString}&signature=${signatureHex}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'X-MBX-APIKEY': apiKey,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.msg || `HTTP ${response.status}`);
-    }
-    
-    // Success - update test result in database
-    await updateExchangeKeyTestResult(session.user.id, 'binance', {
-      status: 'success',
-      message: 'Koneksi berhasil! Balance: ' + (data.totalWalletBalance || 'N/A') + ' USDT'
-    });
-    
-    showTestResult(resultDiv, 'success', '✅ Koneksi berhasil! API Key valid dan bisa akses account.');
-    
-  } catch (err) {
-    console.error('Binance test failed:', err);
-    
-    let msg = err.message;
-    if (msg.includes('Invalid API-key')) msg = 'API Key tidak valid';
-    else if (msg.includes('Signature')) msg = 'Secret Key tidak cocok';
-    else if (msg.includes('IP')) msg = 'IP tidak diizinkan (cek IP Whitelist di Binance)';
-    else if (msg.includes('timestamp')) msg = 'Waktu server tidak sinkron';
-    
-    await updateExchangeKeyTestResult(session.user.id, 'binance', {
-      status: 'failed',
-      message: msg
-    });
-    
-    showTestResult(resultDiv, 'error', '❌ ' + msg);
-  } finally {
-    testBtn.disabled = false;
-    testBtn.textContent = 'Test Koneksi';
-  }
-}
-
-function showTestResult(container, type, message) {
-  container.style.display = 'block';
-  container.textContent = message;
-  container.style.background = type === 'success' 
-    ? 'rgba(34, 211, 167, 0.15)' 
-    : 'rgba(240, 78, 78, 0.15)';
-  container.style.color = type === 'success' 
-    ? 'var(--accent-secondary)' 
-    : 'var(--accent-danger)';
-  container.style.border = type === 'success' 
-    ? '1px solid var(--accent-secondary)' 
-    : '1px solid var(--accent-danger)';
-}
-
 async function saveExchangeKey(session) {
   const saveBtn = document.getElementById('exchangeSaveBtn');
   const apiKey = document.getElementById('exchangeApiKey')?.value?.trim();
   const secretKey = document.getElementById('exchangeSecretKey')?.value?.trim();
-  const testnet = document.getElementById('exchangeTestnet')?.checked;
   const tradingType = document.querySelector('input[name="exchangeTradingType"]:checked')?.value || 'spot';
-  const permissions = Array.from(document.querySelectorAll('input[name="exchangePermissions"]:checked'))
-    .map(input => input.value);
   const ipWhitelist = document.getElementById('exchangeIpWhitelist')?.value?.trim();
   const label = document.getElementById('exchangeLabel')?.value?.trim() || 'Main Account';
   
   if (!apiKey || !secretKey) {
     alert('API Key dan Secret Key wajib diisi');
-    return;
-  }
-  
-  if (permissions.length === 0) {
-    alert('Pilih minimal satu izin API');
     return;
   }
   
@@ -655,9 +505,7 @@ async function saveExchangeKey(session) {
       exchange: 'binance',
       api_key: apiKey,
       secret_key: secretKey,
-      testnet,
       trading_type: tradingType,
-      permissions,
       ip_whitelist: ipWhitelist,
       label,
       is_active: true
@@ -669,9 +517,7 @@ async function saveExchangeKey(session) {
     session.exchangeKey = {
       api_key: apiKey,
       secret_key: secretKey,
-      testnet,
       trading_type: tradingType,
-      permissions,
       ip_whitelist: ipWhitelist,
       label
     };
@@ -719,9 +565,7 @@ async function deleteExchangeKey(session) {
     // Clear form
     document.getElementById('exchangeApiKey').value = '';
     document.getElementById('exchangeSecretKey').value = '';
-    document.getElementById('exchangeTestnet').checked = false;
     document.querySelector('input[name="exchangeTradingType"][value="spot"]').checked = true;
-    document.querySelectorAll('input[name="exchangePermissions"]').forEach(cb => cb.checked = false);
     document.getElementById('exchangeIpWhitelist').value = '';
     document.getElementById('exchangeLabel').value = 'Main Account';
     deleteBtn.style.display = 'none';
