@@ -2,6 +2,7 @@ import i18next from './i18n.js';
 import { signOut, upsertProfile, getExchangeKey, upsertExchangeKey, updateExchangeKeyTestResult } from './supabase.js';
 import { supabase } from './supabase.js';
 import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
+import './styles/settings-tabs.css';
 
 // ============ Auth Guard ============
 async function requireAuthWrapper() {
