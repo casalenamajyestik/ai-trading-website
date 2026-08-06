@@ -577,15 +577,22 @@ async function saveExchangeKey(session) {
     
   } catch (err) {
     console.error('Failed to save exchange key:', err);
-    const errorMsg = err?.message || err?.details || JSON.stringify(err) || 'Unknown error';
-    saveBtn.textContent = 'Gagal: ' + errorMsg.substring(0, 50);
+    console.error('Error details:', {
+      message: err?.message,
+      details: err?.details,
+      hint: err?.hint,
+      code: err?.code,
+      fullError: err
+    });
+    const errorMsg = err?.message || err?.details || err?.hint || JSON.stringify(err) || 'Unknown error';
+    saveBtn.textContent = 'Gagal: ' + errorMsg.substring(0, 80);
     saveBtn.style.background = 'var(--accent-danger)';
     saveBtn.style.borderColor = 'var(--accent-danger)';
     setTimeout(() => {
       saveBtn.textContent = originalText;
       saveBtn.style.background = '';
       saveBtn.style.borderColor = '';
-    }, 5000);
+    }, 8000);
   } finally {
     saveBtn.disabled = false;
   }
