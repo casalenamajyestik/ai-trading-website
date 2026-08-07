@@ -955,6 +955,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Realtime subscriptions
   let botStateSubscription = null;
   let tradeHistorySubscription = null;
+  let currentPage = 'overview';
 
   function cleanupSubscriptions() {
     if (botStateSubscription) {
@@ -996,7 +997,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     botStateSubscription = subscribeBotState(session.botSession.id, (payload) => {
       console.log('Bot state update:', payload);
       session.botState = payload.new || payload.old || {};
-      if (document.querySelector('[data-page="botControl"]')?.classList.contains('active')) {
+      // Only update UI if still on botControl page
+      if (currentPage === 'botControl') {
         const pg = pages.botControl;
         if (pg && pageContent) {
           pageContent.innerHTML = pg.render(session);
@@ -1009,7 +1011,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.log('New trade:', payload);
       if (payload.new) {
         session.recentTrades = [payload.new, ...(session.recentTrades || []).slice(0, 19)];
-        updateTradesFeed(session);
+        if (currentPage === 'botControl') {
+          updateTradesFeed(session);
+        }
       }
     });
   }
@@ -1017,12 +1021,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   function navigateTo(pageName) {
     if (pageName === 'logout') {
       cleanupSubscriptions();
+      currentPage = pageName;
       signOut().then(() => {
         localStorage.removeItem('auth_session');
         window.location.href = '/';
       });
       return;
     }
+
+    // ALWAYS cleanup subscriptions first when navigating
+    cleanupSubscriptions();
+    currentPage = pageName;
 
     navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageName));
     const pg = pages[pageName];
@@ -1050,7 +1059,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           subscribeToBotUpdates(session);
         });
       } else {
-        cleanupSubscriptions();
         if (pageContent) pageContent.innerHTML = pg.render(session);
       }
     }
