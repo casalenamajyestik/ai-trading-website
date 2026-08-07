@@ -158,6 +158,12 @@
   gap: 0.75rem;
 }
 
+.toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .toggle-switch {
   position: relative;
   width: 68px;
