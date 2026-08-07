@@ -11,6 +11,7 @@ import {
 } from './supabase.js';
 import { supabase } from './supabase.js';
 import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
+import { subscribeBotState } from './supabase.js';
 import './styles/settings-tabs.css';
 
 // ============ Auth Guard ============
@@ -861,6 +862,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadBotData(session).then(s => {
     session = s;
+    
+    // Start realtime subscription for bot_state updates
+    if (session.botSession?.id) {
+      console.log('[Dashboard] Starting realtime subscription for bot_state:', session.botSession.id);
+      subscribeBotState(session.botSession.id, (payload) => {
+        console.log('[Dashboard] Realtime bot_state update:', payload);
+        if (payload.new) {
+          session.botState = payload.new;
+          // Re-render current page if it's overview
+          const currentPage = document.querySelector('.nav-item.active')?.dataset.page;
+          if (currentPage === 'overview' && pageContent) {
+            pageContent.innerHTML = pages.overview.render(session);
+          }
+        }
+      });
+    }
+    
     navigateTo('overview');
   });
 });
