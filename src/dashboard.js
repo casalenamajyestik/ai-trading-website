@@ -393,7 +393,7 @@ const pages = {
             <div class="toggle-container">
               <div class="toggle-info">
                 <div class="toggle-title">Trading Bot</div>
-                <div class="toggle-desc">${isActive ? 'Bot aktif & mengeksekusi strategi' : 'Bot tidak aktif, klik untuk menyalakan'}</div>
+                <div class="toggle-desc">ON/OFF Trading Bot</div>
               </div>
               <label class="switch">
                 <input type="checkbox" id="botToggleSettings" ${isActive ? 'checked' : ''}>
@@ -712,9 +712,9 @@ function loadBotSettingsUI(session) {
     statusBadge.textContent = isActive ? (status === 'running' ? 'Aktif & Running' : 'Aktif tapi ' + statusLabel.toLowerCase()) : 'Nonaktif';
   }
 
-  const statusDisplay = document.query('.settings-panel[data-tab="aplikasi"] .toggle-desc');
-  if (statusDisplay) statusDisplay.textContent = isActive ? 'Bot aktif & mengeksekusi strategi' : 'Bot tidak aktif, klik untuk menyalakan';
-}
+  const statusDisplay = document.querySelector('.settings-panel[data-tab="aplikasi"] .toggle-desc');
+  if (statusDisplay) statusDisplay.textContent = 'ON/OFF Trading Bot';
+  }
 
 function attachAplikasiTabHandlers(session) {
   const toggle = document.getElementById('botToggleSettings');
