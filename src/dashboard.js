@@ -407,21 +407,6 @@ const pages = {
             </div>
           </div>
 
-          <div class="exchange-section" style="margin-top:1.5rem;">
-            <div class="exchange-section-title">Mode Trading</div>
-            <div class="radio-group">
-              <label class="radio-option">
-                <input type="radio" name="botModeSettings" value="paper" ${mode === 'paper' ? 'checked' : ''} ${isActive ? 'disabled' : ''}>
-                <span>📝 Paper Trading (Simulasi)</span>
-              </label>
-              <label class="radio-option">
-                <input type="radio" name="botModeSettings" value="live" ${mode === 'live' ? 'checked' : ''} ${isActive ? 'disabled' : ''}>
-                <span>🔴 Live Trading (Real Money)</span>
-              </label>
-            </div>
-            <div class="hint" style="margin-top:0.5rem;">${isActive ? 'Matikan bot dulu untuk ganti mode' : 'Pilih mode sebelum menyalakan bot'}</div>
-          </div>
-
           <div class="action-row" style="margin-top:1.5rem;">
             <button class="btn btn-primary" id="botSaveSettingsBtn" ${isActive ? 'disabled' : ''}>Simpan Pengaturan Bot</button>
           </div>
@@ -726,13 +711,8 @@ function loadBotSettingsUI(session) {
     statusBadge.className = `status-badge ${statusClass}`;
     statusBadge.textContent = isActive ? (status === 'running' ? 'Aktif & Running' : 'Aktif tapi ' + statusLabel.toLowerCase()) : 'Nonaktif';
   }
-  
-  document.querySelectorAll('input[name="botModeSettings"]').forEach(r => {
-    r.checked = r.value === mode;
-    r.disabled = isActive;
-  });
 
-  const statusDisplay = document.querySelector('.settings-panel[data-tab="aplikasi"] .toggle-desc');
+  const statusDisplay = document.query('.settings-panel[data-tab="aplikasi"] .toggle-desc');
   if (statusDisplay) statusDisplay.textContent = isActive ? 'Bot aktif & mengeksekusi strategi' : 'Bot tidak aktif, klik untuk menyalakan';
 }
 
@@ -760,27 +740,6 @@ function attachAplikasiTabHandlers(session) {
       }
     });
   }
-
-  document.querySelectorAll('input[name="botModeSettings"]').forEach(radio => {
-    if (!radio.dataset.listener) {
-      radio.dataset.listener = 'true';
-      radio.addEventListener('change', async (e) => {
-        if (e.target.disabled) return;
-        const mode = e.target.value;
-        try {
-          const { error } = await updateBotSession(session.user.id, { mode });
-          if (error) throw error;
-          session.botSession = { ...session.botSession, mode };
-          localStorage.setItem('auth_session', JSON.stringify(session));
-          loadBotSettingsUI(session);
-        } catch (err) {
-          console.error('Mode change failed:', err);
-          alert('Gagal: ' + (err.message || err));
-          loadBotSettingsUI(session);
-        }
-      });
-    }
-  });
 
   const saveBtn = document.getElementById('botSaveSettingsBtn');
   if (saveBtn) {
