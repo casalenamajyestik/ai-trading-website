@@ -923,7 +923,7 @@ function updateTradesFeed(session) {
 
 // ============ Init ============
 document.addEventListener('DOMContentLoaded', async () => {
-  const session = await requireAuthWrapper();
+  let session = await requireAuthWrapper();
   if (!session) return;
 
   // Update topbar
