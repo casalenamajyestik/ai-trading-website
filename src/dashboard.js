@@ -956,6 +956,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let botStateSubscription = null;
   let tradeHistorySubscription = null;
   let currentPage = 'overview';
+  let currentAbortController = null;
 
   function cleanupSubscriptions() {
     if (botStateSubscription) {
@@ -968,7 +969,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  async function loadBotData(session) {
+  // Cancel any pending navigation/load
+  function cancelPending() {
+    if (currentAbortController) {
+      currentAbortController.abort();
+    }
+    currentAbortController = new AbortController();
+    return currentAbortController.signal;
+  }
+
+  async function loadBotData(session, signal) {
     try {
       const [{ data: botSession }, { data: botState }, { data: trades }] = await Promise.all([
         getBotSession(session.user.id),
@@ -976,11 +986,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         getTradeHistory(session.user.id, 20)
       ]);
       
+      if (signal.aborted) return session;
+      
       session.botSession = botSession || {};
       session.botState = botState || {};
       session.recentTrades = trades || [];
       return session;
     } catch (err) {
+      if (err.name === 'AbortError' || signal.aborted) return session;
       console.error('Failed to load bot data:', err);
       session.botSession = {};
       session.botState = {};
@@ -1029,45 +1042,117 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // ALWAYS cleanup subscriptions first when navigating
+    // Cancel any pending load/subscriptions immediately
     cleanupSubscriptions();
+    const signal = cancelPending();
     
-    // Small delay to let unsubscribe complete, then update page
-    setTimeout(() => {
-      currentPage = pageName;
+    // Update page immediately for responsive UI
+    currentPage = pageName;
+    navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageName));
+    
+    const pg = pages[pageName];
+    if (!pg) return;
+    
+    if (pageTitle) pageTitle.textContent = pg.title;
 
-      navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageName));
-      const pg = pages[pageName];
-      if (pg) {
-        if (pageTitle) pageTitle.textContent = pg.title;
+    if (pageName === 'settings') {
+      getExchangeKey(session.user.id, 'binance').then(({ data }) => {
+        if (signal.aborted) return;
+        session.exchangeKey = data || {};
+        if (pageContent) pageContent.innerHTML = pg.render(session);
+        attachSettingsSaveHandler(session);
+        attachExchangeTabHandlers(session);
+      }).catch(err => {
+        console.error('Failed to fetch exchange key:', err);
+        session.exchangeKey = {};
+        if (pageContent) pageContent.innerHTML = pg.render(session);
+        attachSettingsSaveHandler(session);
+        attachExchangeTabHandlers(session);
+      });
+    } else if (pageName === 'botControl') {
+      // Show loading state immediately
+      if (pageContent) pageContent.innerHTML = pg.render({ ...session, botSession: {}, botState: {} });
+      
+      // Load data with abort support
+      loadBotData(session, signal).then(updatedSession => {
+        if (signal.aborted) return;
+        session = updatedSession;
+        if (pageContent) pageContent.innerHTML = pg.render(session);
+        attachBotControlHandlers(session);
+        subscribeToBotUpdates(session);
+      }).catch(err => {
+        if (err.name !== 'AbortError' && !signal.aborted) {
+          console.error('Failed to load bot data:', err);
+        }
+      });
+    } else {
+      if (pageContent) pageContent.innerHTML = pg.render(session);
+    }
+    
+    if (sidebar) sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('active');
+  }
 
-        if (pageName === 'settings') {
-          getExchangeKey(session.user.id, 'binance').then(({ data }) => {
-            session.exchangeKey = data || {};
-            if (pageContent) pageContent.innerHTML = pg.render(session);
-            attachSettingsSaveHandler(session);
-            attachExchangeTabHandlers(session);
-          }).catch(err => {
-            console.error('Failed to fetch exchange key:', err);
-            session.exchangeKey = {};
-            if (pageContent) pageContent.innerHTML = pg.render(session);
-            attachSettingsSaveHandler(session);
-            attachExchangeTabHandlers(session);
-          });
-        } else if (pageName === 'botControl') {
-          loadBotData(session).then(updatedSession => {
-            session = updatedSession;
-            if (pageContent) pageContent.innerHTML = pg.render(session);
-            attachBotControlHandlers(session);
-            subscribeToBotUpdates(session);
-          });
-        } else {
-          if (pageContent) pageContent.innerHTML = pg.render(session);
+  // Cancel any pending navigation/load
+  function cancelPending() {
+    if (currentAbortController) {
+      currentAbortController.abort();
+    }
+    currentAbortController = new AbortController();
+    return currentAbortController.signal;
+  }
+
+  async function loadBotData(session, signal) {
+    try {
+      const [{ data: botSession }, { data: botState }, { data: trades }] = await Promise.all([
+        getBotSession(session.user.id),
+        session.botSession?.id ? getBotState(session.botSession.id) : { data: null, error: null },
+        getTradeHistory(session.user.id, 20)
+      ]);
+      
+      if (signal.aborted) return session;
+      
+      session.botSession = botSession || {};
+      session.botState = botState || {};
+      session.recentTrades = trades || [];
+      return session;
+    } catch (err) {
+      if (err.name === 'AbortError' || signal.aborted) return session;
+      console.error('Failed to load bot data:', err);
+      session.botSession = {};
+      session.botState = {};
+      session.recentTrades = [];
+      return session;
+    }
+  }
+
+  function subscribeToBotUpdates(session) {
+    if (!session.botSession?.id) return;
+    
+    cleanupSubscriptions();
+
+    botStateSubscription = subscribeBotState(session.botSession.id, (payload) => {
+      console.log('Bot state update:', payload);
+      session.botState = payload.new || payload.old || {};
+      // Only update UI if still on botControl page
+      if (currentPage === 'botControl') {
+        const pg = pages.botControl;
+        if (pg && pageContent) {
+          pageContent.innerHTML = pg.render(session);
+          attachBotControlHandlers(session);
         }
       }
-      if (sidebar) sidebar.classList.remove('open');
-      if (overlay) overlay.classList.remove('active');
-    }, 0);
+    });
+
+    tradeHistorySubscription = subscribeTradeHistory(session.user.id, (payload) => {
+      console.log('New trade:', payload);
+      if (payload.new) {
+        session.recentTrades = [payload.new, ...(session.recentTrades || []).slice(0, 19)];
+        if (currentPage === 'botControl') {
+          updateTradesFeed(session);
+        }
+      }
+    });
   }
 
   navItems.forEach(item => {
