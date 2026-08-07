@@ -397,7 +397,9 @@ const pages = {
               </div>
               <label class="toggle-switch">
                 <input type="checkbox" id="botToggleSettings" ${isActive ? 'checked' : ''}>
-                <span class="toggle-slider"></span>
+                <span class="toggle-slider">
+                  <span class="toggle-thumb"></span>
+                </span>
               </label>
             </div>
             <div style="margin-top:0.75rem;padding:0.75rem;background:var(--bg-input);border-radius:var(--radius-md);font-size:0.85rem;color:var(--text-secondary);">
