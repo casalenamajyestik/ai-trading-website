@@ -520,6 +520,7 @@ function attachExchangeTabHandlers(session) {
         }
         if (isActive && tab === 'aplikasi' && !p.dataset.loaded) {
           loadBotSettingsUI(session);
+          attachAplikasiTabHandlers(session);
           p.dataset.loaded = 'true';
         }
       });
@@ -722,25 +723,45 @@ function attachAplikasiTabHandlers(session) {
   const toggle = document.getElementById('botToggleSettings');
   if (toggle && !toggle.dataset.listener) {
     toggle.dataset.listener = 'true';
-    toggle.addEventListener('change', async (e) => {
-      const isActive = e.target.checked;
+    
+    // Handle both change event (checkbox) and click event (label/slider)
+    const handleToggle = async (e) => {
+      const isActive = toggle.checked;
+      console.log('[Bot Toggle] User toggled to:', isActive);
       toggle.disabled = true;
       try {
         const { error } = await toggleBotSession(session.user.id, isActive);
-        if (error) throw error;
+        if (error) {
+          console.error('[Bot Toggle] API error:', error);
+          throw error;
+        }
+        console.log('[Bot Toggle] API success, updating local session');
         
         session.botSession = { ...session.botSession, is_active: isActive };
         localStorage.setItem('auth_session', JSON.stringify(session));
         loadBotSettingsUI(session);
+        console.log('[Bot Toggle] UI updated, localStorage saved');
         
       } catch (err) {
-        console.error('Toggle failed:', err);
-        alert('Gagal: ' + (err.message || err));
+        console.error('[Bot Toggle] Failed:', err);
+        alert('Gagal mengubah status bot: ' + (err.message || err));
         toggle.checked = !isActive;
       } finally {
         toggle.disabled = false;
       }
-    });
+    };
+    
+    toggle.addEventListener('change', handleToggle);
+    // Also handle click on the label/slider for better UX
+    const toggleLabel = toggle.closest('.toggle-switch');
+    if (toggleLabel) {
+      toggleLabel.addEventListener('click', (e) => {
+        // Only trigger if not clicking directly on checkbox (to avoid double-fire)
+        if (e.target !== toggle) {
+          toggle.click();
+        }
+      });
+    }
   }
 
   const saveBtn = document.getElementById('botSaveSettingsBtn');
