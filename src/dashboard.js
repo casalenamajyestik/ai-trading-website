@@ -395,9 +395,9 @@ const pages = {
                 <div class="toggle-title">Trading Bot</div>
                 <div class="toggle-desc">ON/OFF Trading Bot</div>
               </div>
-              <label class="switch">
+              <label class="toggle-switch">
                 <input type="checkbox" id="botToggleSettings" ${isActive ? 'checked' : ''}>
-                <span class="slider"></span>
+                <span class="toggle-slider"></span>
               </label>
             </div>
             <div style="margin-top:0.75rem;padding:0.75rem;background:var(--bg-input);border-radius:var(--radius-md);font-size:0.85rem;color:var(--text-secondary);">
