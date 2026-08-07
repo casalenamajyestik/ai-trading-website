@@ -5,13 +5,9 @@ import {
   getExchangeKey, 
   upsertExchangeKey,
   getBotSession,
-  createBotSession,
   updateBotSession,
   toggleBotSession,
-  getBotState,
-  subscribeBotState,
-  subscribeTradeHistory,
-  getTradeHistory
+  getBotState
 } from './supabase.js';
 import { supabase } from './supabase.js';
 import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
@@ -105,56 +101,73 @@ function getCountryOptions(selectedCode = 'ID') {
 const pages = {
   overview: {
     title: 'Overview',
-    render: (session) => `
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-card-label">Total Balance</div>
-          <div class="stat-card-value">${formatIDR(session.balance || 50000000)}</div>
-          <div class="stat-card-change positive">+12.5% this week</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-label">Active Bots</div>
-          <div class="stat-card-value">3</div>
-          <div class="stat-card-change">2 running, 1 paused</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-label">Today's PnL</div>
-          <div class="stat-card-value positive">+${formatIDR(245000)}</div>
-          <div class="stat-card-change positive">+0.49%</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-label">Win Rate</div>
-          <div class="stat-card-value">73.2%</div>
-          <div class="stat-card-change positive">+2.1% vs last week</div>
-        </div>
-      </div>
-      <div class="content-grid">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">Active Bots</span>
-            <span class="card-badge">Live</span>
+    render: (session) => {
+      const botSession = session.botSession || {};
+      const botState = session.botState || {};
+      const isActive = botSession.is_active || false;
+      const status = botState.status || 'stopped';
+      const mode = botSession.mode || 'paper';
+      const lastHeartbeat = botState.last_heartbeat;
+      const dailyPnL = botState.daily_pnl || 0;
+      const totalPnL = botState.total_pnl || 0;
+
+      const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
+      const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
+      const statusText = isActive ? (status === 'running' ? 'Aktif & Running' : 'Aktif tapi ' + statusLabel.toLowerCase()) : 'Nonaktif';
+
+      return `
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-label">Total Balance</div>
+            <div class="stat-card-value">${formatIDR(session.balance || 50000000)}</div>
+            <div class="stat-card-change positive">+12.5% this week</div>
           </div>
-          <div class="bot-list">
-            <div class="bot-item">
-              <div class="bot-info">
-                <div class="bot-icon running"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
-                <div><div class="bot-name">Grid Bot - BTC/USDT</div><div class="bot-strategy">Grid Trading · 0.5% spread</div></div>
-              </div>
-              <div class="bot-pnl"><div class="bot-pnl-value positive">+2.34%</div><div class="bot-pnl-label">Today</div></div>
+          <div class="stat-card">
+            <div class="stat-card-label">Trading Bot</div>
+            <div class="stat-card-value">
+              <span class="status-badge ${isActive ? 'running' : 'stopped'}">${statusText}</span>
             </div>
-            <div class="bot-item">
-              <div class="bot-info">
-                <div class="bot-icon running"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z"/></svg></div>
-                <div><div class="bot-name">DCA Bot - ETH/USDT</div><div class="bot-strategy">Dollar Cost Average</div></div>
-              </div>
-              <div class="bot-pnl"><div class="bot-pnl-value positive">+1.87%</div><div class="bot-pnl-label">Today</div></div>
+            <div class="stat-card-change">${mode === 'live' ? '🔴 LIVE MODE' : '📝 Paper Trading'}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Today's PnL</div>
+            <div class="stat-card-value ${dailyPnL >= 0 ? 'positive' : 'negative'}">${formatIDR(dailyPnL)}</div>
+            <div class="stat-card-change">Daily</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-label">Win Rate</div>
+            <div class="stat-card-value">73.2%</div>
+            <div class="stat-card-change positive">+2.1% vs last week</div>
+          </div>
+        </div>
+        <div class="content-grid">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Active Bots</span>
+              <span class="card-badge">Live</span>
             </div>
-            <div class="bot-item">
-              <div class="bot-info">
-                <div class="bot-icon paused"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>
-                <div><div class="bot-name">AI Adaptive - SOL/USDT</div><div class="bot-strategy">AI Adaptive · ML-based</div></div>
+            <div class="bot-list">
+              <div class="bot-item">
+                <div class="bot-info">
+                  <div class="bot-icon running"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+                  <div><div class="bot-name">Grid Bot - BTC/USDT</div><div class="bot-strategy">Grid Trading · 0.5% spread</div></div>
+                </div>
+                <div class="bot-pnl"><div class="bot-pnl-value positive">+2.34%</div><div class="bot-pnl-label">Today</div></div>
               </div>
-              <div class="bot-pnl"><div class="bot-pnl-value">0.00%</div><div class="bot-pnl-label">Paused</div></div>
+              <div class="bot-item">
+                <div class="bot-info">
+                  <div class="bot-icon running"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z"/></svg></div>
+                  <div><div class="bot-name">DCA Bot - ETH/USDT</div><div class="bot-strategy">Dollar Cost Average</div></div>
+                </div>
+                <div class="bot-pnl"><div class="bot-pnl-value positive">+1.87%</div><div class="bot-pnl-label">Today</div></div>
+              </div>
+              <div class="bot-item">
+                <div class="bot-info">
+                  <div class="bot-icon paused"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>
+                  <div><div class="bot-name">AI Adaptive - SOL/USDT</div><div class="bot-strategy">AI Adaptive · ML-based</div></div>
+                </div>
+                <div class="bot-pnl"><div class="bot-pnl-value">0.00%</div><div class="bot-pnl-label">Paused</div></div>
+              </div>
             </div>
           </div>
         </div>
@@ -192,6 +205,7 @@ const pages = {
           </div>
         </div>
       </div>`
+    }
   },
   bots: {
     title: 'Bots',
@@ -276,19 +290,28 @@ const pages = {
     title: 'Pengaturan',
     render: (session) => {
       const exchangeKey = session.exchangeKey || {};
+      const botSession = session.botSession || {};
+      const botState = session.botState || {};
+      const isActive = botSession.is_active || false;
+      const status = botState.status || 'stopped';
+      const mode = botSession.mode || 'paper';
+      const lastHeartbeat = botState.last_heartbeat;
+
+      const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
+      const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
+      const statusText = isActive ? (status === 'running' ? 'Aktif & Running' : 'Aktif tapi ' + statusLabel.toLowerCase()) : 'Nonaktif';
+
       return `
-      <!-- Tabs Navigation (outside card) -->
       <div class="settings-tabs-container" role="tablist">
         <button class="settings-tab active" role="tab" data-tab="profile" aria-selected="true">Profil</button>
         <button class="settings-tab" role="tab" data-tab="exchange" aria-selected="false">Exchange</button>
+        <button class="settings-tab" role="tab" data-tab="aplikasi" aria-selected="false">Aplikasi</button>
       </div>
-    <!-- Card Content -->
     <div class="card">
       <div class="card-header">
         <span class="card-title">Account Settings</span>
       </div>
       <div class="settings-tab-content">
-        <!-- PROFIL TAB -->
         <div class="settings-panel active" role="tabpanel" data-tab="profile">
           <div style="display:flex;flex-direction:column;gap:1rem;">
             <div><label>Nama</label><input type="text" id="settingsName" value="${session.user?.name || ''}" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
@@ -300,7 +323,6 @@ const pages = {
           </div>
         </div>
 
-        <!-- EXCHANGE TAB -->
         <div class="settings-panel" role="tabpanel" data-tab="exchange" hidden>
           <div class="info-banner">
             <div class="info-title">🔑 Kunci API Binance</div>
@@ -359,176 +381,53 @@ const pages = {
             <button class="btn btn-danger" id="exchangeDeleteBtn" style="display:${exchangeKey.api_key ? 'inline-flex' : 'none'}">Hapus Kunci</button>
           </div>
         </div>
+
+        <div class="settings-panel" role="tabpanel" data-tab="aplikasi" hidden>
+          <div class="info-banner">
+            <div class="info-title">🤖 Trading Bot Control</div>
+            Kelola status dan mode trading bot Anda.
+          </div>
+
+          <div class="exchange-section">
+            <div class="exchange-section-title">Bot Status</div>
+            <div class="toggle-container">
+              <div class="toggle-info">
+                <div class="toggle-title">Trading Bot</div>
+                <div class="toggle-desc">${isActive ? 'Bot aktif & mengeksekusi strategi' : 'Bot tidak aktif, klik untuk menyalakan'}</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="botToggleSettings" ${isActive ? 'checked' : ''}>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div style="margin-top:0.75rem;padding:0.75rem;background:var(--bg-input);border-radius:var(--radius-md);font-size:0.85rem;color:var(--text-secondary);">
+              <strong>Status:</strong> <span class="status-badge ${statusClass}">${statusText}</span>
+              <span style="margin-left:1rem;">${mode === 'live' ? '🔴 LIVE MODE' : '📝 Paper Trading'}</span>
+              ${lastHeartbeat ? `<span style="margin-left:1rem;">Terupdate: ${timeAgo(new Date(lastHeartbeat))}</span>` : ''}
+            </div>
+          </div>
+
+          <div class="exchange-section" style="margin-top:1.5rem;">
+            <div class="exchange-section-title">Mode Trading</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="botModeSettings" value="paper" ${mode === 'paper' ? 'checked' : ''} ${isActive ? 'disabled' : ''}>
+                <span>📝 Paper Trading (Simulasi)</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="botModeSettings" value="live" ${mode === 'live' ? 'checked' : ''} ${isActive ? 'disabled' : ''}>
+                <span>🔴 Live Trading (Real Money)</span>
+              </label>
+            </div>
+            <div class="hint" style="margin-top:0.5rem;">${isActive ? 'Matikan bot dulu untuk ganti mode' : 'Pilih mode sebelum menyalakan bot'}</div>
+          </div>
+
+          <div class="action-row" style="margin-top:1.5rem;">
+            <button class="btn btn-primary" id="botSaveSettingsBtn" ${isActive ? 'disabled' : ''}>Simpan Pengaturan Bot</button>
+          </div>
+        </div>
       </div>
     </div>`;
-    }
-  },
-  botControl: {
-    title: 'Bot Control',
-    render: (session) => {
-      const botSession = session.botSession || {};
-      const botState = session.botState || {};
-      const isActive = botSession.is_active || false;
-      const status = botState.status || 'stopped';
-      const mode = botSession.mode || 'paper';
-      const lastHeartbeat = botState.last_heartbeat;
-      const dailyPnL = botState.daily_pnl || 0;
-      const totalPnL = botState.total_pnl || 0;
-      const positions = botState.current_positions || [];
-
-      const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
-      const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
-
-      return `
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-card-label">Bot Status</div>
-            <div class="stat-card-value">
-              <span class="status-badge ${statusClass}">${statusLabel}</span>
-            </div>
-            <div class="stat-card-change">${mode === 'live' ? '🔴 LIVE MODE' : '📝 Paper Trading'}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-label">Today's PnL</div>
-            <div class="stat-card-value ${dailyPnL >= 0 ? 'positive' : 'negative'}">${formatIDR(dailyPnL)}</div>
-            <div class="stat-card-change">Daily</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-label">Total PnL</div>
-            <div class="stat-card-value ${totalPnL >= 0 ? 'positive' : 'negative'}">${formatIDR(totalPnL)}</div>
-            <div class="stat-card-change">All Time</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-label">Open Positions</div>
-            <div class="stat-card-value">${positions.length}</div>
-            <div class="stat-card-change">${lastHeartbeat ? 'Updated ' + timeAgo(new Date(lastHeartbeat)) : 'No heartbeat'}</div>
-          </div>
-        </div>
-
-        <div class="content-grid">
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">Bot Control</span>
-              <span class="card-badge">${mode === 'live' ? 'Live' : 'Paper'}</span>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:1.5rem;">
-              <!-- Toggle Switch -->
-              <div class="toggle-container">
-                <div class="toggle-info">
-                  <div class="toggle-title">Trading Bot</div>
-                  <div class="toggle-desc">${isActive ? 'Bot aktif & mengeksekusi strategi' : 'Bot tidak aktif, klik untuk menyalakan'}</div>
-                </div>
-                <label class="switch">
-                  <input type="checkbox" id="botToggle" ${isActive ? 'checked' : ''}>
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <!-- Mode Selector -->
-              <div class="settings-panel" style="margin-top:1rem;">
-                <div class="exchange-section">
-                  <div class="exchange-section-title">Mode Trading</div>
-                  <div class="radio-group">
-                    <label class="radio-option">
-                      <input type="radio" name="botMode" value="paper" ${mode === 'paper' ? 'checked' : ''} ${isActive ? 'disabled' : ''}>
-                      <span>📝 Paper Trading (Simulasi)</span>
-                    </label>
-                    <label class="radio-option">
-                      <input type="radio" name="botMode" value="live" ${mode === 'live' ? 'checked' : ''} ${isActive ? 'disabled' : ''}>
-                      <span>🔴 Live Trading (Real Money)</span>
-                    </label>
-                  </div>
-                  <div class="hint" style="margin-top:0.5rem;">${isActive ? 'Matikan bot dulu untuk ganti mode' : 'Pilih mode sebelum menyalakan bot'}</div>
-                </div>
-              </div>
-
-              <!-- Risk Settings -->
-              <div class="exchange-section">
-                <div class="exchange-section-title">Risk Parameters</div>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
-                  <div class="exchange-field">
-                    <label>Max Leverage</label>
-                    <input type="number" id="riskLeverage" value="${botSession.risk_params?.leverage || 10}" min="1" max="125" step="1" ${isActive ? 'disabled' : ''} style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-                  </div>
-                  <div class="exchange-field">
-                    <label>Max Position Size %</label>
-                    <input type="number" id="riskMaxPos" value="${botSession.risk_params?.max_position_pct || 10}" min="1" max="100" step="1" ${isActive ? 'disabled' : ''} style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-                  </div>
-                  <div class="exchange-field">
-                    <label>Stop Loss %</label>
-                    <input type="number" id="riskSL" value="${botSession.risk_params?.stop_loss_pct || 2}" min="0.1" max="50" step="0.1" ${isActive ? 'disabled' : ''} style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-                  </div>
-                  <div class="exchange-field">
-                    <label>Take Profit %</label>
-                    <input type="number" id="riskTP" value="${botSession.risk_params?.take_profit_pct || 4}" min="0.1" max="100" step="0.1" ${isActive ? 'disabled' : ''} style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-                  </div>
-                </div>
-              </div>
-
-              <div class="action-row">
-                <button class="btn btn-primary" id="botSaveSettingsBtn" ${isActive ? 'disabled' : ''}>Simpan Pengaturan</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">Open Positions</span>
-              <span class="card-badge">Real-time</span>
-            </div>
-            <div class="bot-list" id="positionsList">
-              ${positions.length === 0 ? `
-                <div class="bot-item" style="justify-content:center;padding:2rem;color:var(--text-muted);">
-                  Tidak ada posisi terbuka
-                </div>
-              ` : positions.map(pos => `
-                <div class="bot-item">
-                  <div class="bot-info">
-                    <div class="bot-icon ${pos.side === 'long' ? 'running' : 'stopped'}">${pos.side === 'long' ? '↑' : '↓'}</div>
-                    <div>
-                      <div class="bot-name">${pos.symbol}</div>
-                      <div class="bot-strategy">${pos.side.toUpperCase()} · ${pos.qty} @ $${pos.entry_price}</div>
-                    </div>
-                  </div>
-                  <div class="bot-pnl">
-                    <div class="bot-pnl-value ${pos.unrealized_pnl >= 0 ? 'positive' : 'negative'}">${pos.unrealized_pnl_pct >= 0 ? '+' : ''}${pos.unrealized_pnl_pct.toFixed(2)}%</div>
-                    <div class="bot-pnl-label">${formatIDR(pos.unrealized_pnl)}</div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:1.5rem;">
-          <div class="card-header">
-            <span class="card-title">Recent Trades</span>
-            <span class="card-badge">Last 20</span>
-          </div>
-          <div class="activity-feed" id="tradesFeed">
-            <div class="activity-item" style="justify-content:center;color:var(--text-muted);">Memuat riwayat trade...</div>
-          </div>
-        </div>
-
-        <style>
-          .toggle-container { display:flex;align-items:center;justify-content:space-between;padding:1rem;background:var(--bg-card);border-radius:var(--radius-lg);border:1px solid var(--border-color); }
-          .toggle-info { flex:1; }
-          .toggle-title { font-weight:600;font-size:1rem; }
-          .toggle-desc { font-size:0.85rem;color:var(--text-muted);margin-top:0.25rem; }
-          .switch { position:relative;display:inline-block;width:56px;height:30px;flex-shrink:0; }
-          .switch input { opacity:0;width:0;height:0; }
-          .slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:var(--border-color);transition:.3s;border-radius:30px; }
-          .slider:before { position:absolute;content:"";height:22px;width:22px;left:4px;bottom:4px;background-color:white;transition:.3s;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.2); }
-          .switch input:checked + .slider { background-color:var(--accent-secondary); }
-          .switch input:checked + .slider:before { transform:translateX(26px); }
-          .switch input:disabled + .slider { opacity:0.5;cursor:not-allowed; }
-          .status-badge { display:inline-block;padding:0.25rem 0.75rem;border-radius:999px;font-size:0.8rem;font-weight:600; }
-          .status-badge.running { background:rgba(16,185,129,0.15);color:var(--accent-secondary); }
-          .status-badge.stopped { background:rgba(107,114,128,0.15);color:var(--text-muted); }
-          .status-badge.error { background:rgba(239,68,68,0.15);color:var(--accent-danger); }
-          .status-badge.starting { background:rgba(245,158,11,0.15);color:var(--accent-warm); }
-        </style>
-      `;
     }
   }
 };
@@ -630,6 +529,10 @@ function attachExchangeTabHandlers(session) {
         p.hidden = !isActive;
         if (isActive && tab === 'exchange' && !p.dataset.loaded) {
           loadExchangeKey(session);
+          p.dataset.loaded = 'true';
+        }
+        if (isActive && tab === 'aplikasi' && !p.dataset.loaded) {
+          loadBotSettingsUI(session);
           p.dataset.loaded = 'true';
         }
       });
@@ -802,11 +705,41 @@ async function deleteExchangeKeyFn(userId, exchange) {
   return { error };
 }
 
-// ============ Bot Control Handlers ============
-function attachBotControlHandlers(session) {
-  // Toggle switch
-  const toggle = document.getElementById('botToggle');
-  if (toggle) {
+// ============ Aplikasi Tab Handlers ============
+function loadBotSettingsUI(session) {
+  const botSession = session.botSession || {};
+  const botState = session.botState || {};
+  const isActive = botSession.is_active || false;
+  const status = botState.status || 'stopped';
+  const mode = botSession.mode || 'paper';
+  const lastHeartbeat = botState.last_heartbeat;
+
+  const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
+  const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
+  const statusText = isActive ? (status === 'running' ? 'Aktif & Running' : 'Aktif tapi ' + statusLabel.toLowerCase()) : 'Nonaktif';
+
+  const toggle = document.getElementById('botToggleSettings');
+  if (toggle) toggle.checked = isActive;
+  
+  const statusBadge = document.querySelector('.settings-panel[data-tab="aplikasi"] .status-badge');
+  if (statusBadge) {
+    statusBadge.className = `status-badge ${statusClass}`;
+    statusBadge.textContent = isActive ? (status === 'running' ? 'Aktif & Running' : 'Aktif tapi ' + statusLabel.toLowerCase()) : 'Nonaktif';
+  }
+  
+  document.querySelectorAll('input[name="botModeSettings"]').forEach(r => {
+    r.checked = r.value === mode;
+    r.disabled = isActive;
+  });
+
+  const statusDisplay = document.querySelector('.settings-panel[data-tab="aplikasi"] .toggle-desc');
+  if (statusDisplay) statusDisplay.textContent = isActive ? 'Bot aktif & mengeksekusi strategi' : 'Bot tidak aktif, klik untuk menyalakan';
+}
+
+function attachAplikasiTabHandlers(session) {
+  const toggle = document.getElementById('botToggleSettings');
+  if (toggle && !toggle.dataset.listener) {
+    toggle.dataset.listener = 'true';
     toggle.addEventListener('change', async (e) => {
       const isActive = e.target.checked;
       toggle.disabled = true;
@@ -816,14 +749,7 @@ function attachBotControlHandlers(session) {
         
         session.botSession = { ...session.botSession, is_active: isActive };
         localStorage.setItem('auth_session', JSON.stringify(session));
-        
-        const desc = toggle.closest('.toggle-container').querySelector('.toggle-desc');
-        if (desc) desc.textContent = isActive ? 'Bot aktif & mengeksekusi strategi' : 'Bot tidak aktif, klik untuk menyalakan';
-        
-        document.querySelectorAll('input[name="botMode"]').forEach(r => r.disabled = isActive);
-        document.querySelectorAll('#riskLeverage, #riskMaxPos, #riskSL, #riskTP').forEach(i => i.disabled = isActive);
-        const saveBtn = document.getElementById('botSaveSettingsBtn');
-        if (saveBtn) saveBtn.disabled = isActive;
+        loadBotSettingsUI(session);
         
       } catch (err) {
         console.error('Toggle failed:', err);
@@ -835,90 +761,40 @@ function attachBotControlHandlers(session) {
     });
   }
 
-  // Mode radio buttons
-  document.querySelectorAll('input[name="botMode"]').forEach(radio => {
-    radio.addEventListener('change', async (e) => {
-      if (e.target.disabled) return;
-      const mode = e.target.value;
-      try {
-        const { error } = await updateBotSession(session.user.id, { mode });
-        if (error) throw error;
-        session.botSession = { ...session.botSession, mode };
-        localStorage.setItem('auth_session', JSON.stringify(session));
-      } catch (err) {
-        console.error('Mode change failed:', err);
-        alert('Gagal: ' + (err.message || err));
-        document.querySelector(`input[name="botMode"][value="${session.botSession.mode || 'paper'}"]`).checked = true;
-      }
-    });
+  document.querySelectorAll('input[name="botModeSettings"]').forEach(radio => {
+    if (!radio.dataset.listener) {
+      radio.dataset.listener = 'true';
+      radio.addEventListener('change', async (e) => {
+        if (e.target.disabled) return;
+        const mode = e.target.value;
+        try {
+          const { error } = await updateBotSession(session.user.id, { mode });
+          if (error) throw error;
+          session.botSession = { ...session.botSession, mode };
+          localStorage.setItem('auth_session', JSON.stringify(session));
+          loadBotSettingsUI(session);
+        } catch (err) {
+          console.error('Mode change failed:', err);
+          alert('Gagal: ' + (err.message || err));
+          loadBotSettingsUI(session);
+        }
+      });
+    }
   });
 
-  // Save risk settings
   const saveBtn = document.getElementById('botSaveSettingsBtn');
   if (saveBtn) {
-    saveBtn.addEventListener('click', async () => {
-      const riskParams = {
-        leverage: parseInt(document.getElementById('riskLeverage')?.value) || 10,
-        max_position_pct: parseInt(document.getElementById('riskMaxPos')?.value) || 10,
-        stop_loss_pct: parseFloat(document.getElementById('riskSL')?.value) || 2,
-        take_profit_pct: parseFloat(document.getElementById('riskTP')?.value) || 4
-      };
-      
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Menyimpan...';
-      
-      try {
-        const { error } = await updateBotSession(session.user.id, { risk_params: riskParams });
-        if (error) throw error;
-        
-        session.botSession = { ...session.botSession, risk_params: riskParams };
-        localStorage.setItem('auth_session', JSON.stringify(session));
-        
-        saveBtn.textContent = 'Tersimpan!';
-        saveBtn.style.background = 'var(--accent-secondary)';
-        saveBtn.style.borderColor = 'var(--accent-secondary)';
-        setTimeout(() => {
-          saveBtn.textContent = 'Simpan Pengaturan';
-          saveBtn.style.background = '';
-          saveBtn.style.borderColor = '';
-        }, 2000);
-      } catch (err) {
-        console.error('Save risk params failed:', err);
-        saveBtn.textContent = 'Gagal: ' + (err.message || err).substring(0, 40);
-        saveBtn.style.background = 'var(--accent-danger)';
-        saveBtn.style.borderColor = 'var(--accent-danger)';
-        setTimeout(() => {
-          saveBtn.textContent = 'Simpan Pengaturan';
-          saveBtn.style.background = '';
-          saveBtn.style.borderColor = '';
-        }, 5000);
-      } finally {
-        saveBtn.disabled = false;
-      }
+    saveBtn.addEventListener('click', () => {
+      saveBtn.textContent = 'Tersimpan!';
+      saveBtn.style.background = 'var(--accent-secondary)';
+      saveBtn.style.borderColor = 'var(--accent-secondary)';
+      setTimeout(() => {
+        saveBtn.textContent = 'Simpan Pengaturan Bot';
+        saveBtn.style.background = '';
+        saveBtn.style.borderColor = '';
+      }, 2000);
     });
   }
-
-  // Initial trades feed
-  updateTradesFeed(session);
-}
-
-function updateTradesFeed(session) {
-  const feed = document.getElementById('tradesFeed');
-  if (!feed) return;
-  
-  const trades = session.recentTrades || [];
-  if (trades.length === 0) {
-    feed.innerHTML = '<div class="activity-item" style="justify-content:center;color:var(--text-muted);">Belum ada transaksi</div>';
-    return;
-  }
-  
-  feed.innerHTML = trades.map(trade => `
-    <div class="activity-item">
-      <div class="activity-icon ${trade.side === 'buy' || trade.side === 'long' ? 'buy' : 'sell'}">${trade.side === 'buy' || trade.side === 'long' ? '↑' : '↓'}</div>
-      <div class="activity-text"><strong>${trade.side.toUpperCase()}</strong> ${trade.qty} ${trade.symbol} @ $${trade.price}</div>
-      <span class="activity-time">${timeAgo(new Date(trade.timestamp))}</span>
-    </div>
-  `).join('');
 }
 
 // ============ Init ============
@@ -926,13 +802,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   let session = await requireAuthWrapper();
   if (!session) return;
 
-  // Update topbar
   const avatar = document.getElementById('topbarAvatar');
   const name = document.getElementById('topbarName');
   if (avatar) avatar.src = session.user.avatar;
   if (name) name.textContent = session.user.name;
 
-  // Mobile menu
   const mobileBtn = document.getElementById('mobileMenuBtn');
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
@@ -947,94 +821,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Navigation
+  async function loadBotData(session) {
+    try {
+      const [{ data: botSession }, { data: botState }] = await Promise.all([
+        getBotSession(session.user.id),
+        session.botSession?.id ? getBotState(session.botSession.id) : { data: null, error: null }
+      ]);
+      
+      session.botSession = botSession || {};
+      session.botState = botState || {};
+      return session;
+    } catch (err) {
+      console.error('Failed to load bot data:', err);
+      session.botSession = {};
+      session.botState = {};
+      return session;
+    }
+  }
+
   const navItems = document.querySelectorAll('.nav-item');
   const pageTitle = document.getElementById('pageTitle');
   const pageContent = document.getElementById('pageContent');
 
-  // Realtime subscriptions
-  let botStateSubscription = null;
-  let tradeHistorySubscription = null;
-  let currentPage = 'overview';
-  let currentAbortController = null;
-
-  function cleanupSubscriptions() {
-    if (botStateSubscription) {
-      botStateSubscription.unsubscribe();
-      botStateSubscription = null;
-    }
-    if (tradeHistorySubscription) {
-      tradeHistorySubscription.unsubscribe();
-      tradeHistorySubscription = null;
-    }
-  }
-
-  // Cancel any pending navigation/load
-  function cancelPending() {
-    if (currentAbortController) {
-      currentAbortController.abort();
-    }
-    currentAbortController = new AbortController();
-    return currentAbortController.signal;
-  }
-
-  async function loadBotData(session, signal) {
-    try {
-      const [{ data: botSession }, { data: botState }, { data: trades }] = await Promise.all([
-        getBotSession(session.user.id),
-        session.botSession?.id ? getBotState(session.botSession.id) : { data: null, error: null },
-        getTradeHistory(session.user.id, 20)
-      ]);
-      
-      if (signal.aborted) return session;
-      
-      session.botSession = botSession || {};
-      session.botState = botState || {};
-      session.recentTrades = trades || [];
-      return session;
-    } catch (err) {
-      if (err.name === 'AbortError' || signal.aborted) return session;
-      console.error('Failed to load bot data:', err);
-      session.botSession = {};
-      session.botState = {};
-      session.recentTrades = [];
-      return session;
-    }
-  }
-
-  function subscribeToBotUpdates(session) {
-    if (!session.botSession?.id) return;
-    
-    cleanupSubscriptions();
-
-    botStateSubscription = subscribeBotState(session.botSession.id, (payload) => {
-      console.log('Bot state update:', payload);
-      session.botState = payload.new || payload.old || {};
-      // Only update UI if still on botControl page
-      if (currentPage === 'botControl') {
-        const pg = pages.botControl;
-        if (pg && pageContent) {
-          pageContent.innerHTML = pg.render(session);
-          attachBotControlHandlers(session);
-        }
-      }
-    });
-
-    tradeHistorySubscription = subscribeTradeHistory(session.user.id, (payload) => {
-      console.log('New trade:', payload);
-      if (payload.new) {
-        session.recentTrades = [payload.new, ...(session.recentTrades || []).slice(0, 19)];
-        if (currentPage === 'botControl') {
-          updateTradesFeed(session);
-        }
-      }
-    });
-  }
-
   function navigateTo(pageName) {
     if (pageName === 'logout') {
-      cleanupSubscriptions();
-      currentPage = pageName;
       signOut().then(() => {
         localStorage.removeItem('auth_session');
         window.location.href = '/';
@@ -1042,48 +852,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Cancel any pending load/subscriptions immediately
-    cleanupSubscriptions();
-    const signal = cancelPending();
-    
-    // Update page immediately for responsive UI
-    currentPage = pageName;
     navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageName));
-    
     const pg = pages[pageName];
     if (!pg) return;
     
     if (pageTitle) pageTitle.textContent = pg.title;
 
     if (pageName === 'settings') {
-      getExchangeKey(session.user.id, 'binance').then(({ data }) => {
-        if (signal.aborted) return;
-        session.exchangeKey = data || {};
-        if (pageContent) pageContent.innerHTML = pg.render(session);
-        attachSettingsSaveHandler(session);
-        attachExchangeTabHandlers(session);
-      }).catch(err => {
-        console.error('Failed to fetch exchange key:', err);
-        session.exchangeKey = {};
-        if (pageContent) pageContent.innerHTML = pg.render(session);
-        attachSettingsSaveHandler(session);
-        attachExchangeTabHandlers(session);
-      });
-    } else if (pageName === 'botControl') {
-      // Show loading state immediately
-      if (pageContent) pageContent.innerHTML = pg.render({ ...session, botSession: {}, botState: {} });
-      
-      // Load data with abort support
-      loadBotData(session, signal).then(updatedSession => {
-        if (signal.aborted) return;
+      loadBotData(session).then(updatedSession => {
         session = updatedSession;
         if (pageContent) pageContent.innerHTML = pg.render(session);
-        attachBotControlHandlers(session);
-        subscribeToBotUpdates(session);
-      }).catch(err => {
-        if (err.name !== 'AbortError' && !signal.aborted) {
-          console.error('Failed to load bot data:', err);
-        }
+        attachSettingsSaveHandler(session);
+        attachExchangeTabHandlers(session);
       });
     } else {
       if (pageContent) pageContent.innerHTML = pg.render(session);
@@ -1093,71 +873,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (overlay) overlay.classList.remove('active');
   }
 
-  // Cancel any pending navigation/load
-  function cancelPending() {
-    if (currentAbortController) {
-      currentAbortController.abort();
-    }
-    currentAbortController = new AbortController();
-    return currentAbortController.signal;
-  }
-
-  async function loadBotData(session, signal) {
-    try {
-      const [{ data: botSession }, { data: botState }, { data: trades }] = await Promise.all([
-        getBotSession(session.user.id),
-        session.botSession?.id ? getBotState(session.botSession.id) : { data: null, error: null },
-        getTradeHistory(session.user.id, 20)
-      ]);
-      
-      if (signal.aborted) return session;
-      
-      session.botSession = botSession || {};
-      session.botState = botState || {};
-      session.recentTrades = trades || [];
-      return session;
-    } catch (err) {
-      if (err.name === 'AbortError' || signal.aborted) return session;
-      console.error('Failed to load bot data:', err);
-      session.botSession = {};
-      session.botState = {};
-      session.recentTrades = [];
-      return session;
-    }
-  }
-
-  function subscribeToBotUpdates(session) {
-    if (!session.botSession?.id) return;
-    
-    cleanupSubscriptions();
-
-    botStateSubscription = subscribeBotState(session.botSession.id, (payload) => {
-      console.log('Bot state update:', payload);
-      session.botState = payload.new || payload.old || {};
-      // Only update UI if still on botControl page
-      if (currentPage === 'botControl') {
-        const pg = pages.botControl;
-        if (pg && pageContent) {
-          pageContent.innerHTML = pg.render(session);
-          attachBotControlHandlers(session);
-        }
-      }
-    });
-
-    tradeHistorySubscription = subscribeTradeHistory(session.user.id, (payload) => {
-      console.log('New trade:', payload);
-      if (payload.new) {
-        session.recentTrades = [payload.new, ...(session.recentTrades || []).slice(0, 19)];
-        if (currentPage === 'botControl') {
-          updateTradesFeed(session);
-        }
-      }
-    });
-  }
-
   navItems.forEach(item => {
     item.addEventListener('click', () => navigateTo(item.dataset.page));
   });
 
-  navigateTo('overview');
+  loadBotData(session).then(s => {
+    session = s;
+    navigateTo('overview');
+  });
 });
