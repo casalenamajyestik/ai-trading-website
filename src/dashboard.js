@@ -1031,39 +1031,43 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ALWAYS cleanup subscriptions first when navigating
     cleanupSubscriptions();
-    currentPage = pageName;
+    
+    // Small delay to let unsubscribe complete, then update page
+    setTimeout(() => {
+      currentPage = pageName;
 
-    navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageName));
-    const pg = pages[pageName];
-    if (pg) {
-      if (pageTitle) pageTitle.textContent = pg.title;
+      navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageName));
+      const pg = pages[pageName];
+      if (pg) {
+        if (pageTitle) pageTitle.textContent = pg.title;
 
-      if (pageName === 'settings') {
-        getExchangeKey(session.user.id, 'binance').then(({ data }) => {
-          session.exchangeKey = data || {};
+        if (pageName === 'settings') {
+          getExchangeKey(session.user.id, 'binance').then(({ data }) => {
+            session.exchangeKey = data || {};
+            if (pageContent) pageContent.innerHTML = pg.render(session);
+            attachSettingsSaveHandler(session);
+            attachExchangeTabHandlers(session);
+          }).catch(err => {
+            console.error('Failed to fetch exchange key:', err);
+            session.exchangeKey = {};
+            if (pageContent) pageContent.innerHTML = pg.render(session);
+            attachSettingsSaveHandler(session);
+            attachExchangeTabHandlers(session);
+          });
+        } else if (pageName === 'botControl') {
+          loadBotData(session).then(updatedSession => {
+            session = updatedSession;
+            if (pageContent) pageContent.innerHTML = pg.render(session);
+            attachBotControlHandlers(session);
+            subscribeToBotUpdates(session);
+          });
+        } else {
           if (pageContent) pageContent.innerHTML = pg.render(session);
-          attachSettingsSaveHandler(session);
-          attachExchangeTabHandlers(session);
-        }).catch(err => {
-          console.error('Failed to fetch exchange key:', err);
-          session.exchangeKey = {};
-          if (pageContent) pageContent.innerHTML = pg.render(session);
-          attachSettingsSaveHandler(session);
-          attachExchangeTabHandlers(session);
-        });
-      } else if (pageName === 'botControl') {
-        loadBotData(session).then(updatedSession => {
-          session = updatedSession;
-          if (pageContent) pageContent.innerHTML = pg.render(session);
-          attachBotControlHandlers(session);
-          subscribeToBotUpdates(session);
-        });
-      } else {
-        if (pageContent) pageContent.innerHTML = pg.render(session);
+        }
       }
-    }
-    if (sidebar) sidebar.classList.remove('open');
-    if (overlay) overlay.classList.remove('active');
+      if (sidebar) sidebar.classList.remove('open');
+      if (overlay) overlay.classList.remove('active');
+    }, 0);
   }
 
   navItems.forEach(item => {
