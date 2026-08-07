@@ -160,8 +160,8 @@
 
 .toggle-switch {
   position: relative;
-  width: 56px;
-  height: 28px;
+  width: 68px;
+  height: 32px;
   flex-shrink: 0;
 }
 
@@ -177,21 +177,21 @@
   inset: 0;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: 28px;
+  border-radius: 32px;
   transition: all var(--transition-fast);
   display: flex;
   align-items: center;
-  padding: 0 2px;
+  padding: 0 4px;
   overflow: hidden;
 }
 
 .toggle-slider::before {
   content: "OFF";
   position: absolute;
-  left: 8px;
+  left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--text-secondary);
   transition: opacity var(--transition-fast);
@@ -202,10 +202,10 @@
 .toggle-slider::after {
   content: "ON";
   position: absolute;
-  right: 8px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--text-secondary);
   opacity: 0;
@@ -216,8 +216,8 @@
 
 .toggle-thumb {
   position: absolute;
-  height: 22px;
-  width: 22px;
+  height: 26px;
+  width: 26px;
   left: 2px;
   top: 50%;
   transform: translateY(-50%);
@@ -225,7 +225,7 @@
   border-radius: 50%;
   transition: all var(--transition-fast);
   z-index: 2;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
 
 .toggle-switch input:checked + .toggle-slider {
@@ -242,7 +242,7 @@
 }
 
 .toggle-switch input:checked + .toggle-slider .toggle-thumb {
-  transform: translateY(-50%) translateX(28px);
+  transform: translateY(-50%) translateX(36px);
   background: #fff;
 }
 
