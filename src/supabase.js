@@ -152,3 +152,107 @@ export async function updateExchangeKeyTestResult(userId, exchange, result) {
     .single();
   return { data, error };
 }
+
+// ============ Bot Integration Helpers ============
+
+// Bot Sessions
+export async function getBotSession(userId) {
+  const { data, error } = await supabase
+    .from('bot_sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+  return { data, error };
+}
+
+export async function createBotSession(sessionData) {
+  const { data, error } = await supabase
+    .from('bot_sessions')
+    .insert(sessionData)
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function updateBotSession(userId, updates) {
+  const { data, error } = await supabase
+    .from('bot_sessions')
+    .update(updates)
+    .eq('user_id', userId)
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function toggleBotSession(userId, isActive) {
+  const { data, error } = await supabase
+    .from('bot_sessions')
+    .update({ is_active: isActive, updated_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .select()
+    .single();
+  return { data, error };
+}
+
+// Bot State (real-time)
+export async function getBotState(sessionId) {
+  const { data, error } = await supabase
+    .from('bot_state')
+    .select('*')
+    .eq('session_id', sessionId)
+    .single();
+  return { data, error };
+}
+
+export async function subscribeBotState(sessionId, callback) {
+  return supabase
+    .channel(`bot_state:${sessionId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'bot_state',
+        filter: `session_id=eq.${sessionId}`
+      },
+      callback
+    )
+    .subscribe();
+}
+
+export async function subscribeTradeHistory(userId, callback) {
+  return supabase
+    .channel(`trade_history:${userId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'trade_history',
+        filter: `user_id=eq.${userId}`
+      },
+      callback
+    )
+    .subscribe();
+}
+
+// Trade History
+export async function getTradeHistory(userId, limit = 50) {
+  const { data, error } = await supabase
+    .from('trade_history')
+    .select('*')
+    .eq('user_id', userId)
+    .order('timestamp', { ascending: false })
+    .limit(limit);
+  return { data, error };
+}
+
+export async function getTradeHistoryBySession(sessionId, limit = 50) {
+  const { data, error } = await supabase
+    .from('trade_history')
+    .select('*')
+    .eq('session_id', sessionId)
+    .order('timestamp', { ascending: false })
+    .limit(limit);
+  return { data, error };
+}
