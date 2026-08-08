@@ -1,4 +1,4 @@
-import i18next from './i18n.js';
+import { i18next } from './language-theme.js';
 import { 
   signOut, 
   upsertProfile, 
@@ -12,6 +12,7 @@ import {
 import { supabase } from './supabase.js';
 import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
 import { subscribeBotState } from './supabase.js';
+import { initTheme, initLanguage, updateDynamicI18n } from './language-theme.js';
 import './styles/settings-tabs.css';
 
 // ============ Auth Guard ============
@@ -785,6 +786,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   let session = await requireAuthWrapper();
   if (!session) return;
 
+  // Initialize theme and language selectors
+  initTheme('#themeToggle');
+  initLanguage();
+
   const avatar = document.getElementById('topbarAvatar');
   const name = document.getElementById('topbarName');
   if (avatar) avatar.src = session.user.avatar;
@@ -847,9 +852,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (pageContent) pageContent.innerHTML = pg.render(session);
         attachSettingsSaveHandler(session);
         attachExchangeTabHandlers(session);
+        updateDynamicI18n();
       });
     } else {
       if (pageContent) pageContent.innerHTML = pg.render(session);
+      updateDynamicI18n();
     }
     
     if (sidebar) sidebar.classList.remove('open');

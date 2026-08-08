@@ -1,96 +1,14 @@
 /* ===== AI Trading Platform — Main JavaScript ===== */
 
 import './styles.css';
-import i18next from 'i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
-import { translations } from './i18n.js';
+import { i18next, initTheme, initLanguage, updateDynamicI18n } from './language-theme.js';
 
 // Auth listener (shared with dashboard)
 import { initAuth, updateNavbarForAuth, setOpenLoginRef } from './auth-listener.js';
 
-// ============ i18n Init ============
-i18next.use(LanguageDetector).init({
-  resources: { id: { translation: translations.id }, en: { translation: translations.en } },
-  fallbackLng: 'id',
-  detection: { order: ['localStorage', 'navigator'], caches: ['localStorage'] },
-  interpolation: { escapeValue: false }
-});
-
-// ============ Theme Management ============
-const themeToggle = document.getElementById('themeToggle');
-const html = document.documentElement;
-
-function getPreferredTheme() {
-  return localStorage.getItem('theme') || 'dark';
-}
-
-function setTheme(theme) {
-  html.setAttribute('data-theme', theme);
-  localStorage.setItem('theme', theme);
-  themeToggle.setAttribute('aria-pressed', theme === 'dark' ? 'false' : 'true');
-}
-
-setTheme(getPreferredTheme());
-
-themeToggle.addEventListener('click', () => {
-  const current = html.getAttribute('data-theme');
-  setTheme(current === 'dark' ? 'light' : 'dark');
-});
-
-// ============ Language Management ============
-const langToggle = document.querySelector('.lang-btn.lang-toggle');
-const langDropdown = document.querySelector('.lang-dropdown');
-const langDropdownItems = document.querySelectorAll('.lang-dropdown-item');
-const langFlag = langToggle?.querySelector('.lang-flag');
-const langText = langToggle?.querySelector('.lang-text');
-
-function setLanguage(lang) {
-  i18next.changeLanguage(lang);
-  localStorage.setItem('i18next', lang);
-  
-  // Update toggle button
-  if (langFlag && langText) {
-    langFlag.textContent = lang === 'id' ? '🇮🇩' : '🇺🇸';
-    langText.textContent = lang === 'id' ? 'ID' : 'EN';
-  }
-  
-  // Update dropdown items
-  langDropdownItems.forEach(item => {
-    const isActive = item.dataset.lang === lang;
-    item.classList.toggle('active', isActive);
-    item.setAttribute('aria-selected', isActive ? 'true' : 'false');
-  });
-  
-  // Close dropdown
-  if (langDropdown) langDropdown.classList.remove('show');
-  if (langToggle) langToggle.classList.remove('active');
-}
-
-// Toggle dropdown
-if (langToggle && langDropdown) {
-  langToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const isOpen = langDropdown.classList.toggle('show');
-    langToggle.classList.toggle('active', isOpen);
-  });
-}
-
-// Dropdown item clicks
-langDropdownItems.forEach(item => {
-  item.addEventListener('click', () => setLanguage(item.dataset.lang));
-});
-
-// Close dropdown on outside click
-document.addEventListener('click', (e) => {
-  if (langDropdown && langToggle && !langToggle.contains(e.target)) {
-    langDropdown.classList.remove('show');
-    langToggle.classList.remove('active');
-  }
-});
-
-// Initialize language from localStorage
-const savedLang = localStorage.getItem('i18next') || 'id';
-setLanguage(savedLang);
+// Initialize theme and language
+initTheme('#themeToggle');
+initLanguage();
 
 // ============ Mobile Navigation ============
 const hamburger = document.getElementById('hamburger');
