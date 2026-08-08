@@ -13,6 +13,7 @@ import { supabase } from './supabase.js';
 import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
 import { subscribeBotState } from './supabase.js';
 import { initTheme, initLanguage, updateDynamicI18n } from './language-theme.js';
+import './styles.css';
 import './styles/settings-tabs.css';
 
 // ============ Auth Guard ============
