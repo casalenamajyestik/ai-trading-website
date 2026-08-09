@@ -113,6 +113,7 @@ const pages = {
       const lastHeartbeat = botState.last_heartbeat;
       const dailyPnL = botState.daily_pnl || 0;
       const totalPnL = botState.total_pnl || 0;
+      const balance = botState.balance || 0;
 
       const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
       const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
@@ -122,7 +123,7 @@ const pages = {
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-card-label">Total Balance</div>
-            <div class="stat-card-value">${formatIDR(session.balance || 50000000)}</div>
+            <div class="stat-card-value">${formatIDR(balance)}</div>
             <div class="stat-card-change positive">+12.5% this week</div>
           </div>
           <div class="stat-card">
@@ -273,9 +274,12 @@ const pages = {
   },
   portfolio: {
     title: 'Portfolio',
-    render: (session) => `
+    render: (session) => {
+      const botState = session.botState || {};
+      const balance = botState.balance || 0;
+      return `
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-card-label">Total Value</div><div class="stat-card-value">${formatIDR(session.balance || 50000000)}</div></div>
+        <div class="stat-card"><div class="stat-card-label">Total Value</div><div class="stat-card-value">${formatIDR(balance)}</div></div>
         <div class="stat-card"><div class="stat-card-label">In Positions</div><div class="stat-card-value">${formatIDR(32000000)}</div></div>
         <div class="stat-card"><div class="stat-card-label">Available</div><div class="stat-card-value">${formatIDR(18000000)}</div></div>
         <div class="stat-card"><div class="stat-card-label">Unrealized PnL</div><div class="stat-card-value positive">+${formatIDR(4200000)}</div></div>
@@ -287,7 +291,8 @@ const pages = {
           <div class="bot-item"><div class="bot-info"><div class="bot-icon running">Ξ</div><div><div class="bot-name">ETH</div><div class="bot-strategy">0.2 ETH · Avg $3,520</div></div></div><div class="bot-pnl"><div class="bot-pnl-value positive">+1.87%</div><div class="bot-pnl-label">$142,000</div></div></div>
           <div class="bot-item"><div class="bot-info"><div class="bot-icon running">◎</div><div><div class="bot-name">SOL</div><div class="bot-strategy">50 SOL · Avg $142.50</div></div></div><div class="bot-pnl"><div class="bot-pnl-value positive">+3.10%</div><div class="bot-pnl-label">$21,750</div></div></div>
         </div>
-      </div>`
+      </div>`;
+    }
   },
   settings: {
     title: 'Pengaturan',

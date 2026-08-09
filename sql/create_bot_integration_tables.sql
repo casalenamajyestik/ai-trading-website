@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS public.bot_state (
     current_positions JSONB DEFAULT '[]',      -- Array posisi terbuka
     daily_pnl NUMERIC DEFAULT 0,
     total_pnl NUMERIC DEFAULT 0,
+    balance NUMERIC DEFAULT 0,               -- Total account balance from exchange
     error_message TEXT,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
