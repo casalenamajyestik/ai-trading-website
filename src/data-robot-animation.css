@@ -382,17 +382,6 @@
 .output-data:nth-child(10n+26) { animation-delay: 10.4s; }
 .output-data:nth-child(10n+27) { animation-delay: 10.8s; }
 .output-data:nth-child(10n+28) { animation-delay: 11.2s; }
-.output-data:nth-child(10n+29) { animation-delay: 11.6s; }
-.output-data:nth-child(10n+30) { animation-delay: 12s; }
-.output-data:nth-child(10n+31) { animation-delay: 12.4s; }
-.output-data:nth-child(10n+32) { animation-delay: 12.8s; }
-.output-data:nth-child(10n+33) { animation-delay: 13.2s; }
-.output-data:nth-child(10n+34) { animation-delay: 13.6s; }
-.output-data:nth-child(10n+35) { animation-delay: 14s; }
-.output-data:nth-child(10n+36) { animation-delay: 14.4s; }
-.output-data:nth-child(10n+37) { animation-delay: 14.8s; }
-.output-data:nth-child(10n+38) { animation-delay: 15.2s; }
-.output-data:nth-child(10n+39) { animation-delay: 15.6s; }
 
 @keyframes outputAppear {
   0% { opacity: 0.5; transform: translateY(5px) scale(0.9); }

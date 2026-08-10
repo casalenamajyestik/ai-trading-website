@@ -615,7 +615,7 @@ export class DataRobotAnimation {
   
   buildOutputDisplay() {
     const cx = this.options.width / 2;
-    const cy = this.options.height / 2 + 120;
+    const cy = this.options.height / 2 + 10; // Center of robot
     
     // Coin symbols rotating display (no prices)
     const coinSymbols = [
@@ -668,16 +668,45 @@ export class DataRobotAnimation {
     // Combine: first show coin symbols, then whale ops
     const allOutputs = [...coinSymbols, ...whaleOps];
     
-    allOutputs.forEach((output, i) => {
-      const y = cy + (i % 6) * 16;
-      const x = cx + (i % 2 === 0 ? -140 : 140);
-      const text = this.createText(x, y, output.text, `output-data ${output.class}`);
-      text.setAttribute('font-size', '9');
-      text.setAttribute('text-anchor', i % 2 === 0 ? 'start' : 'end');
-      text.setAttribute('dominant-baseline', 'middle');
-      text.style.animationDelay = `${(i + 1) * 0.4}s`; // Staggered every 0.4s
-      text.style.animationDuration = '8s';
-      this.svg.appendChild(text);
+    // Define display zones around the robot
+    const zones = [
+      // Zone 1: Below robot (original area)
+      { x: cx - 150, y: cy + 100, anchor: 'start', rows: 4, colGap: 16 },
+      { x: cx + 150, y: cy + 100, anchor: 'end', rows: 4, colGap: 16 },
+      // Zone 2: Above robot (near head)
+      { x: cx - 180, y: cy - 110, anchor: 'start', rows: 3, colGap: 16 },
+      { x: cx + 180, y: cy - 110, anchor: 'end', rows: 3, colGap: 16 },
+      // Zone 3: Left side (near left arm)
+      { x: cx - 220, y: cy - 20, anchor: 'end', rows: 3, colGap: 16 },
+      // Zone 4: Right side (near right arm)
+      { x: cx + 220, y: cy - 20, anchor: 'start', rows: 3, colGap: 16 },
+      // Zone 5: Near core (left)
+      { x: cx - 120, y: cy + 30, anchor: 'end', rows: 2, colGap: 16 },
+      // Zone 6: Near core (right)
+      { x: cx + 120, y: cy + 30, anchor: 'start', rows: 2, colGap: 16 },
+      // Zone 7: Far left (near source nodes)
+      { x: cx - 280, y: cy - 40, anchor: 'end', rows: 2, colGap: 16 },
+      // Zone 8: Far right (near source nodes)
+      { x: cx + 280, y: cy - 40, anchor: 'start', rows: 2, colGap: 16 },
+    ];
+    
+    // Distribute outputs across zones
+    let outputIndex = 0;
+    zones.forEach((zone, zoneIndex) => {
+      for (let row = 0; row < zone.rows && outputIndex < allOutputs.length; row++) {
+        const output = allOutputs[outputIndex];
+        const y = zone.y + row * zone.colGap;
+        
+        const text = this.createText(zone.x, y, output.text, `output-data ${output.class}`);
+        text.setAttribute('font-size', '9');
+        text.setAttribute('text-anchor', zone.anchor);
+        text.setAttribute('dominant-baseline', 'middle');
+        text.style.animationDelay = `${(outputIndex + 1) * 0.4}s`;
+        text.style.animationDuration = '8s';
+        this.svg.appendChild(text);
+        
+        outputIndex++;
+      }
     });
   }
   
