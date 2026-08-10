@@ -26,50 +26,50 @@
 
 .robot-head {
   transform-origin: center 70px;
-  animation: robotFloat 200s ease-in-out infinite;
+  animation: robotFloat 8s ease-in-out infinite;
 }
 
 .robot-eye {
   transform-origin: center;
-  animation: eyeBlink 200s ease-in-out infinite;
+  animation: eyeBlink 4s ease-in-out infinite;
 }
 
 .robot-eye-pupil {
-  animation: pupilMove 240s ease-in-out infinite;
+  animation: pupilMove 6s ease-in-out infinite;
 }
 
 .robot-antenna {
   transform-origin: bottom center;
-  animation: antennaWiggle 180s ease-in-out infinite;
+  animation: antennaWiggle 3s ease-in-out infinite;
 }
 
 .robot-antenna-ball {
-  animation: antennaPulse 120s ease-in-out infinite;
+  animation: antennaPulse 2s ease-in-out infinite;
 }
 
 .robot-ear {
-  animation: earTwitch 300s ease-in-out infinite;
+  animation: earTwitch 5s ease-in-out infinite;
 }
 
 .robot-mouth {
-  animation: mouthSpeak 180s ease-in-out infinite;
+  animation: mouthSpeak 3s ease-in-out infinite;
 }
 
 .robot-torso {
-  animation: torsoBreath 200s ease-in-out infinite;
+  animation: torsoBreath 8s ease-in-out infinite;
 }
 
 .robot-core {
-  animation: corePulse 120s ease-in-out infinite;
+  animation: corePulse 2s ease-in-out infinite;
 }
 
 .robot-core-ring {
-  animation: coreRingRotate 400s linear infinite;
+  animation: coreRingRotate 20s linear infinite;
 }
 
 .robot-core-ring.reverse {
   animation-direction: reverse;
-  animation-duration: 500s;
+  animation-duration: 25s;
 }
 
 .robot-arm {
@@ -77,22 +77,22 @@
 }
 
 .robot-arm-left {
-  animation: armLeftMove 200s ease-in-out infinite;
+  animation: armLeftMove 8s ease-in-out infinite;
 }
 
 .robot-arm-right {
-  animation: armRightMove 200s ease-in-out infinite;
+  animation: armRightMove 8s ease-in-out infinite;
 }
 
 .robot-hand {
   transform-origin: center;
-  animation: handGrip 180s ease-in-out infinite;
+  animation: handGrip 3s ease-in-out infinite;
 }
 
 /* Data Stream Particles */
 .data-particle {
   opacity: 0;
-  animation: particleFlow 180s ease-out infinite;
+  animation: particleFlow 8s ease-out infinite;
 }
 
 .data-particle.market { fill: var(--accent-primary); }
@@ -115,7 +115,7 @@
   font-size: 10px;
   font-weight: 500;
   opacity: 0;
-  animation: labelFade 180s ease-out infinite;
+  animation: labelFade 8s ease-out infinite;
   pointer-events: none;
 }
 
@@ -132,7 +132,7 @@
 .data-connection {
   stroke-dasharray: 8 4;
   stroke-opacity: 0;
-  animation: connectionDraw 180s ease-out infinite;
+  animation: connectionDraw 8s ease-out infinite;
 }
 
 .data-connection.market { stroke: var(--accent-primary); }
@@ -148,7 +148,7 @@
 .processing-ring {
   stroke-dasharray: 30 10;
   stroke-opacity: 0.6;
-  animation: processingSpin 400s linear infinite, processingPulse 120s ease-in-out infinite;
+  animation: processingSpin 20s linear infinite, processingPulse 2s ease-in-out infinite;
 }
 
 .processing-ring.market { stroke: var(--accent-primary); }
@@ -250,18 +250,18 @@
 
 /* Particle Flow - each stream has different delay */
 .data-particle:nth-child(8n+1) { animation-delay: 0s; }
-.data-particle:nth-child(8n+2) { animation-delay: 22s; }
-.data-particle:nth-child(8n+3) { animation-delay: 45s; }
-.data-particle:nth-child(8n+4) { animation-delay: 67s; }
-.data-particle:nth-child(8n+5) { animation-delay: 90s; }
-.data-particle:nth-child(8n+6) { animation-delay: 112s; }
-.data-particle:nth-child(8n+7) { animation-delay: 135s; }
-.data-particle:nth-child(8n+8) { animation-delay: 157s; }
+.data-particle:nth-child(8n+2) { animation-delay: 1s; }
+.data-particle:nth-child(8n+3) { animation-delay: 2s; }
+.data-particle:nth-child(8n+4) { animation-delay: 3s; }
+.data-particle:nth-child(8n+5) { animation-delay: 4s; }
+.data-particle:nth-child(8n+6) { animation-delay: 5s; }
+.data-particle:nth-child(8n+7) { animation-delay: 6s; }
+.data-particle:nth-child(8n+8) { animation-delay: 7s; }
 
 @keyframes particleFlow {
   0% { opacity: 0; transform: translateX(0) translateY(0) scale(0.5); }
-  2% { opacity: 1; }
-  95% { opacity: 1; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
   100% { opacity: 0; transform: translateX(var(--tx, 100px)) translateY(var(--ty, -50px)) scale(1); }
 }
 
@@ -277,45 +277,45 @@
 }
 
 .data-source-label:nth-child(8n+1) { animation-delay: 0s; }
-.data-source-label:nth-child(8n+2) { animation-delay: 22s; }
-.data-source-label:nth-child(8n+3) { animation-delay: 45s; }
-.data-source-label:nth-child(8n+4) { animation-delay: 67s; }
-.data-source-label:nth-child(8n+5) { animation-delay: 90s; }
-.data-source-label:nth-child(8n+6) { animation-delay: 112s; }
-.data-source-label:nth-child(8n+7) { animation-delay: 135s; }
-.data-source-label:nth-child(8n+8) { animation-delay: 157s; }
+.data-source-label:nth-child(8n+2) { animation-delay: 1s; }
+.data-source-label:nth-child(8n+3) { animation-delay: 2s; }
+.data-source-label:nth-child(8n+4) { animation-delay: 3s; }
+.data-source-label:nth-child(8n+5) { animation-delay: 4s; }
+.data-source-label:nth-child(8n+6) { animation-delay: 5s; }
+.data-source-label:nth-child(8n+7) { animation-delay: 6s; }
+.data-source-label:nth-child(8n+8) { animation-delay: 7s; }
 
 @keyframes labelFade {
   0% { opacity: 0; transform: translateX(-20px); }
-  5% { opacity: 1; transform: translateX(0); }
-  95% { opacity: 1; }
+  20% { opacity: 1; transform: translateX(0); }
+  80% { opacity: 1; }
   100% { opacity: 0; transform: translateX(20px); }
 }
 
 .data-connection:nth-child(8n+1) { animation-delay: 0s; }
-.data-connection:nth-child(8n+2) { animation-delay: 22s; }
-.data-connection:nth-child(8n+3) { animation-delay: 45s; }
-.data-connection:nth-child(8n+4) { animation-delay: 67s; }
-.data-connection:nth-child(8n+5) { animation-delay: 90s; }
-.data-connection:nth-child(8n+6) { animation-delay: 112s; }
-.data-connection:nth-child(8n+7) { animation-delay: 135s; }
-.data-connection:nth-child(8n+8) { animation-delay: 157s; }
+.data-connection:nth-child(8n+2) { animation-delay: 1s; }
+.data-connection:nth-child(8n+3) { animation-delay: 2s; }
+.data-connection:nth-child(8n+4) { animation-delay: 3s; }
+.data-connection:nth-child(8n+5) { animation-delay: 4s; }
+.data-connection:nth-child(8n+6) { animation-delay: 5s; }
+.data-connection:nth-child(8n+7) { animation-delay: 6s; }
+.data-connection:nth-child(8n+8) { animation-delay: 7s; }
 
 @keyframes connectionDraw {
   0% { stroke-opacity: 0; stroke-dashoffset: 100; }
-  10% { stroke-opacity: 0.5; stroke-dashoffset: 0; }
-  90% { stroke-opacity: 0.5; stroke-dashoffset: -100; }
+  30% { stroke-opacity: 0.5; stroke-dashoffset: 0; }
+  70% { stroke-opacity: 0.5; stroke-dashoffset: -100; }
   100% { stroke-opacity: 0; stroke-dashoffset: -200; }
 }
 
 .processing-ring:nth-of-type(1) { animation-delay: 0s; }
-.processing-ring:nth-of-type(2) { animation-delay: 50s; }
-.processing-ring:nth-of-type(3) { animation-delay: 100s; }
-.processing-ring:nth-of-type(4) { animation-delay: 150s; }
-.processing-ring:nth-of-type(5) { animation-delay: 200s; }
-.processing-ring:nth-of-type(6) { animation-delay: 250s; }
-.processing-ring:nth-of-type(7) { animation-delay: 300s; }
-.processing-ring:nth-of-type(8) { animation-delay: 350s; }
+.processing-ring:nth-of-type(2) { animation-delay: 2s; }
+.processing-ring:nth-of-type(3) { animation-delay: 4s; }
+.processing-ring:nth-of-type(4) { animation-delay: 6s; }
+.processing-ring:nth-of-type(5) { animation-delay: 8s; }
+.processing-ring:nth-of-type(6) { animation-delay: 10s; }
+.processing-ring:nth-of-type(7) { animation-delay: 12s; }
+.processing-ring:nth-of-type(8) { animation-delay: 14s; }
 
 @keyframes processingSpin {
   from { transform: rotate(0deg); }
@@ -327,17 +327,21 @@
   50% { stroke-opacity: 0.8; stroke-width: 4; }
 }
 
-.output-data:nth-child(6n+1) { animation-delay: 30s; }
-.output-data:nth-child(6n+2) { animation-delay: 60s; }
-.output-data:nth-child(6n+3) { animation-delay: 90s; }
-.output-data:nth-child(6n+4) { animation-delay: 120s; }
-.output-data:nth-child(6n+5) { animation-delay: 150s; }
-.output-data:nth-child(6n+6) { animation-delay: 180s; }
+.output-data:nth-child(10n+1) { animation-delay: 1s; }
+.output-data:nth-child(10n+2) { animation-delay: 2s; }
+.output-data:nth-child(10n+3) { animation-delay: 3s; }
+.output-data:nth-child(10n+4) { animation-delay: 4s; }
+.output-data:nth-child(10n+5) { animation-delay: 5s; }
+.output-data:nth-child(10n+6) { animation-delay: 6s; }
+.output-data:nth-child(10n+7) { animation-delay: 7s; }
+.output-data:nth-child(10n+8) { animation-delay: 8s; }
+.output-data:nth-child(10n+9) { animation-delay: 9s; }
+.output-data:nth-child(10n+10) { animation-delay: 10s; }
 
 @keyframes outputAppear {
   0% { opacity: 0; transform: translateY(10px) scale(0.8); }
-  10% { opacity: 1; transform: translateY(0) scale(1); }
-  90% { opacity: 1; }
+  20% { opacity: 1; transform: translateY(0) scale(1); }
+  80% { opacity: 1; }
   100% { opacity: 0; transform: translateY(-10px) scale(0.8); }
 }
 

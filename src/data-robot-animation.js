@@ -90,7 +90,7 @@ export class DataRobotAnimation {
       ring.setAttribute('stroke', i % 2 === 0 ? 'var(--accent-primary)' : 'var(--accent-secondary)');
       ring.setAttribute('stroke-width', i <= 2 ? '1.5' : '1');
       ring.setAttribute('stroke-dasharray', i % 2 === 0 ? '20 10' : '10 10');
-      ring.style.animationDelay = `${i * 30}s`; // Match long durations
+      ring.style.animationDelay = `${i * 1}s`; // Match faster durations
       antenna.appendChild(ring);
     }
     
@@ -98,7 +98,7 @@ export class DataRobotAnimation {
     for (let i = 1; i <= 4; i++) {
       const decoration = this.createCircle(cx, cy - 130 - i * 8, 2 + i * 0.5, i % 2 === 0 ? 'var(--accent-primary)' : 'var(--accent-warm)');
       decoration.setAttribute('opacity', '0.4');
-      decoration.style.animationDelay = `${i * 45}s`;
+      decoration.style.animationDelay = `${i * 2}s`;
       antenna.appendChild(decoration);
     }
     
@@ -226,7 +226,7 @@ export class DataRobotAnimation {
       decorRing.setAttribute('stroke-width', '0.5');
       decorRing.setAttribute('stroke-opacity', '0.15');
       decorRing.setAttribute('stroke-dasharray', '5 15');
-      decorRing.style.animationDuration = `${300 + i * 100}s`;
+      decorRing.style.animationDuration = `${20 + i * 5}s`; // Match faster durations
       coreGroup.appendChild(decorRing);
     }
     
@@ -267,7 +267,7 @@ export class DataRobotAnimation {
         const light = this.createCircle(panelX, panelY + 4 + i * 5, 2, 
           i % 3 === 0 ? 'var(--accent-primary)' : i % 3 === 1 ? 'var(--accent-secondary)' : 'var(--accent-warm)');
         light.setAttribute('opacity', '0.6');
-        light.style.animationDelay = `${i * 25}s`;
+        light.style.animationDelay = `${i * 1}s`; // Match faster durations
         torso.appendChild(light);
       }
       
@@ -361,7 +361,7 @@ export class DataRobotAnimation {
       const light = this.createCircle(cx - 55 + i * 10, cy + 85, 2, 
         i % 4 === 0 ? 'var(--accent-primary)' : i % 4 === 1 ? 'var(--accent-secondary)' : i % 4 === 2 ? 'var(--accent-warm)' : '#a855f7');
       light.setAttribute('opacity', '0.5');
-      light.style.animationDelay = `${i * 15}s`;
+      light.style.animationDelay = `${i * 1}s`; // Match faster durations
       baseGroup.appendChild(light);
     }
     
@@ -418,7 +418,7 @@ export class DataRobotAnimation {
         2
       );
       connection.setAttribute('class', `data-connection ${source.id}`);
-      connection.style.animationDelay = `${sourceIndex * 22}s`;
+      connection.style.animationDelay = `${sourceIndex * 1}s`;
       this.svg.appendChild(connection);
       
       // Secondary connection line (thinner, different path)
@@ -431,7 +431,7 @@ export class DataRobotAnimation {
       connection2.setAttribute('class', `data-connection ${source.id}`);
       connection2.setAttribute('stroke-dasharray', '4 8');
       connection2.setAttribute('stroke-opacity', '0.3');
-      connection2.style.animationDelay = `${sourceIndex * 22 + 11}s`;
+      connection2.style.animationDelay = `${sourceIndex * 1 + 0.5}s`;
       this.svg.appendChild(connection2);
       
       // Source label
@@ -441,7 +441,7 @@ export class DataRobotAnimation {
       label.setAttribute('fill', source.color);
       label.setAttribute('text-anchor', isLeft ? 'start' : 'end');
       label.setAttribute('dominant-baseline', 'middle');
-      label.style.animationDelay = `${sourceIndex * 22}s`;
+      label.style.animationDelay = `${sourceIndex * 1}s`;
       this.svg.appendChild(label);
       
       // Source node
@@ -455,7 +455,7 @@ export class DataRobotAnimation {
       const pulseRing = this.createCircle(sourceX + (isLeft ? 30 : -30), sourceY, 20, 'none', 'processing-ring');
       pulseRing.setAttribute('stroke', source.color);
       pulseRing.setAttribute('stroke-width', '1.5');
-      pulseRing.style.animationDelay = `${sourceIndex * 22 + 5}s`;
+      pulseRing.style.animationDelay = `${sourceIndex * 1 + 0.5}s`;
       this.svg.appendChild(pulseRing);
       
       // Secondary pulse rings
@@ -465,8 +465,8 @@ export class DataRobotAnimation {
         extraRing.setAttribute('stroke-width', '0.5');
         extraRing.setAttribute('stroke-opacity', '0.2');
         extraRing.setAttribute('stroke-dasharray', '5 15');
-        extraRing.style.animationDelay = `${sourceIndex * 22 + 5 + r * 30}s`;
-        extraRing.style.animationDuration = `${200 + r * 100}s`;
+        extraRing.style.animationDelay = `${sourceIndex * 1 + 0.5 + r * 2}s`;
+        extraRing.style.animationDuration = `${20 + r * 10}s`;
         this.svg.appendChild(extraRing);
       }
       
@@ -512,13 +512,13 @@ export class DataRobotAnimation {
         '#84cc16'
       ];
       const color = colorVariations[Math.floor(Math.random() * colorVariations.length)];
-      const delay = Math.random() * 180;
+      const delay = Math.random() * 8;
       
       const particle = this.createCircle(startX, startY, size, color, 'data-particle ambient');
       particle.style.setProperty('--tx', `${tx}px`);
       particle.style.setProperty('--ty', `${ty}px`);
       particle.style.animationDelay = `${delay}s`;
-      particle.style.animationDuration = `${200 + Math.random() * 100}s`;
+      particle.style.animationDuration = `${8 + Math.random() * 4}s`;
       particle.setAttribute('opacity', '0.3');
       particle.setAttribute('filter', `drop-shadow(0 0 ${size * 3}px ${color})`);
       
@@ -539,7 +539,7 @@ export class DataRobotAnimation {
     
     indicators.forEach((indicator, i) => {
       const group = this.createGroup('floating-indicator');
-      group.style.animationDelay = `${i * 30}s`;
+      group.style.animationDelay = `${i * 1}s`;
       
       // Background
       const bg = this.createRect(indicator.x - 35, indicator.y - 10, 70, 20, 6, 'var(--bg-card-solid)', indicator.color, 1);
@@ -561,8 +561,8 @@ export class DataRobotAnimation {
       ring.setAttribute('stroke-width', '1');
       ring.setAttribute('stroke-opacity', '0.2');
       ring.setAttribute('stroke-dasharray', '8 12');
-      ring.style.animationDelay = `${i * 30 + 10}s`;
-      ring.style.animationDuration = '200s';
+      ring.style.animationDelay = `${i * 1 + 1}s`;
+      ring.style.animationDuration = '20s';
       group.appendChild(ring);
       
       robotGroup.appendChild(group);
@@ -571,7 +571,7 @@ export class DataRobotAnimation {
   
   createParticle(sourceIndex, particleIndex, totalParticles, source, isLeft, sourceX, sourceY, targetX, targetY) {
     const progress = (particleIndex + sourceIndex * 0.17) / (totalParticles * this.options.sources.length);
-    const delay = progress * 180; // Spread across full 180s cycle
+    const delay = progress * 8; // Spread across full 8s cycle
     
     const startX = isLeft ? sourceX + 30 : sourceX - 30;
     const startY = sourceY;
@@ -590,7 +590,7 @@ export class DataRobotAnimation {
     particle.style.setProperty('--tx', `${tx}px`);
     particle.style.setProperty('--ty', `${ty}px`);
     particle.style.animationDelay = `${delay}s`;
-    particle.style.animationDuration = `${180 + Math.random() * 60}s`; // 180-240s
+    particle.style.animationDuration = `${8 + Math.random() * 4}s`; // 8-12s
     
     // Add glow
     particle.setAttribute('filter', `drop-shadow(0 0 ${size * 2}px ${source.color})`);
@@ -608,7 +608,7 @@ export class DataRobotAnimation {
       const ring = this.createCircle(cx, cy, 28 + i * 6, 'none', 'processing-ring');
       ring.setAttribute('stroke', this.options.sources[i % this.options.sources.length].color);
       ring.setAttribute('stroke-width', i < 3 ? '2' : '1');
-      ring.style.animationDelay = `${i * 50}s`; // Match CSS delays
+      ring.style.animationDelay = `${i * 2}s`; // Match CSS delays (2s intervals)
       this.svg.appendChild(ring);
     }
   }
@@ -618,16 +618,16 @@ export class DataRobotAnimation {
     const cy = this.options.height / 2 + 120;
     
     const outputs = [
-      { text: 'BTC: $67,420 ↑', class: 'positive', delay: 30 },
-      { text: 'ETH: $3,520 ↑', class: 'positive', delay: 45 },
-      { text: 'SOL: $142.50 →', class: 'neutral', delay: 60 },
-      { text: 'Signal: LONG BTC', class: 'positive', delay: 75 },
-      { text: 'Risk: 2.3% ✓', class: 'positive', delay: 90 },
-      { text: 'Next: 14s', class: 'neutral', delay: 105 },
-      { text: 'Whale: 1,200 BTC moved', class: 'neutral', delay: 120 },
-      { text: 'CPI: 3.2% est.', class: 'neutral', delay: 135 },
-      { text: 'Funding: +0.01%', class: 'neutral', delay: 150 },
-      { text: 'OI: $12.4B ↑', class: 'positive', delay: 165 }
+      { text: 'BTC: $67,420 ↑', class: 'positive', delay: 1 },
+      { text: 'ETH: $3,520 ↑', class: 'positive', delay: 2 },
+      { text: 'SOL: $142.50 →', class: 'neutral', delay: 3 },
+      { text: 'Signal: LONG BTC', class: 'positive', delay: 4 },
+      { text: 'Risk: 2.3% ✓', class: 'positive', delay: 5 },
+      { text: 'Next: 14s', class: 'neutral', delay: 6 },
+      { text: 'Whale: 1,200 BTC moved', class: 'neutral', delay: 7 },
+      { text: 'CPI: 3.2% est.', class: 'neutral', delay: 8 },
+      { text: 'Funding: +0.01%', class: 'neutral', delay: 9 },
+      { text: 'OI: $12.4B ↑', class: 'positive', delay: 10 }
     ];
     
     outputs.forEach((output, i) => {
@@ -638,7 +638,7 @@ export class DataRobotAnimation {
       text.setAttribute('text-anchor', i < 5 ? 'start' : 'end');
       text.setAttribute('dominant-baseline', 'middle');
       text.style.animationDelay = `${output.delay}s`;
-      text.style.animationDuration = '180s';
+      text.style.animationDuration = '8s';
       this.svg.appendChild(text);
     });
   }
