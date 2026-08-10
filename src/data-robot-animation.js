@@ -617,27 +617,65 @@ export class DataRobotAnimation {
     const cx = this.options.width / 2;
     const cy = this.options.height / 2 + 120;
     
-    const outputs = [
-      { text: 'BTC: $67,420 ↑', class: 'positive', delay: 1 },
-      { text: 'ETH: $3,520 ↑', class: 'positive', delay: 2 },
-      { text: 'SOL: $142.50 →', class: 'neutral', delay: 3 },
-      { text: 'Signal: LONG BTC', class: 'positive', delay: 4 },
-      { text: 'Risk: 2.3% ✓', class: 'positive', delay: 5 },
-      { text: 'Next: 14s', class: 'neutral', delay: 6 },
-      { text: 'Whale: 1,200 BTC moved', class: 'neutral', delay: 7 },
-      { text: 'CPI: 3.2% est.', class: 'neutral', delay: 8 },
-      { text: 'Funding: +0.01%', class: 'neutral', delay: 9 },
-      { text: 'OI: $12.4B ↑', class: 'positive', delay: 10 }
+    // Coin symbols rotating display (no prices)
+    const coinSymbols = [
+      { text: '₿ BTC', class: 'neutral' },
+      { text: 'Ξ ETH', class: 'neutral' },
+      { text: '◎ SOL', class: 'neutral' },
+      { text: '▲ BNB', class: 'neutral' },
+      { text: '● XRP', class: 'neutral' },
+      { text: '◆ ADA', class: 'neutral' },
+      { text: '⬡ DOT', class: 'neutral' },
+      { text: '◇ DOGE', class: 'neutral' },
+      { text: '◆ AVAX', class: 'neutral' },
+      { text: '● MATIC', class: 'neutral' },
+      { text: '◇ LINK', class: 'neutral' },
+      { text: '▲ UNI', class: 'neutral' },
+      { text: '● ATOM', class: 'neutral' },
+      { text: '◆ NEAR', class: 'neutral' },
+      { text: '◇ ARB', class: 'neutral' },
+      { text: '● OP', class: 'neutral' },
+      { text: '◆ INJ', class: 'neutral' },
+      { text: '◇ TIA', class: 'neutral' },
+      { text: '▲ RENDER', class: 'neutral' },
+      { text: '● FET', class: 'neutral' },
     ];
     
-    outputs.forEach((output, i) => {
-      const y = cy + (i % 5) * 18;
-      const x = cx + (i < 5 ? -120 : 120);
+    // Whale operations with different coins - sequential display
+    const whaleOps = [
+      { text: '🐋 Whale: 1,240 BTC accumulated', class: 'positive' },
+      { text: '🐋 Whale: 8,500 ETH transferred to cold storage', class: 'positive' },
+      { text: '🐋 Whale: 45M SOL staked', class: 'positive' },
+      { text: '🐋 Whale: 120M XRP moved to exchange', class: 'negative' },
+      { text: '🐋 Whale: 2.5M BNB burned', class: 'positive' },
+      { text: '🐋 Whale: 15M ADA delegated', class: 'positive' },
+      { text: '🐋 Whale: 800K DOT bonded', class: 'positive' },
+      { text: '🐋 Whale: 50M DOGE accumulated', class: 'neutral' },
+      { text: '🐋 Whale: 300K AVAX staked', class: 'positive' },
+      { text: '🐋 Whale: 5M MATIC bridged to L2', class: 'positive' },
+      { text: '🐋 Whale: 200K LINK accumulated', class: 'positive' },
+      { text: '🐋 Whale: 1.2M UNI governance vote', class: 'neutral' },
+      { text: '🐋 Whale: 500K ATOM staked', class: 'positive' },
+      { text: '🐋 Whale: 3M NEAR locked', class: 'positive' },
+      { text: '🐋 Whale: 2M ARB claimed', class: 'neutral' },
+      { text: '🐋 Whale: 800K OP delegated', class: 'positive' },
+      { text: '🐋 Whale: 150K INJ staked', class: 'positive' },
+      { text: '🐋 Whale: 500K TIA staked', class: 'positive' },
+      { text: '🐋 Whale: 100K RENDER delegated', class: 'positive' },
+      { text: '🐋 Whale: 2M FET accumulated', class: 'positive' },
+    ];
+    
+    // Combine: first show coin symbols, then whale ops
+    const allOutputs = [...coinSymbols, ...whaleOps];
+    
+    allOutputs.forEach((output, i) => {
+      const y = cy + (i % 6) * 16;
+      const x = cx + (i % 2 === 0 ? -140 : 140);
       const text = this.createText(x, y, output.text, `output-data ${output.class}`);
-      text.setAttribute('font-size', '10');
-      text.setAttribute('text-anchor', i < 5 ? 'start' : 'end');
+      text.setAttribute('font-size', '9');
+      text.setAttribute('text-anchor', i % 2 === 0 ? 'start' : 'end');
       text.setAttribute('dominant-baseline', 'middle');
-      text.style.animationDelay = `${output.delay}s`;
+      text.style.animationDelay = `${(i + 1) * 0.4}s`; // Staggered every 0.4s
       text.style.animationDuration = '8s';
       this.svg.appendChild(text);
     });
