@@ -131,6 +131,7 @@ const pages = {
         }, 0);
 
         return `
+          <div class="data-robot-container" id="dataRobotContainer" role="img" aria-label="AI Robot memproses data dari berbagai sumber: Market Data, Exchange API, AI Models, News Feed, On-Chain, Social Sentiment"></div>
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-card-label">Total Balance</div>
@@ -155,7 +156,6 @@ const pages = {
               <div class="stat-card-change positive">+2.1% vs last week</div>
             </div>
           </div>
-          <div class="data-robot-container" id="dataRobotContainer" role="img" aria-label="AI Robot memproses data dari berbagai sumber: Market Data, Exchange API, AI Models, News Feed, On-Chain, Social Sentiment"></div>
           <div class="content-grid">
             <div class="card">
               <div class="card-header">
