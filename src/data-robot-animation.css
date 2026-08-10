@@ -174,55 +174,76 @@
 
 /* Keyframes */
 @keyframes robotFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0% { transform: translateY(0); }
+  25% { transform: translateY(-4px); }
+  50% { transform: translateY(0); }
+  75% { transform: translateY(4px); }
+  100% { transform: translateY(0); }
 }
 
 @keyframes eyeBlink {
-  0%, 45%, 55%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(0.1); }
+  0% { transform: scaleY(1); }
+  45% { transform: scaleY(1); }
+  47% { transform: scaleY(0.1); }
+  50% { transform: scaleY(1); }
+  55% { transform: scaleY(1); }
+  100% { transform: scaleY(1); }
 }
 
 @keyframes pupilMove {
-  0%, 100% { transform: translate(0, 0); }
+  0% { transform: translate(0, 0); }
   25% { transform: translate(2px, 1px); }
   50% { transform: translate(-1px, -1px); }
   75% { transform: translate(1px, 2px); }
+  100% { transform: translate(0, 0); }
 }
 
 @keyframes antennaWiggle {
-  0%, 100% { transform: rotate(-5deg); }
-  50% { transform: rotate(5deg); }
+  0% { transform: rotate(-5deg); }
+  25% { transform: rotate(5deg); }
+  50% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+  100% { transform: rotate(-5deg); }
 }
 
 @keyframes antennaPulse {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.3); }
+  0% { opacity: 0.6; transform: scale(1); }
+  25% { opacity: 1; transform: scale(1.3); }
+  50% { opacity: 0.6; transform: scale(1); }
+  75% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0.6; transform: scale(1); }
 }
 
 @keyframes earTwitch {
-  0%, 80%, 100% { transform: rotate(0deg); }
-  85% { transform: rotate(8deg); }
-  90% { transform: rotate(-5deg); }
-  95% { transform: rotate(3deg); }
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(8deg); }
+  50% { transform: rotate(-5deg); }
+  75% { transform: rotate(3deg); }
+  100% { transform: rotate(0deg); }
 }
 
 @keyframes mouthSpeak {
-  0%, 100% { transform: scaleX(1) scaleY(0.3); }
-  20% { transform: scaleX(0.8) scaleY(0.8); }
-  40% { transform: scaleX(1.2) scaleY(0.4); }
-  60% { transform: scaleX(0.6) scaleY(1); }
-  80% { transform: scaleX(1) scaleY(0.3); }
+  0% { transform: scaleX(1) scaleY(0.3); }
+  25% { transform: scaleX(0.8) scaleY(0.8); }
+  50% { transform: scaleX(1.2) scaleY(0.4); }
+  75% { transform: scaleX(0.6) scaleY(1); }
+  100% { transform: scaleX(1) scaleY(0.3); }
 }
 
 @keyframes torsoBreath {
-  0%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(1.02); }
+  0% { transform: scaleY(1); }
+  25% { transform: scaleY(1.02); }
+  50% { transform: scaleY(1); }
+  75% { transform: scaleY(1.01); }
+  100% { transform: scaleY(1); }
 }
 
 @keyframes corePulse {
-  0%, 100% { opacity: 0.7; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.15); }
+  0% { opacity: 0.7; transform: scale(1); }
+  25% { opacity: 1; transform: scale(1.15); }
+  50% { opacity: 0.7; transform: scale(1); }
+  75% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0.7; transform: scale(1); }
 }
 
 @keyframes coreRingRotate {
@@ -231,21 +252,27 @@
 }
 
 @keyframes armLeftMove {
-  0%, 100% { transform: rotate(-15deg); }
-  30% { transform: rotate(-35deg); }
-  60% { transform: rotate(-5deg); }
+  0% { transform: rotate(-15deg); }
+  25% { transform: rotate(-35deg); }
+  50% { transform: rotate(-5deg); }
+  75% { transform: rotate(-25deg); }
+  100% { transform: rotate(-15deg); }
 }
 
 @keyframes armRightMove {
-  0%, 100% { transform: rotate(15deg); }
-  30% { transform: rotate(35deg); }
-  60% { transform: rotate(5deg); }
+  0% { transform: rotate(15deg); }
+  25% { transform: rotate(35deg); }
+  50% { transform: rotate(5deg); }
+  75% { transform: rotate(25deg); }
+  100% { transform: rotate(15deg); }
 }
 
 @keyframes handGrip {
-  0%, 100% { transform: scale(1); }
-  30% { transform: scale(0.8); }
-  60% { transform: scale(1.1); }
+  0% { transform: scale(1); }
+  25% { transform: scale(0.8); }
+  50% { transform: scale(1.1); }
+  75% { transform: scale(0.9); }
+  100% { transform: scale(1); }
 }
 
 /* Particle Flow - each stream has different delay */
@@ -259,21 +286,22 @@
 .data-particle:nth-child(8n+8) { animation-delay: 7s; }
 
 @keyframes particleFlow {
-  0% { opacity: 0; transform: translateX(0) translateY(0) scale(0.5); }
-  10% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(var(--tx, 100px)) translateY(var(--ty, -50px)) scale(1); }
+  0% { opacity: 0.3; transform: translateX(0) translateY(0) scale(0.5); }
+  10% { opacity: 1; transform: translateX(calc(var(--tx, 100px) * 0.1)) translateY(calc(var(--ty, -50px) * 0.1)) scale(0.6); }
+  50% { opacity: 1; transform: translateX(calc(var(--tx, 100px) * 0.5)) translateY(calc(var(--ty, -50px) * 0.5)) scale(1); }
+  90% { opacity: 1; transform: translateX(calc(var(--tx, 100px) * 0.9)) translateY(calc(var(--ty, -50px) * 0.9)) scale(1); }
+  100% { opacity: 0.3; transform: translateX(var(--tx, 100px)) translateY(var(--ty, -50px)) scale(0.5); }
 }
 
 @keyframes particlePulse {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.5); }
+  0%, 100% { opacity: 0.6; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.4); }
 }
 
 @keyframes particleTrail {
-  0% { stroke-dashoffset: 0; opacity: 0.3; }
-  50% { stroke-dashoffset: 20; opacity: 0.8; }
-  100% { stroke-dashoffset: 40; opacity: 0.3; }
+  0% { stroke-dashoffset: 0; opacity: 0.4; }
+  50% { stroke-dashoffset: 30; opacity: 0.9; }
+  100% { stroke-dashoffset: 60; opacity: 0.4; }
 }
 
 .data-source-label:nth-child(8n+1) { animation-delay: 0s; }
@@ -286,10 +314,10 @@
 .data-source-label:nth-child(8n+8) { animation-delay: 7s; }
 
 @keyframes labelFade {
-  0% { opacity: 0; transform: translateX(-20px); }
-  20% { opacity: 1; transform: translateX(0); }
-  80% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(20px); }
+  0% { opacity: 0.4; transform: translateX(-10px); }
+  30% { opacity: 1; transform: translateX(0); }
+  70% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0.4; transform: translateX(10px); }
 }
 
 .data-connection:nth-child(8n+1) { animation-delay: 0s; }
@@ -302,10 +330,9 @@
 .data-connection:nth-child(8n+8) { animation-delay: 7s; }
 
 @keyframes connectionDraw {
-  0% { stroke-opacity: 0; stroke-dashoffset: 100; }
-  30% { stroke-opacity: 0.5; stroke-dashoffset: 0; }
-  70% { stroke-opacity: 0.5; stroke-dashoffset: -100; }
-  100% { stroke-opacity: 0; stroke-dashoffset: -200; }
+  0% { stroke-opacity: 0.3; stroke-dashoffset: 0; }
+  50% { stroke-opacity: 0.8; stroke-dashoffset: 100; }
+  100% { stroke-opacity: 0.3; stroke-dashoffset: 200; }
 }
 
 .processing-ring:nth-of-type(1) { animation-delay: 0s; }
@@ -323,8 +350,8 @@
 }
 
 @keyframes processingPulse {
-  0%, 100% { stroke-opacity: 0.3; stroke-width: 2; }
-  50% { stroke-opacity: 0.8; stroke-width: 4; }
+  0%, 100% { stroke-opacity: 0.4; stroke-width: 2; }
+  50% { stroke-opacity: 0.9; stroke-width: 4; }
 }
 
 .output-data:nth-child(10n+1) { animation-delay: 1s; }
@@ -339,10 +366,10 @@
 .output-data:nth-child(10n+10) { animation-delay: 10s; }
 
 @keyframes outputAppear {
-  0% { opacity: 0; transform: translateY(10px) scale(0.8); }
+  0% { opacity: 0.5; transform: translateY(5px) scale(0.9); }
   20% { opacity: 1; transform: translateY(0) scale(1); }
-  80% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-10px) scale(0.8); }
+  80% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0.5; transform: translateY(-5px) scale(0.9); }
 }
 
 /* Legend */
