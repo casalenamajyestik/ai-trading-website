@@ -1,0 +1,389 @@
+/* ============ Data Robot Animation ============ */
+.data-robot-container {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  background: linear-gradient(180deg, var(--bg-tertiary) 0%, var(--bg-card) 100%);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.data-robot-svg {
+  width: 100%;
+  height: 100%;
+  max-width: 600px;
+  display: block;
+}
+
+/* Robot Body Parts */
+.robot-body {
+  filter: drop-shadow(0 8px 24px rgba(79, 142, 255, 0.15));
+}
+
+.robot-head {
+  transform-origin: center 70px;
+  animation: robotFloat 4s ease-in-out infinite;
+}
+
+.robot-eye {
+  transform-origin: center;
+  animation: eyeBlink 4s ease-in-out infinite;
+}
+
+.robot-eye-pupil {
+  animation: pupilMove 6s ease-in-out infinite;
+}
+
+.robot-antenna {
+  transform-origin: bottom center;
+  animation: antennaWiggle 3s ease-in-out infinite;
+}
+
+.robot-antenna-ball {
+  animation: antennaPulse 2s ease-in-out infinite;
+}
+
+.robot-ear {
+  animation: earTwitch 5s ease-in-out infinite;
+}
+
+.robot-mouth {
+  animation: mouthSpeak 3s ease-in-out infinite;
+}
+
+.robot-torso {
+  animation: torsoBreath 4s ease-in-out infinite;
+}
+
+.robot-core {
+  animation: corePulse 2s ease-in-out infinite;
+}
+
+.robot-core-ring {
+  animation: coreRingRotate 8s linear infinite;
+}
+
+.robot-core-ring.reverse {
+  animation-direction: reverse;
+  animation-duration: 10s;
+}
+
+.robot-arm {
+  transform-origin: top center;
+}
+
+.robot-arm-left {
+  animation: armLeftMove 4s ease-in-out infinite;
+}
+
+.robot-arm-right {
+  animation: armRightMove 4s ease-in-out infinite;
+}
+
+.robot-hand {
+  transform-origin: center;
+  animation: handGrip 3s ease-in-out infinite;
+}
+
+/* Data Stream Particles */
+.data-particle {
+  opacity: 0;
+  animation: particleFlow 3s ease-out infinite;
+}
+
+.data-particle.market { fill: var(--accent-primary); }
+.data-particle.exchange { fill: var(--accent-secondary); }
+.data-particle.ai { fill: var(--accent-warm); }
+.data-particle.news { fill: #a855f7; }
+.data-particle.chain { fill: #f97316; }
+.data-particle.social { fill: #ec4899; }
+
+/* Data Source Labels */
+.data-source-label {
+  font-family: 'Geist', -apple-system, sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0;
+  animation: labelFade 3s ease-out infinite;
+  pointer-events: none;
+}
+
+.data-source-label.market { fill: var(--accent-primary); }
+.data-source-label.exchange { fill: var(--accent-secondary); }
+.data-source-label.ai { fill: var(--accent-warm); }
+.data-source-label.news { fill: #a855f7; }
+.data-source-label.chain { fill: #f97316; }
+.data-source-label.social { fill: #ec4899; }
+
+/* Connection Lines */
+.data-connection {
+  stroke-dasharray: 8 4;
+  stroke-opacity: 0;
+  animation: connectionDraw 3s ease-out infinite;
+}
+
+.data-connection.market { stroke: var(--accent-primary); }
+.data-connection.exchange { stroke: var(--accent-secondary); }
+.data-connection.ai { stroke: var(--accent-warm); }
+.data-connection.news { stroke: #a855f7; }
+.data-connection.chain { stroke: #f97316; }
+.data-connection.social { stroke: #ec4899; }
+
+/* Processing Indicator */
+.processing-ring {
+  stroke-dasharray: 30 10;
+  stroke-opacity: 0.6;
+  animation: processingSpin 2s linear infinite, processingPulse 2s ease-in-out infinite;
+}
+
+.processing-ring.market { stroke: var(--accent-primary); }
+.processing-ring.exchange { stroke: var(--accent-secondary); }
+.processing-ring.ai { stroke: var(--accent-warm); }
+.processing-ring.news { stroke: #a855f7; }
+.processing-ring.chain { stroke: #f97316; }
+.processing-ring.social { stroke: #ec4899; }
+
+/* Output Data */
+.output-data {
+  opacity: 0;
+  animation: outputAppear 3s ease-out infinite;
+  font-family: 'Geist', -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--text-primary);
+}
+
+.output-data.positive { fill: var(--accent-secondary); }
+.output-data.negative { fill: var(--accent-danger); }
+.output-data.neutral { fill: var(--accent-primary); }
+
+/* Keyframes */
+@keyframes robotFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes eyeBlink {
+  0%, 45%, 55%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.1); }
+}
+
+@keyframes pupilMove {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(2px, 1px); }
+  50% { transform: translate(-1px, -1px); }
+  75% { transform: translate(1px, 2px); }
+}
+
+@keyframes antennaWiggle {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+@keyframes antennaPulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+@keyframes earTwitch {
+  0%, 80%, 100% { transform: rotate(0deg); }
+  85% { transform: rotate(8deg); }
+  90% { transform: rotate(-5deg); }
+  95% { transform: rotate(3deg); }
+}
+
+@keyframes mouthSpeak {
+  0%, 100% { transform: scaleX(1) scaleY(0.3); }
+  20% { transform: scaleX(0.8) scaleY(0.8); }
+  40% { transform: scaleX(1.2) scaleY(0.4); }
+  60% { transform: scaleX(0.6) scaleY(1); }
+  80% { transform: scaleX(1) scaleY(0.3); }
+}
+
+@keyframes torsoBreath {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.02); }
+}
+
+@keyframes corePulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes coreRingRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes armLeftMove {
+  0%, 100% { transform: rotate(-15deg); }
+  30% { transform: rotate(-35deg); }
+  60% { transform: rotate(-5deg); }
+}
+
+@keyframes armRightMove {
+  0%, 100% { transform: rotate(15deg); }
+  30% { transform: rotate(35deg); }
+  60% { transform: rotate(5deg); }
+}
+
+@keyframes handGrip {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(0.8); }
+  60% { transform: scale(1.1); }
+}
+
+/* Particle Flow - each stream has different delay */
+.data-particle:nth-child(6n+1) { animation-delay: 0s; }
+.data-particle:nth-child(6n+2) { animation-delay: 0.5s; }
+.data-particle:nth-child(6n+3) { animation-delay: 1s; }
+.data-particle:nth-child(6n+4) { animation-delay: 1.5s; }
+.data-particle:nth-child(6n+5) { animation-delay: 2s; }
+.data-particle:nth-child(6n+6) { animation-delay: 2.5s; }
+
+@keyframes particleFlow {
+  0% { opacity: 0; transform: translateX(0) translateY(0) scale(0.5); }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(var(--tx, 100px)) translateY(var(--ty, -50px)) scale(1); }
+}
+
+.data-source-label:nth-child(6n+1) { animation-delay: 0s; }
+.data-source-label:nth-child(6n+2) { animation-delay: 0.5s; }
+.data-source-label:nth-child(6n+3) { animation-delay: 1s; }
+.data-source-label:nth-child(6n+4) { animation-delay: 1.5s; }
+.data-source-label:nth-child(6n+5) { animation-delay: 2s; }
+.data-source-label:nth-child(6n+6) { animation-delay: 2.5s; }
+
+@keyframes labelFade {
+  0% { opacity: 0; transform: translateX(-20px); }
+  20% { opacity: 1; transform: translateX(0); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(20px); }
+}
+
+.data-connection:nth-child(6n+1) { animation-delay: 0s; }
+.data-connection:nth-child(6n+2) { animation-delay: 0.5s; }
+.data-connection:nth-child(6n+3) { animation-delay: 1s; }
+.data-connection:nth-child(6n+4) { animation-delay: 1.5s; }
+.data-connection:nth-child(6n+5) { animation-delay: 2s; }
+.data-connection:nth-child(6n+6) { animation-delay: 2.5s; }
+
+@keyframes connectionDraw {
+  0% { stroke-opacity: 0; stroke-dashoffset: 100; }
+  30% { stroke-opacity: 0.5; stroke-dashoffset: 0; }
+  70% { stroke-opacity: 0.5; stroke-dashoffset: -100; }
+  100% { stroke-opacity: 0; stroke-dashoffset: -200; }
+}
+
+.processing-ring:nth-of-type(1) { animation-delay: 0s; }
+.processing-ring:nth-of-type(2) { animation-delay: 0.33s; }
+.processing-ring:nth-of-type(3) { animation-delay: 0.66s; }
+.processing-ring:nth-of-type(4) { animation-delay: 1s; }
+.processing-ring:nth-of-type(5) { animation-delay: 1.33s; }
+.processing-ring:nth-of-type(6) { animation-delay: 1.66s; }
+
+@keyframes processingSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes processingPulse {
+  0%, 100% { stroke-opacity: 0.3; stroke-width: 2; }
+  50% { stroke-opacity: 0.8; stroke-width: 4; }
+}
+
+.output-data:nth-child(6n+1) { animation-delay: 1.5s; }
+.output-data:nth-child(6n+2) { animation-delay: 2s; }
+.output-data:nth-child(6n+3) { animation-delay: 2.5s; }
+.output-data:nth-child(6n+4) { animation-delay: 3s; }
+.output-data:nth-child(6n+5) { animation-delay: 3.5s; }
+.output-data:nth-child(6n+6) { animation-delay: 4s; }
+
+@keyframes outputAppear {
+  0% { opacity: 0; transform: translateY(10px) scale(0.8); }
+  20% { opacity: 1; transform: translateY(0) scale(1); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-10px) scale(0.8); }
+}
+
+/* Legend */
+.data-robot-legend {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Geist', -apple-system, sans-serif;
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-dot.market { background: var(--accent-primary); box-shadow: 0 0 8px var(--accent-primary); }
+.legend-dot.exchange { background: var(--accent-secondary); box-shadow: 0 0 8px var(--accent-secondary); }
+.legend-dot.ai { background: var(--accent-warm); box-shadow: 0 0 8px var(--accent-warm); }
+.legend-dot.news { background: #a855f7; box-shadow: 0 0 8px #a855f7; }
+.legend-dot.chain { background: #f97316; box-shadow: 0 0 8px #f97316; }
+.legend-dot.social { background: #ec4899; box-shadow: 0 0 8px #ec4899; }
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .robot-head,
+  .robot-eye,
+  .robot-eye-pupil,
+  .robot-antenna,
+  .robot-antenna-ball,
+  .robot-ear,
+  .robot-mouth,
+  .robot-torso,
+  .robot-core,
+  .robot-core-ring,
+  .robot-arm,
+  .robot-hand,
+  .data-particle,
+  .data-source-label,
+  .data-connection,
+  .processing-ring,
+  .output-data {
+    animation: none !important;
+  }
+  .robot-head { transform: translateY(-4px); }
+  .robot-core { opacity: 1; transform: scale(1.15); }
+  .data-particle { opacity: 0.6; }
+  .data-source-label { opacity: 0.8; }
+  .data-connection { stroke-opacity: 0.4; }
+  .processing-ring { stroke-opacity: 0.5; }
+  .output-data { opacity: 0.8; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .data-robot-container {
+    height: 280px;
+  }
+  .legend-item { font-size: 10px; }
+  .legend-dot { width: 6px; height: 6px; }
+}

@@ -13,8 +13,10 @@ import { supabase } from './supabase.js';
 import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
 import { subscribeBotState } from './supabase.js';
 import { initTheme, initLanguage, updateDynamicI18n } from './language-theme.js';
+import { initDataRobot } from './data-robot-animation.js';
 import './styles.css';
 import './styles/settings-tabs.css';
+import './data-robot-animation.css';
 
 // ============ Auth Guard ============
 async function requireAuthWrapper() {
@@ -103,114 +105,124 @@ function getCountryOptions(selectedCode = 'ID') {
 // ============ Page Content ============
 const pages = {
   overview: {
-    title: 'Overview',
-    render: (session) => {
-      const botSession = session.botSession || {};
-      const botState = session.botState || {};
-      const isActive = botSession.is_active || false;
-      const status = botState.status || 'stopped';
-      const mode = botSession.mode || 'paper';
-      const lastHeartbeat = botState.last_heartbeat;
-      const dailyPnL = botState.daily_pnl || 0;
-      const totalPnL = botState.total_pnl || 0;
-      const balance = botState.balance || 0;
+      title: 'Overview',
+      render: (session) => {
+        const botSession = session.botSession || {};
+        const botState = session.botState || {};
+        const isActive = botSession.is_active || false;
+        const status = botState.status || 'stopped';
+        const mode = botSession.mode || 'paper';
+        const lastHeartbeat = botState.last_heartbeat;
+        const dailyPnL = botState.daily_pnl || 0;
+        const totalPnL = botState.total_pnl || 0;
+        const balance = botState.balance || 0;
 
-      const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
-      const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
-      const statusText = isActive ? (status === 'running' ? 'Aktif & Running' : 'Aktif tapi ' + statusLabel.toLowerCase()) : 'Nonaktif';
+        const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
+        const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
+        const statusText = isActive ? (status === 'running' ? 'Aktif & Running' : 'Aktif tapi ' + statusLabel.toLowerCase()) : 'Nonaktif';
 
-      return `
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-card-label">Total Balance</div>
-            <div class="stat-card-value">${formatIDR(balance)}</div>
-            <div class="stat-card-change positive">+12.5% this week</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-label">Trading Bot</div>
-            <div class="stat-card-value">
-              <span class="status-badge ${isActive ? 'running' : 'stopped'}">${statusText}</span>
+        // Initialize data robot animation after render
+        setTimeout(() => {
+          const container = document.getElementById('dataRobotContainer');
+          if (container && !container.dataset.initialized) {
+            container.dataset.initialized = 'true';
+            initDataRobot('#dataRobotContainer');
+          }
+        }, 0);
+
+        return `
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-card-label">Total Balance</div>
+              <div class="stat-card-value">${formatIDR(balance)}</div>
+              <div class="stat-card-change positive">+12.5% this week</div>
             </div>
-            <div class="stat-card-change">${mode === 'live' ? '🔴 LIVE MODE' : '📝 Paper Trading'}</div>
+            <div class="stat-card">
+              <div class="stat-card-label">Trading Bot</div>
+              <div class="stat-card-value">
+                <span class="status-badge ${isActive ? 'running' : 'stopped'}">${statusText}</span>
+              </div>
+              <div class="stat-card-change">${mode === 'live' ? '🔴 LIVE MODE' : '📝 Paper Trading'}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-label">Today's PnL</div>
+              <div class="stat-card-value ${dailyPnL >= 0 ? 'positive' : 'negative'}">${formatIDR(dailyPnL)}</div>
+              <div class="stat-card-change">Daily</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-label">Win Rate</div>
+              <div class="stat-card-value">73.2%</div>
+              <div class="stat-card-change positive">+2.1% vs last week</div>
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-card-label">Today's PnL</div>
-            <div class="stat-card-value ${dailyPnL >= 0 ? 'positive' : 'negative'}">${formatIDR(dailyPnL)}</div>
-            <div class="stat-card-change">Daily</div>
+          <div class="data-robot-container" id="dataRobotContainer" role="img" aria-label="AI Robot memproses data dari berbagai sumber: Market Data, Exchange API, AI Models, News Feed, On-Chain, Social Sentiment"></div>
+          <div class="content-grid">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Active Bots</span>
+                <span class="card-badge">Live</span>
+              </div>
+              <div class="bot-list">
+                <div class="bot-item">
+                  <div class="bot-info">
+                    <div class="bot-icon running"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+                    <div><div class="bot-name">Grid Bot - BTC/USDT</div><div class="bot-strategy">Grid Trading · 0.5% spread</div></div>
+                  </div>
+                  <div class="bot-pnl"><div class="bot-pnl-value positive">+2.34%</div><div class="bot-pnl-label">Today</div></div>
+                </div>
+                <div class="bot-item">
+                  <div class="bot-info">
+                    <div class="bot-icon running"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z"/></svg></div>
+                    <div><div class="bot-name">DCA Bot - ETH/USDT</div><div class="bot-strategy">Dollar Cost Average</div></div>
+                  </div>
+                  <div class="bot-pnl"><div class="bot-pnl-value positive">+1.87%</div><div class="bot-pnl-label">Today</div></div>
+                </div>
+                <div class="bot-item">
+                  <div class="bot-info">
+                    <div class="bot-icon paused"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>
+                    <div><div class="bot-name">AI Adaptive - SOL/USDT</div><div class="bot-strategy">AI Adaptive · ML-based</div></div>
+                  </div>
+                  <div class="bot-pnl"><div class="bot-pnl-value">0.00%</div><div class="bot-pnl-label">Paused</div></div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-card-label">Win Rate</div>
-            <div class="stat-card-value">73.2%</div>
-            <div class="stat-card-change positive">+2.1% vs last week</div>
-          </div>
-        </div>
-        <div class="content-grid">
           <div class="card">
             <div class="card-header">
-              <span class="card-title">Active Bots</span>
-              <span class="card-badge">Live</span>
+              <span class="card-title">Recent Activity</span>
+              <span class="card-badge">Today</span>
             </div>
-            <div class="bot-list">
-              <div class="bot-item">
-                <div class="bot-info">
-                  <div class="bot-icon running"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
-                  <div><div class="bot-name">Grid Bot - BTC/USDT</div><div class="bot-strategy">Grid Trading · 0.5% spread</div></div>
-                </div>
-                <div class="bot-pnl"><div class="bot-pnl-value positive">+2.34%</div><div class="bot-pnl-label">Today</div></div>
+            <div class="activity-feed">
+              <div class="activity-item">
+                <div class="activity-icon buy">↑</div>
+                <div class="activity-text"><strong>Buy</strong> 0.05 BTC at $67,420</div>
+                <span class="activity-time">12m ago</span>
               </div>
-              <div class="bot-item">
-                <div class="bot-info">
-                  <div class="bot-icon running"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z"/></svg></div>
-                  <div><div class="bot-name">DCA Bot - ETH/USDT</div><div class="bot-strategy">Dollar Cost Average</div></div>
-                </div>
-                <div class="bot-pnl"><div class="bot-pnl-value positive">+1.87%</div><div class="bot-pnl-label">Today</div></div>
+              <div class="activity-item">
+                <div class="activity-icon sell">↓</div>
+                <div class="activity-text"><strong>Sell</strong> 0.2 ETH at $3,520</div>
+                <span class="activity-time">28m ago</span>
               </div>
-              <div class="bot-item">
-                <div class="bot-info">
-                  <div class="bot-icon paused"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>
-                  <div><div class="bot-name">AI Adaptive - SOL/USDT</div><div class="bot-strategy">AI Adaptive · ML-based</div></div>
-                </div>
-                <div class="bot-pnl"><div class="bot-pnl-value">0.00%</div><div class="bot-pnl-label">Paused</div></div>
+              <div class="activity-item">
+                <div class="activity-icon info">i</div>
+                <div class="activity-text">Grid Bot rebalanced BTC/USDT</div>
+                <span class="activity-time">1h ago</span>
+              </div>
+              <div class="activity-item">
+                <div class="activity-icon buy">↑</div>
+                <div class="activity-text"><strong>Buy</strong> 50 SOL at $142.50</div>
+                <span class="activity-time">3h ago</span>
+              </div>
+              <div class="activity-item">
+                <div class="activity-icon sell">↓</div>
+                <div class="activity-text"><strong>Take Profit</strong> ETH +2.34%</div>
+                <span class="activity-time">5h ago</span>
               </div>
             </div>
           </div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">Recent Activity</span>
-            <span class="card-badge">Today</span>
-          </div>
-          <div class="activity-feed">
-            <div class="activity-item">
-              <div class="activity-icon buy">↑</div>
-              <div class="activity-text"><strong>Buy</strong> 0.05 BTC at $67,420</div>
-              <span class="activity-time">12m ago</span>
-            </div>
-            <div class="activity-item">
-              <div class="activity-icon sell">↓</div>
-              <div class="activity-text"><strong>Sell</strong> 0.2 ETH at $3,520</div>
-              <span class="activity-time">28m ago</span>
-            </div>
-            <div class="activity-item">
-              <div class="activity-icon info">i</div>
-              <div class="activity-text">Grid Bot rebalanced BTC/USDT</div>
-              <span class="activity-time">1h ago</span>
-            </div>
-            <div class="activity-item">
-              <div class="activity-icon buy">↑</div>
-              <div class="activity-text"><strong>Buy</strong> 50 SOL at $142.50</div>
-              <span class="activity-time">3h ago</span>
-            </div>
-            <div class="activity-item">
-              <div class="activity-icon sell">↓</div>
-              <div class="activity-text"><strong>Take Profit</strong> ETH +2.34%</div>
-              <span class="activity-time">5h ago</span>
-            </div>
-          </div>
-        </div>
-      </div>`
-    }
-  },
+        </div>`
+      }
+    },
   bots: {
     title: 'Bots',
     render: (session) => `
@@ -886,6 +898,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Re-render current page if it's overview
           const currentPage = document.querySelector('.nav-item.active')?.dataset.page;
           if (currentPage === 'overview' && pageContent) {
+            // Reset initialized flag so animation restarts
+            const robotContainer = document.getElementById('dataRobotContainer');
+            if (robotContainer) robotContainer.dataset.initialized = 'false';
             pageContent.innerHTML = pages.overview.render(session);
           }
         }
