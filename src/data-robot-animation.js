@@ -614,101 +614,114 @@ export class DataRobotAnimation {
   }
   
   buildOutputDisplay() {
-    const cx = this.options.width / 2;
-    const cy = this.options.height / 2 + 10; // Center of robot
+      const cx = this.options.width / 2;
+      const cy = this.options.height / 2 + 10; // Center of robot
     
-    // Coin symbols rotating display (no prices)
-    const coinSymbols = [
-      { text: '₿ BTC', class: 'neutral' },
-      { text: 'Ξ ETH', class: 'neutral' },
-      { text: '◎ SOL', class: 'neutral' },
-      { text: '▲ BNB', class: 'neutral' },
-      { text: '● XRP', class: 'neutral' },
-      { text: '◆ ADA', class: 'neutral' },
-      { text: '⬡ DOT', class: 'neutral' },
-      { text: '◇ DOGE', class: 'neutral' },
-      { text: '◆ AVAX', class: 'neutral' },
-      { text: '● MATIC', class: 'neutral' },
-      { text: '◇ LINK', class: 'neutral' },
-      { text: '▲ UNI', class: 'neutral' },
-      { text: '● ATOM', class: 'neutral' },
-      { text: '◆ NEAR', class: 'neutral' },
-      { text: '◇ ARB', class: 'neutral' },
-      { text: '● OP', class: 'neutral' },
-      { text: '◆ INJ', class: 'neutral' },
-      { text: '◇ TIA', class: 'neutral' },
-      { text: '▲ RENDER', class: 'neutral' },
-      { text: '● FET', class: 'neutral' },
-    ];
+      // Coin symbols rotating display (no prices)
+      const coinSymbols = [
+        { text: '₿ BTC', class: 'neutral' },
+        { text: 'Ξ ETH', class: 'neutral' },
+        { text: '◎ SOL', class: 'neutral' },
+        { text: '▲ BNB', class: 'neutral' },
+        { text: '● XRP', class: 'neutral' },
+        { text: '◆ ADA', class: 'neutral' },
+        { text: '⬡ DOT', class: 'neutral' },
+        { text: '◇ DOGE', class: 'neutral' },
+        { text: '◆ AVAX', class: 'neutral' },
+        { text: '● MATIC', class: 'neutral' },
+        { text: '◇ LINK', class: 'neutral' },
+        { text: '▲ UNI', class: 'neutral' },
+        { text: '● ATOM', class: 'neutral' },
+        { text: '◆ NEAR', class: 'neutral' },
+        { text: '◇ ARB', class: 'neutral' },
+        { text: '● OP', class: 'neutral' },
+        { text: '◆ INJ', class: 'neutral' },
+        { text: '◇ TIA', class: 'neutral' },
+        { text: '▲ RENDER', class: 'neutral' },
+        { text: '● FET', class: 'neutral' },
+      ];
     
-    // Whale operations with different coins - sequential display
-    const whaleOps = [
-      { text: '🐋 Whale: 1,240 BTC accumulated', class: 'positive' },
-      { text: '🐋 Whale: 8,500 ETH transferred to cold storage', class: 'positive' },
-      { text: '🐋 Whale: 45M SOL staked', class: 'positive' },
-      { text: '🐋 Whale: 120M XRP moved to exchange', class: 'negative' },
-      { text: '🐋 Whale: 2.5M BNB burned', class: 'positive' },
-      { text: '🐋 Whale: 15M ADA delegated', class: 'positive' },
-      { text: '🐋 Whale: 800K DOT bonded', class: 'positive' },
-      { text: '🐋 Whale: 50M DOGE accumulated', class: 'neutral' },
-      { text: '🐋 Whale: 300K AVAX staked', class: 'positive' },
-      { text: '🐋 Whale: 5M MATIC bridged to L2', class: 'positive' },
-      { text: '🐋 Whale: 200K LINK accumulated', class: 'positive' },
-      { text: '🐋 Whale: 1.2M UNI governance vote', class: 'neutral' },
-      { text: '🐋 Whale: 500K ATOM staked', class: 'positive' },
-      { text: '🐋 Whale: 3M NEAR locked', class: 'positive' },
-      { text: '🐋 Whale: 2M ARB claimed', class: 'neutral' },
-      { text: '🐋 Whale: 800K OP delegated', class: 'positive' },
-      { text: '🐋 Whale: 150K INJ staked', class: 'positive' },
-      { text: '🐋 Whale: 500K TIA staked', class: 'positive' },
-      { text: '🐋 Whale: 100K RENDER delegated', class: 'positive' },
-      { text: '🐋 Whale: 2M FET accumulated', class: 'positive' },
-    ];
+      // Whale operations with different coins - sequential display
+      const whaleOps = [
+        { text: '🐋 Whale: 1,240 BTC accumulated', class: 'positive' },
+        { text: '🐋 Whale: 8,500 ETH transferred to cold storage', class: 'positive' },
+        { text: '🐋 Whale: 45M SOL staked', class: 'positive' },
+        { text: '🐋 Whale: 120M XRP moved to exchange', class: 'negative' },
+        { text: '🐋 Whale: 2.5M BNB burned', class: 'positive' },
+        { text: '🐋 Whale: 15M ADA delegated', class: 'positive' },
+        { text: '🐋 Whale: 800K DOT bonded', class: 'positive' },
+        { text: '🐋 Whale: 50M DOGE accumulated', class: 'neutral' },
+        { text: '🐋 Whale: 300K AVAX staked', class: 'positive' },
+        { text: '🐋 Whale: 5M MATIC bridged to L2', class: 'positive' },
+        { text: '🐋 Whale: 200K LINK accumulated', class: 'positive' },
+        { text: '🐋 Whale: 1.2M UNI governance vote', class: 'neutral' },
+        { text: '🐋 Whale: 500K ATOM staked', class: 'positive' },
+        { text: '🐋 Whale: 3M NEAR locked', class: 'positive' },
+        { text: '🐋 Whale: 2M ARB claimed', class: 'neutral' },
+        { text: '🐋 Whale: 800K OP delegated', class: 'positive' },
+        { text: '🐋 Whale: 150K INJ staked', class: 'positive' },
+        { text: '🐋 Whale: 500K TIA staked', class: 'positive' },
+        { text: '🐋 Whale: 100K RENDER delegated', class: 'positive' },
+        { text: '🐋 Whale: 2M FET accumulated', class: 'positive' },
+      ];
     
-    // Combine: first show coin symbols, then whale ops
-    const allOutputs = [...coinSymbols, ...whaleOps];
+      // Combine: first show coin symbols, then whale ops
+      const allOutputs = [...coinSymbols, ...whaleOps];
     
-    // Define display zones around the robot
-    const zones = [
-      // Zone 1: Below robot (original area)
-      { x: cx - 150, y: cy + 100, anchor: 'start', rows: 4, colGap: 16 },
-      { x: cx + 150, y: cy + 100, anchor: 'end', rows: 4, colGap: 16 },
-      // Zone 2: Above robot (near head)
-      { x: cx - 180, y: cy - 110, anchor: 'start', rows: 3, colGap: 16 },
-      { x: cx + 180, y: cy - 110, anchor: 'end', rows: 3, colGap: 16 },
-      // Zone 3: Left side (near left arm)
-      { x: cx - 220, y: cy - 20, anchor: 'end', rows: 3, colGap: 16 },
-      // Zone 4: Right side (near right arm)
-      { x: cx + 220, y: cy - 20, anchor: 'start', rows: 3, colGap: 16 },
-      // Zone 5: Near core (left)
-      { x: cx - 120, y: cy + 30, anchor: 'end', rows: 2, colGap: 16 },
-      // Zone 6: Near core (right)
-      { x: cx + 120, y: cy + 30, anchor: 'start', rows: 2, colGap: 16 },
-      // Zone 7: Far left (near source nodes)
-      { x: cx - 280, y: cy - 40, anchor: 'end', rows: 2, colGap: 16 },
-      // Zone 8: Far right (near source nodes)
-      { x: cx + 280, y: cy - 40, anchor: 'start', rows: 2, colGap: 16 },
-    ];
+      // Define display zones around the robot - utilizing all empty areas
+      const zones = [
+        // Zone 1: Below robot (bottom center area)
+        { x: cx - 150, y: cy + 100, anchor: 'start', rows: 4, colGap: 16 },
+        { x: cx + 150, y: cy + 100, anchor: 'end', rows: 4, colGap: 16 },
+        // Zone 2: Above robot (near head)
+        { x: cx - 180, y: cy - 110, anchor: 'start', rows: 3, colGap: 16 },
+        { x: cx + 180, y: cy - 110, anchor: 'end', rows: 3, colGap: 16 },
+        // Zone 3: Left side (near left arm)
+        { x: cx - 220, y: cy - 20, anchor: 'end', rows: 3, colGap: 16 },
+        // Zone 4: Right side (near right arm)
+        { x: cx + 220, y: cy - 20, anchor: 'start', rows: 3, colGap: 16 },
+        // Zone 5: Near core (left)
+        { x: cx - 120, y: cy + 30, anchor: 'end', rows: 2, colGap: 16 },
+        // Zone 6: Near core (right)
+        { x: cx + 120, y: cy + 30, anchor: 'start', rows: 2, colGap: 16 },
+        // Zone 7: Far left (near source nodes)
+        { x: cx - 280, y: cy - 40, anchor: 'end', rows: 2, colGap: 16 },
+        // Zone 8: Far right (near source nodes)
+        { x: cx + 280, y: cy - 40, anchor: 'start', rows: 2, colGap: 16 },
+        // Zone 9: Bottom-left corner
+        { x: 40, y: this.options.height - 50, anchor: 'start', rows: 2, colGap: 16 },
+        // Zone 10: Bottom-right corner
+        { x: this.options.width - 40, y: this.options.height - 50, anchor: 'end', rows: 2, colGap: 16 },
+        // Zone 11: Top-left corner
+        { x: 40, y: 40, anchor: 'start', rows: 2, colGap: 16 },
+        // Zone 12: Below robot center
+        { x: cx, y: cy + 150, anchor: 'middle', rows: 2, colGap: 16 },
+        // Zone 13: Above robot center
+        { x: cx, y: cy - 160, anchor: 'middle', rows: 2, colGap: 16 },
+      ];
     
-    // Distribute outputs across zones
-    let outputIndex = 0;
-    zones.forEach((zone, zoneIndex) => {
-      for (let row = 0; row < zone.rows && outputIndex < allOutputs.length; row++) {
-        const output = allOutputs[outputIndex];
-        const y = zone.y + row * zone.colGap;
+      // Distribute outputs across zones
+      let outputIndex = 0;
+      zones.forEach((zone) => {
+        for (let row = 0; row < zone.rows && outputIndex < allOutputs.length; row++) {
+          const output = allOutputs[outputIndex];
+          const y = zone.y + row * zone.colGap;
         
-        const text = this.createText(zone.x, y, output.text, `output-data ${output.class}`);
-        text.setAttribute('font-size', '9');
-        text.setAttribute('text-anchor', zone.anchor);
-        text.setAttribute('dominant-baseline', 'middle');
-        text.style.animationDelay = `${(outputIndex + 1) * 0.4}s`;
-        text.style.animationDuration = '8s';
-        this.svg.appendChild(text);
+          const text = this.createText(zone.x, y, output.text, `output-data ${output.class}`);
+          text.setAttribute('font-size', '9');
+          text.setAttribute('text-anchor', zone.anchor);
+          text.setAttribute('dominant-baseline', 'middle');
+          text.style.animationDelay = `${(outputIndex + 1) * 0.4}s`;
+          text.style.animationDuration = '8s';
+          this.svg.appendChild(text);
         
-        outputIndex++;
-      }
-    });
-  }
+          outputIndex++;
+        }
+      });
+    
+      // Add blinking header at top-right corner: ACCUMULATED DATA / EXECUTION DATA
+      this.addBlinkingHeader(cx, cy);
+    }
   
   buildLegend() {
     const legendGroup = this.createGroup('data-robot-legend');
@@ -732,6 +745,42 @@ export class DataRobotAnimation {
     });
     
     this.svg.appendChild(legendGroup);
+  }
+  
+  addBlinkingHeader(cx, cy) {
+    // Top-right corner blinking header
+    const headerX = this.options.width - 60;
+    const headerY = 50;
+    
+    const headerGroup = this.createGroup('blinking-header');
+    
+    // Background panel
+    const bg = this.createRect(headerX - 100, headerY - 20, 200, 40, 8, 'var(--bg-card-solid)', 'var(--accent-primary)', 2);
+    bg.setAttribute('opacity', '0.9');
+    bg.setAttribute('filter', 'drop-shadow(0 0 16px var(--accent-primary))');
+    headerGroup.appendChild(bg);
+    
+    // ACCUMULATED DATA text
+    const accText = this.createText(headerX, headerY - 5, 'ACCUMULATED DATA', 'blink-text accumulated');
+    accText.setAttribute('font-size', '13');
+    accText.setAttribute('font-weight', '700');
+    accText.setAttribute('fill', 'var(--accent-primary)');
+    accText.setAttribute('text-anchor', 'middle');
+    accText.setAttribute('dominant-baseline', 'middle');
+    accText.setAttribute('letter-spacing', '1.5');
+    headerGroup.appendChild(accText);
+    
+    // EXECUTION DATA text
+    const execText = this.createText(headerX, headerY + 15, 'EXECUTION DATA', 'blink-text execution');
+    execText.setAttribute('font-size', '13');
+    execText.setAttribute('font-weight', '700');
+    execText.setAttribute('fill', 'var(--accent-secondary)');
+    execText.setAttribute('text-anchor', 'middle');
+    execText.setAttribute('dominant-baseline', 'middle');
+    execText.setAttribute('letter-spacing', '1.5');
+    headerGroup.appendChild(execText);
+    
+    this.svg.appendChild(headerGroup);
   }
   
   // SVG Element Helpers
