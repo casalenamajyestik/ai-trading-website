@@ -748,39 +748,69 @@ export class DataRobotAnimation {
   }
   
   addBlinkingHeader(cx, cy) {
-    // Top-right corner blinking header
+    // Top-right corner blinking header - positioned higher
     const headerX = this.options.width - 60;
-    const headerY = 50;
+    const headerY = 25; // Higher position
     
     const headerGroup = this.createGroup('blinking-header');
     
     // Background panel
-    const bg = this.createRect(headerX - 100, headerY - 20, 200, 40, 8, 'var(--bg-card-solid)', 'var(--accent-primary)', 2);
+    const bg = this.createRect(headerX - 110, headerY - 18, 220, 36, 8, 'var(--bg-card-solid)', 'var(--accent-primary)', 2);
     bg.setAttribute('opacity', '0.9');
     bg.setAttribute('filter', 'drop-shadow(0 0 16px var(--accent-primary))');
     headerGroup.appendChild(bg);
     
-    // ACCUMULATED DATA text
-    const accText = this.createText(headerX, headerY - 5, 'ACCUMULATED DATA', 'blink-text accumulated');
-    accText.setAttribute('font-size', '13');
-    accText.setAttribute('font-weight', '700');
-    accText.setAttribute('fill', 'var(--accent-primary)');
-    accText.setAttribute('text-anchor', 'middle');
-    accText.setAttribute('dominant-baseline', 'middle');
-    accText.setAttribute('letter-spacing', '1.5');
-    headerGroup.appendChild(accText);
-    
-    // EXECUTION DATA text
-    const execText = this.createText(headerX, headerY + 15, 'EXECUTION DATA', 'blink-text execution');
-    execText.setAttribute('font-size', '13');
-    execText.setAttribute('font-weight', '700');
-    execText.setAttribute('fill', 'var(--accent-secondary)');
-    execText.setAttribute('text-anchor', 'middle');
-    execText.setAttribute('dominant-baseline', 'middle');
-    execText.setAttribute('letter-spacing', '1.5');
-    headerGroup.appendChild(execText);
+    // Single text element that will alternate
+    const headerText = this.createText(headerX, headerY, 'ACCUMULATED DATA', 'blinking-header-text');
+    headerText.setAttribute('font-size', '13');
+    headerText.setAttribute('font-weight', '700');
+    headerText.setAttribute('fill', 'var(--accent-primary)');
+    headerText.setAttribute('text-anchor', 'middle');
+    headerText.setAttribute('dominant-baseline', 'middle');
+    headerText.setAttribute('letter-spacing', '1.5');
+    headerGroup.appendChild(headerText);
     
     this.svg.appendChild(headerGroup);
+    
+    // Start alternating animation via JavaScript
+    this.startHeaderAlternation(headerText);
+  }
+  
+  startHeaderAlternation(textElement) {
+    const messages = [
+      { text: 'ACCUMULATED DATA', color: 'var(--accent-primary)' },
+      { text: 'EXECUTION DATA', color: 'var(--accent-secondary)' }
+    ];
+    
+    let currentIndex = 0;
+    
+    const alternate = () => {
+      const msg = messages[currentIndex];
+      
+      // Blink out
+      textElement.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      textElement.style.opacity = '0.3';
+      textElement.style.transform = 'scale(0.95)';
+      
+      setTimeout(() => {
+        // Change content and color
+        textElement.textContent = msg.text;
+        textElement.setAttribute('fill', msg.color);
+        
+        // Blink in
+        textElement.style.opacity = '1';
+        textElement.style.transform = 'scale(1)';
+      }, 300);
+      
+      // Switch to next message for next cycle
+      currentIndex = (currentIndex + 1) % messages.length;
+      
+      // Next cycle in 3 seconds
+      setTimeout(alternate, 3000);
+    };
+    
+    // Start first cycle
+    alternate();
   }
   
   // SVG Element Helpers

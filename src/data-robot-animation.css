@@ -390,27 +390,6 @@
   100% { opacity: 0.5; transform: translateY(-5px) scale(0.9); }
 }
 
-/* Blinking Header Styles */
-.blink-text {
-  animation: blinkAlternate 3s ease-in-out infinite;
-}
-
-.blink-text.accumulated {
-  animation-delay: 0s;
-}
-
-.blink-text.execution {
-  animation-delay: 1.5s; /* Alternate with accumulated */
-}
-
-@keyframes blinkAlternate {
-  0% { opacity: 1; transform: scale(1); }
-  45% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(0.95); }
-  55% { opacity: 1; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
 /* Legend */
 .data-robot-legend {
   position: absolute;
