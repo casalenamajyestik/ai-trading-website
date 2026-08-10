@@ -15,9 +15,11 @@ export class DataRobotAnimation {
         { id: 'ai', name: 'AI Models', color: 'var(--accent-warm)', icon: '🧠' },
         { id: 'news', name: 'News Feed', color: '#a855f7', icon: '📰' },
         { id: 'chain', name: 'On-Chain', color: '#f97316', icon: '⛓️' },
-        { id: 'social', name: 'Social Sentiment', color: '#ec4899', icon: '💬' }
+        { id: 'social', name: 'Social Sentiment', color: '#ec4899', icon: '💬' },
+        { id: 'whale', name: 'Whale Alerts', color: '#06b6d4', icon: '🐋' },
+        { id: 'macro', name: 'Macro Events', color: '#84cc16', icon: '📅' }
       ],
-      particleCount: options.particleCount || 48,
+      particleCount: options.particleCount || 120,
       ...options
     };
     
@@ -82,13 +84,22 @@ export class DataRobotAnimation {
     antennaBall.setAttribute('filter', 'drop-shadow(0 0 8px var(--accent-primary))');
     antenna.appendChild(antennaBall);
     
-    // Antenna rings
-    for (let i = 1; i <= 3; i++) {
-      const ring = this.createCircle(cx, cy - 130, 8 + i * 6, 'none', 'processing-ring');
-      ring.setAttribute('stroke', 'var(--accent-primary)');
-      ring.setAttribute('stroke-width', '1.5');
-      ring.style.animationDelay = `${i * 0.3}s`;
+    // Antenna rings - more rings for visual density
+    for (let i = 1; i <= 6; i++) {
+      const ring = this.createCircle(cx, cy - 130, 8 + i * 5, 'none', 'processing-ring');
+      ring.setAttribute('stroke', i % 2 === 0 ? 'var(--accent-primary)' : 'var(--accent-secondary)');
+      ring.setAttribute('stroke-width', i <= 2 ? '1.5' : '1');
+      ring.setAttribute('stroke-dasharray', i % 2 === 0 ? '20 10' : '10 10');
+      ring.style.animationDelay = `${i * 30}s`; // Match long durations
       antenna.appendChild(ring);
+    }
+    
+    // Additional antenna decorative elements
+    for (let i = 1; i <= 4; i++) {
+      const decoration = this.createCircle(cx, cy - 130 - i * 8, 2 + i * 0.5, i % 2 === 0 ? 'var(--accent-primary)' : 'var(--accent-warm)');
+      decoration.setAttribute('opacity', '0.4');
+      decoration.style.animationDelay = `${i * 45}s`;
+      antenna.appendChild(decoration);
     }
     
     robotGroup.appendChild(antenna);
@@ -198,14 +209,25 @@ export class DataRobotAnimation {
     // Core
     const coreGroup = this.createGroup('robot-core');
     
-    // Core rings
-    for (let i = 0; i < 3; i++) {
-      const ring = this.createCircle(cx, cy + 30, 25 + i * 10, 'none', 'robot-core-ring' + (i === 1 ? ' reverse' : ''));
-      ring.setAttribute('stroke', i === 0 ? 'var(--accent-primary)' : i === 1 ? 'var(--accent-secondary)' : 'var(--accent-warm)');
-      ring.setAttribute('stroke-width', '2');
-      ring.setAttribute('stroke-opacity', '0.4');
-      ring.setAttribute('stroke-dasharray', `${30 + i * 10} ${10 + i * 5}`);
+    // Core rings - more rings for visual density
+    for (let i = 0; i < 6; i++) {
+      const ring = this.createCircle(cx, cy + 30, 25 + i * 8, 'none', 'robot-core-ring' + (i % 2 === 1 ? ' reverse' : ''));
+      ring.setAttribute('stroke', i % 3 === 0 ? 'var(--accent-primary)' : i % 3 === 1 ? 'var(--accent-secondary)' : 'var(--accent-warm)');
+      ring.setAttribute('stroke-width', i < 2 ? '2' : '1');
+      ring.setAttribute('stroke-opacity', '0.3');
+      ring.setAttribute('stroke-dasharray', `${20 + i * 8} ${8 + i * 4}`);
       coreGroup.appendChild(ring);
+    }
+    
+    // Additional core decorative rings
+    for (let i = 0; i < 4; i++) {
+      const decorRing = this.createCircle(cx, cy + 30, 80 + i * 15, 'none', 'robot-core-ring' + (i % 2 === 0 ? '' : ' reverse'));
+      decorRing.setAttribute('stroke', i % 2 === 0 ? 'var(--accent-primary)' : 'var(--accent-secondary)');
+      decorRing.setAttribute('stroke-width', '0.5');
+      decorRing.setAttribute('stroke-opacity', '0.15');
+      decorRing.setAttribute('stroke-dasharray', '5 15');
+      decorRing.style.animationDuration = `${300 + i * 100}s`;
+      coreGroup.appendChild(decorRing);
     }
     
     // Core center
@@ -240,14 +262,25 @@ export class DataRobotAnimation {
       const panel = this.createRect(panelX - 12, panelY, 24, 50, 4, 'var(--bg-tertiary)', 'var(--border-subtle)', 1);
       torso.appendChild(panel);
       
-      // Panel lights
-      for (let i = 0; i < 4; i++) {
-        const light = this.createCircle(panelX, panelY + 8 + i * 10, 3, 
-          i % 2 === 0 ? 'var(--accent-primary)' : 'var(--accent-secondary)');
+      // Panel lights - more lights
+      for (let i = 0; i < 8; i++) {
+        const light = this.createCircle(panelX, panelY + 4 + i * 5, 2, 
+          i % 3 === 0 ? 'var(--accent-primary)' : i % 3 === 1 ? 'var(--accent-secondary)' : 'var(--accent-warm)');
         light.setAttribute('opacity', '0.6');
-        light.style.animationDelay = `${i * 0.2}s`;
+        light.style.animationDelay = `${i * 25}s`;
         torso.appendChild(light);
       }
+      
+      // Panel data display
+      const panelDisplay = this.createRect(panelX - 10, panelY + 45, 20, 8, 2, 'var(--bg-input)', 'var(--border-subtle)', 0.5);
+      torso.appendChild(panelDisplay);
+      
+      const panelText = this.createText(panelX, panelY + 50, side === -1 ? 'RX' : 'TX', 'panel-text');
+      panelText.setAttribute('font-size', '6');
+      panelText.setAttribute('fill', 'var(--text-muted)');
+      panelText.setAttribute('text-anchor', 'middle');
+      panelText.setAttribute('dominant-baseline', 'middle');
+      torso.appendChild(panelText);
     });
     
     robotGroup.appendChild(torso);
@@ -323,15 +356,37 @@ export class DataRobotAnimation {
     const baseRect = this.createRect(cx - 40, cy + 75, 80, 20, 6, 'var(--bg-secondary)', 'var(--border-color)', 1.5);
     baseGroup.appendChild(baseRect);
     
-    // Base lights
-    for (let i = 0; i < 5; i++) {
-      const light = this.createCircle(cx - 30 + i * 15, cy + 85, 3, 
-        i % 2 === 0 ? 'var(--accent-primary)' : 'var(--accent-secondary)');
+    // Base lights - more lights
+    for (let i = 0; i < 12; i++) {
+      const light = this.createCircle(cx - 55 + i * 10, cy + 85, 2, 
+        i % 4 === 0 ? 'var(--accent-primary)' : i % 4 === 1 ? 'var(--accent-secondary)' : i % 4 === 2 ? 'var(--accent-warm)' : '#a855f7');
       light.setAttribute('opacity', '0.5');
+      light.style.animationDelay = `${i * 15}s`;
       baseGroup.appendChild(light);
     }
     
+    // Base data display
+    const baseDisplay = this.createRect(cx - 35, cy + 78, 70, 12, 3, 'var(--bg-input)', 'var(--border-subtle)', 0.5);
+    baseGroup.appendChild(baseDisplay);
+    
+    const baseText = this.createText(cx, cy + 86, 'DATA PROCESSING UNIT v2.4.1', 'base-text');
+    baseText.setAttribute('font-size', '6');
+    baseText.setAttribute('fill', 'var(--text-muted)');
+    baseText.setAttribute('text-anchor', 'middle');
+    baseText.setAttribute('dominant-baseline', 'middle');
+    baseGroup.appendChild(baseText);
+    
+    // Base decorative elements
+    for (let i = 0; i < 4; i++) {
+      const decor = this.createRect(cx - 38 + i * 24, cy + 73, 4, 2, 1, 'var(--accent-primary)');
+      decor.setAttribute('opacity', '0.3');
+      baseGroup.appendChild(decor);
+    }
+    
     robotGroup.appendChild(baseGroup);
+    
+    // Add floating data indicators around robot
+    this.createFloatingIndicators(cx, cy, robotGroup);
     
     this.svg.appendChild(robotGroup);
   }
@@ -345,14 +400,17 @@ export class DataRobotAnimation {
     const handRightX = cx + 90;
     const handRightY = cy + 35;
     
+    // Background particle field - ambient data particles
+    this.createAmbientParticles(cx, cy);
+    
     this.options.sources.forEach((source, sourceIndex) => {
-      const isLeft = sourceIndex < 3;
+      const isLeft = sourceIndex < 4; // 4 left, 4 right
       const sourceX = isLeft ? -50 : this.options.width + 50;
-      const sourceY = headY - 20 + sourceIndex * 45;
+      const sourceY = headY - 40 + sourceIndex * 35;
       const targetX = isLeft ? handLeftX : handRightX;
       const targetY = isLeft ? handLeftY : handRightY;
       
-      // Connection line
+      // Connection line - main
       const connection = this.createPath(
         this.createBezierPath(sourceX, sourceY, targetX, targetY, isLeft),
         'none',
@@ -360,8 +418,21 @@ export class DataRobotAnimation {
         2
       );
       connection.setAttribute('class', `data-connection ${source.id}`);
-      connection.style.animationDelay = `${sourceIndex * 0.5}s`;
+      connection.style.animationDelay = `${sourceIndex * 22}s`;
       this.svg.appendChild(connection);
+      
+      // Secondary connection line (thinner, different path)
+      const connection2 = this.createPath(
+        this.createBezierPath(sourceX, sourceY + 10, targetX, targetY - 10, isLeft),
+        'none',
+        source.color,
+        1
+      );
+      connection2.setAttribute('class', `data-connection ${source.id}`);
+      connection2.setAttribute('stroke-dasharray', '4 8');
+      connection2.setAttribute('stroke-opacity', '0.3');
+      connection2.style.animationDelay = `${sourceIndex * 22 + 11}s`;
+      this.svg.appendChild(connection2);
       
       // Source label
       const label = this.createText(sourceX + (isLeft ? 60 : -60), sourceY, `${source.icon} ${source.name}`, `data-source-label ${source.id}`);
@@ -370,7 +441,7 @@ export class DataRobotAnimation {
       label.setAttribute('fill', source.color);
       label.setAttribute('text-anchor', isLeft ? 'start' : 'end');
       label.setAttribute('dominant-baseline', 'middle');
-      label.style.animationDelay = `${sourceIndex * 0.5}s`;
+      label.style.animationDelay = `${sourceIndex * 22}s`;
       this.svg.appendChild(label);
       
       // Source node
@@ -384,8 +455,20 @@ export class DataRobotAnimation {
       const pulseRing = this.createCircle(sourceX + (isLeft ? 30 : -30), sourceY, 20, 'none', 'processing-ring');
       pulseRing.setAttribute('stroke', source.color);
       pulseRing.setAttribute('stroke-width', '1.5');
-      pulseRing.style.animationDelay = `${sourceIndex * 0.3}s`;
+      pulseRing.style.animationDelay = `${sourceIndex * 22 + 5}s`;
       this.svg.appendChild(pulseRing);
+      
+      // Secondary pulse rings
+      for (let r = 1; r <= 2; r++) {
+        const extraRing = this.createCircle(sourceX + (isLeft ? 30 : -30), sourceY, 20 + r * 12, 'none', 'processing-ring');
+        extraRing.setAttribute('stroke', source.color);
+        extraRing.setAttribute('stroke-width', '0.5');
+        extraRing.setAttribute('stroke-opacity', '0.2');
+        extraRing.setAttribute('stroke-dasharray', '5 15');
+        extraRing.style.animationDelay = `${sourceIndex * 22 + 5 + r * 30}s`;
+        extraRing.style.animationDuration = `${200 + r * 100}s`;
+        this.svg.appendChild(extraRing);
+      }
       
       // Generate particles for this stream
       const particleCount = Math.floor(this.options.particleCount / this.options.sources.length);
@@ -405,9 +488,90 @@ export class DataRobotAnimation {
     return `M${x1} ${y1} C${ctrlX1} ${ctrlY1}, ${ctrlX2} ${ctrlY2}, ${x2} ${y2}`;
   }
   
+  createAmbientParticles(cx, cy) {
+    // Create ambient background particles floating around the robot
+    for (let i = 0; i < 40; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 80 + Math.random() * 120;
+      const startX = cx + Math.cos(angle) * radius;
+      const startY = cy + Math.sin(angle) * radius;
+      const endX = cx + Math.cos(angle + (Math.random() - 0.5) * 0.5) * (radius + (Math.random() - 0.5) * 30);
+      const endY = cy + Math.sin(angle + (Math.random() - 0.5) * 0.5) * (radius + (Math.random() - 0.5) * 30);
+      const tx = endX - startX;
+      const ty = endY - startY;
+      
+      const size = 1 + Math.random() * 2;
+      const colorVariations = [
+        'var(--accent-primary)',
+        'var(--accent-secondary)',
+        'var(--accent-warm)',
+        '#a855f7',
+        '#f97316',
+        '#ec4899',
+        '#06b6d4',
+        '#84cc16'
+      ];
+      const color = colorVariations[Math.floor(Math.random() * colorVariations.length)];
+      const delay = Math.random() * 180;
+      
+      const particle = this.createCircle(startX, startY, size, color, 'data-particle ambient');
+      particle.style.setProperty('--tx', `${tx}px`);
+      particle.style.setProperty('--ty', `${ty}px`);
+      particle.style.animationDelay = `${delay}s`;
+      particle.style.animationDuration = `${200 + Math.random() * 100}s`;
+      particle.setAttribute('opacity', '0.3');
+      particle.setAttribute('filter', `drop-shadow(0 0 ${size * 3}px ${color})`);
+      
+      this.svg.appendChild(particle);
+    }
+  }
+  
+  createFloatingIndicators(cx, cy, robotGroup) {
+    // Floating data indicators around the robot
+    const indicators = [
+      { x: cx - 150, y: cy - 60, text: 'BTC: ↑', color: 'var(--accent-primary)' },
+      { x: cx + 150, y: cy - 60, text: 'ETH: ↑', color: 'var(--accent-secondary)' },
+      { x: cx - 140, y: cy + 20, text: 'VOL: 2.4B', color: 'var(--accent-warm)' },
+      { x: cx + 140, y: cy + 20, text: 'OI: $12.4B', color: '#a855f7' },
+      { x: cx - 160, y: cy + 100, text: 'FUND: +0.01%', color: '#06b6d4' },
+      { x: cx + 160, y: cy + 100, text: 'Δ: +2.34%', color: '#84cc16' }
+    ];
+    
+    indicators.forEach((indicator, i) => {
+      const group = this.createGroup('floating-indicator');
+      group.style.animationDelay = `${i * 30}s`;
+      
+      // Background
+      const bg = this.createRect(indicator.x - 35, indicator.y - 10, 70, 20, 6, 'var(--bg-card-solid)', indicator.color, 1);
+      bg.setAttribute('opacity', '0.8');
+      group.appendChild(bg);
+      
+      // Text
+      const text = this.createText(indicator.x, indicator.y, indicator.text, 'indicator-text');
+      text.setAttribute('font-size', '8');
+      text.setAttribute('font-weight', '600');
+      text.setAttribute('fill', indicator.color);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('dominant-baseline', 'middle');
+      group.appendChild(text);
+      
+      // Pulse ring around indicator
+      const ring = this.createCircle(indicator.x, indicator.y, 25, 'none', 'processing-ring');
+      ring.setAttribute('stroke', indicator.color);
+      ring.setAttribute('stroke-width', '1');
+      ring.setAttribute('stroke-opacity', '0.2');
+      ring.setAttribute('stroke-dasharray', '8 12');
+      ring.style.animationDelay = `${i * 30 + 10}s`;
+      ring.style.animationDuration = '200s';
+      group.appendChild(ring);
+      
+      robotGroup.appendChild(group);
+    });
+  }
+  
   createParticle(sourceIndex, particleIndex, totalParticles, source, isLeft, sourceX, sourceY, targetX, targetY) {
     const progress = (particleIndex + sourceIndex * 0.17) / (totalParticles * this.options.sources.length);
-    const delay = progress * 3;
+    const delay = progress * 180; // Spread across full 180s cycle
     
     const startX = isLeft ? sourceX + 30 : sourceX - 30;
     const startY = sourceY;
@@ -416,12 +580,17 @@ export class DataRobotAnimation {
     const tx = endX - startX;
     const ty = endY - startY;
     
-    const size = 3 + Math.random() * 3;
-    const particle = this.createCircle(startX, startY, size, source.color, `data-particle ${source.id}`);
+    const size = 2 + Math.random() * 4;
+    
+    // Randomly assign particle variation classes
+    const variations = ['', 'spark', 'pulse', 'trail'];
+    const variation = variations[Math.floor(Math.random() * variations.length)];
+    
+    const particle = this.createCircle(startX, startY, size, source.color, `data-particle ${source.id}${variation ? ' ' + variation : ''}`);
     particle.style.setProperty('--tx', `${tx}px`);
     particle.style.setProperty('--ty', `${ty}px`);
     particle.style.animationDelay = `${delay}s`;
-    particle.style.animationDuration = `${2.5 + Math.random() * 1}s`;
+    particle.style.animationDuration = `${180 + Math.random() * 60}s`; // 180-240s
     
     // Add glow
     particle.setAttribute('filter', `drop-shadow(0 0 ${size * 2}px ${source.color})`);
@@ -434,12 +603,12 @@ export class DataRobotAnimation {
     const cx = this.options.width / 2;
     const cy = this.options.height / 2 + 40;
     
-    // Processing rings around core
-    for (let i = 0; i < 6; i++) {
+    // Processing rings around core - 8 rings for 8 sources
+    for (let i = 0; i < 8; i++) {
       const ring = this.createCircle(cx, cy, 28 + i * 6, 'none', 'processing-ring');
       ring.setAttribute('stroke', this.options.sources[i % this.options.sources.length].color);
       ring.setAttribute('stroke-width', i < 3 ? '2' : '1');
-      ring.style.animationDelay = `${i * 0.33}s`;
+      ring.style.animationDelay = `${i * 50}s`; // Match CSS delays
       this.svg.appendChild(ring);
     }
   }
@@ -449,23 +618,27 @@ export class DataRobotAnimation {
     const cy = this.options.height / 2 + 120;
     
     const outputs = [
-      { text: 'BTC: $67,420 ↑', class: 'positive', delay: 0 },
-      { text: 'ETH: $3,520 ↑', class: 'positive', delay: 0.5 },
-      { text: 'SOL: $142.50 →', class: 'neutral', delay: 1 },
-      { text: 'Signal: LONG BTC', class: 'positive', delay: 1.5 },
-      { text: 'Risk: 2.3% ✓', class: 'positive', delay: 2 },
-      { text: 'Next: 14s', class: 'neutral', delay: 2.5 }
+      { text: 'BTC: $67,420 ↑', class: 'positive', delay: 30 },
+      { text: 'ETH: $3,520 ↑', class: 'positive', delay: 45 },
+      { text: 'SOL: $142.50 →', class: 'neutral', delay: 60 },
+      { text: 'Signal: LONG BTC', class: 'positive', delay: 75 },
+      { text: 'Risk: 2.3% ✓', class: 'positive', delay: 90 },
+      { text: 'Next: 14s', class: 'neutral', delay: 105 },
+      { text: 'Whale: 1,200 BTC moved', class: 'neutral', delay: 120 },
+      { text: 'CPI: 3.2% est.', class: 'neutral', delay: 135 },
+      { text: 'Funding: +0.01%', class: 'neutral', delay: 150 },
+      { text: 'OI: $12.4B ↑', class: 'positive', delay: 165 }
     ];
     
     outputs.forEach((output, i) => {
-      const y = cy + (i % 3) * 20;
-      const x = cx + (i < 3 ? -80 : 80);
+      const y = cy + (i % 5) * 18;
+      const x = cx + (i < 5 ? -120 : 120);
       const text = this.createText(x, y, output.text, `output-data ${output.class}`);
       text.setAttribute('font-size', '10');
-      text.setAttribute('text-anchor', i < 3 ? 'start' : 'end');
+      text.setAttribute('text-anchor', i < 5 ? 'start' : 'end');
       text.setAttribute('dominant-baseline', 'middle');
       text.style.animationDelay = `${output.delay}s`;
-      text.style.animationDuration = '4s';
+      text.style.animationDuration = '180s';
       this.svg.appendChild(text);
     });
   }
