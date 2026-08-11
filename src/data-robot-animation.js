@@ -749,20 +749,14 @@ export class DataRobotAnimation {
   
   addBlinkingHeader(cx, cy) {
     // Top-right corner blinking header - positioned at very top (y=0)
-    const headerX = this.options.width - 160; // More to the left to avoid clipping
-    const headerY = 6; // Very top position (y=0 baseline, text centered at 6)
+    const headerX = this.options.width - 140; // More to the left to avoid clipping
+    const headerY = 8; // Very top position
     
     const headerGroup = this.createGroup('blinking-header');
     
-    // Background panel
-    const bg = this.createRect(headerX - 120, headerY - 18, 240, 36, 8, 'var(--bg-card-solid)', 'var(--accent-primary)', 2);
-    bg.setAttribute('opacity', '0.9');
-    bg.setAttribute('filter', 'drop-shadow(0 0 16px var(--accent-primary))');
-    headerGroup.appendChild(bg);
-    
-    // Single text element that will alternate
+    // Single text element that will alternate (no background panel)
     const headerText = this.createText(headerX, headerY, 'ACCUMULATED DATA', 'blinking-header-text');
-    headerText.setAttribute('font-size', '12');
+    headerText.setAttribute('font-size', '11');
     headerText.setAttribute('font-weight', '700');
     headerText.setAttribute('fill', 'var(--accent-primary)');
     headerText.setAttribute('text-anchor', 'middle');
