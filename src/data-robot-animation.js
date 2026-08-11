@@ -749,7 +749,7 @@ export class DataRobotAnimation {
   
   addBlinkingHeader(cx, cy) {
     // Top-right corner blinking header - positioned at very top (y=0)
-    const headerX = this.options.width - 120; // More to the left to avoid clipping
+    const headerX = this.options.width - 110; // More to the left to avoid clipping
     const headerY = 1; // Very top position
     
     const headerGroup = this.createGroup('blinking-header');
