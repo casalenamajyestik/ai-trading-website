@@ -110,7 +110,7 @@ function getCountryOptions(selectedCode = 'ID') {
 // ============ Page Content ============
 const pages = {
   overview: {
-    title: 'Dashboard',
+    title: 'Overview',
     render: (session) => {
       const botSession = session.botSession || {};
       const botState = session.botState || {};
@@ -140,15 +140,11 @@ const pages = {
       return `
         <!-- 5 Stat Cards matching spreadsheet design -->
         <div class="stats-grid">
-          <!-- Card 1: Ai Auto Trade with Running/Stop Toggle -->
-          <div class="stat-card bot-status">
-            <div class="stat-card-label">Ai Auto Trade</div>
-            <div class="bot-status-header">
-              <span class="bot-status-title">Ai Auto Trade</span>
-              <label class="toggle-switch">
-                <input type="checkbox" id="botMainToggle" ${isActive ? 'checked' : ''} aria-label="Toggle bot status">
-                <span class="toggle-slider"></span>
-              </label>
+          <!-- Card 1: Ai Auto Trade (no toggle, just status) -->
+          <div class="stat-card">
+            <div class="stat-card-label">AI Auto Trade</div>
+            <div class="stat-card-value">
+              <span class="status-badge ${isActive ? 'running' : 'stopped'}">${isActive ? 'Running' : 'Stop'}</span>
             </div>
             <div class="stat-card-sub ${isActive ? 'positive' : ''}">${isActive ? 'Running' : 'Stop'}</div>
             <div class="stat-card-sub">${mode === 'live' ? '🔴 LIVE MODE' : '📝 Paper Trading'}</div>
@@ -1157,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let session = await requireAuthWrapper();
   if (!session) return;
 
-  // Initialize theme and language selectors
+  // Initialize theme and language selectors (shared with landing page)
   initTheme('#themeToggle');
   initLanguage();
 
@@ -1180,42 +1176,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Language selector dropdown
-  const langToggleBtn = document.getElementById('langToggleBtn');
-  const langDropdown = document.getElementById('langDropdown');
-  const languageSelector = document.getElementById('languageSelector');
-  
-  if (langToggleBtn && langDropdown) {
-    langToggleBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      languageSelector.classList.toggle('open');
-    });
-    
-    document.addEventListener('click', (e) => {
-      if (!languageSelector.contains(e.target)) {
-        languageSelector.classList.remove('open');
+  // Sidebar Bot Toggle Handler
+  const sidebarBotToggle = document.getElementById('botSidebarToggle');
+  const handleSidebarBotToggle = async (e) => {
+    if (!e.target.matches('#botSidebarToggle')) return;
+    const isActive = e.target.checked;
+    console.log('[Sidebar Bot Toggle] User toggled to:', isActive);
+    e.target.disabled = true;
+    try {
+      const { error } = await toggleBotSession(session.user.id, isActive);
+      if (error) throw error;
+      session.botSession = { ...session.botSession, is_active: isActive };
+      localStorage.setItem('auth_session', JSON.stringify(session));
+      // Re-render overview to update status text
+      if (pageContent && document.querySelector('.nav-item.active')?.dataset.page === 'overview') {
+        const robotContainer = document.getElementById('dataRobotContainer');
+        if (robotContainer) robotContainer.dataset.initialized = 'false';
+        pageContent.innerHTML = pages.overview.render(session);
+        // Re-attach toggle handler
+        const newToggle = document.getElementById('botSidebarToggle');
+        if (newToggle) newToggle.addEventListener('change', handleSidebarBotToggle);
       }
-    });
-    
-    langDropdown.querySelectorAll('.lang-dropdown-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const lang = item.dataset.lang;
-        langToggleBtn.dataset.lang = lang;
-        langToggleBtn.querySelector('.lang-flag').textContent = lang === 'id' ? '🇮🇩' : '🇺🇸';
-        langToggleBtn.querySelector('.lang-text').textContent = lang === 'id' ? 'ID' : 'EN';
-        langDropdown.querySelectorAll('.lang-dropdown-item').forEach(i => {
-          i.classList.toggle('active', i.dataset.lang === lang);
-          i.setAttribute('aria-selected', i.dataset.lang === lang);
-        });
-        languageSelector.classList.remove('open');
-        // Change language
-        if (window.i18next) {
-          window.i18next.changeLanguage(lang);
-          updateDynamicI18n();
-        }
-      });
-    });
-  }
+    } catch (err) {
+      console.error('[Sidebar Bot Toggle] Failed:', err);
+      alert('Gagal mengubah status bot: ' + (err.message || err));
+      e.target.checked = !isActive;
+    } finally {
+      e.target.disabled = false;
+    }
+  };
+
+  if (sidebarBotToggle) sidebarBotToggle.addEventListener('change', handleSidebarBotToggle);
 
   async function loadBotData(session) {
     try {
@@ -1296,35 +1287,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     item.addEventListener('click', () => navigateTo(item.dataset.page));
   });
 
-  // Bot Main Toggle Handler (Card 1 on Overview)
-  const handleMainBotToggle = async (e) => {
-    if (!e.target.matches('#botMainToggle')) return;
-    const isActive = e.target.checked;
-    console.log('[Main Bot Toggle] User toggled to:', isActive);
-    e.target.disabled = true;
-    try {
-      const { error } = await toggleBotSession(session.user.id, isActive);
-      if (error) throw error;
-      session.botSession = { ...session.botSession, is_active: isActive };
-      localStorage.setItem('auth_session', JSON.stringify(session));
-      // Re-render overview to update status text
-      if (pageContent && document.querySelector('.nav-item.active')?.dataset.page === 'overview') {
-        const robotContainer = document.getElementById('dataRobotContainer');
-        if (robotContainer) robotContainer.dataset.initialized = 'false';
-        pageContent.innerHTML = pages.overview.render(session);
-        // Re-attach toggle handler
-        const newToggle = document.getElementById('botMainToggle');
-        if (newToggle) newToggle.addEventListener('change', handleMainBotToggle);
-      }
-    } catch (err) {
-      console.error('[Main Bot Toggle] Failed:', err);
-      alert('Gagal mengubah status bot: ' + (err.message || err));
-      e.target.checked = !isActive;
-    } finally {
-      e.target.disabled = false;
-    }
-  };
-
   loadBotData(session).then(s => {
     session = s;
     
@@ -1342,20 +1304,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             const robotContainer = document.getElementById('dataRobotContainer');
             if (robotContainer) robotContainer.dataset.initialized = 'false';
             pageContent.innerHTML = pages.overview.render(session);
-            // Re-attach toggle handler
-            const newToggle = document.getElementById('botMainToggle');
-            if (newToggle) newToggle.addEventListener('change', handleMainBotToggle);
+            // Re-attach sidebar toggle handler
+            const newToggle = document.getElementById('botSidebarToggle');
+            if (newToggle) newToggle.addEventListener('change', handleSidebarBotToggle);
           }
         }
       });
     }
     
     navigateTo('overview');
-    
-    // Attach main bot toggle handler after initial render
-    setTimeout(() => {
-      const mainToggle = document.getElementById('botMainToggle');
-      if (mainToggle) mainToggle.addEventListener('change', handleMainBotToggle);
-    }, 0);
   });
 });
