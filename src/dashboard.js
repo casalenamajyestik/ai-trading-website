@@ -30,6 +30,10 @@ function formatIDR(num) {
   return 'Rp ' + Math.floor(num).toLocaleString('id-ID');
 }
 
+function formatUSD(num) {
+  return '$ ' + Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
   if (seconds < 60) return `${seconds}s ago`;
@@ -106,76 +110,91 @@ function getCountryOptions(selectedCode = 'ID') {
 // ============ Page Content ============
 const pages = {
   overview: {
-      title: 'Dashboard',
-      render: (session) => {
-        const botSession = session.botSession || {};
-        const botState = session.botState || {};
-        const isActive = botSession.is_active || false;
-        const status = botState.status || 'stopped';
-        const mode = botSession.mode || 'paper';
-        const lastHeartbeat = botState.last_heartbeat;
-        const dailyPnL = botState.daily_pnl || 0;
-        const totalPnL = botState.total_pnl || 0;
-        const balance = botState.balance || 0;
-        const yesterdayPnL = botState.yesterday_pnl || 0;
-        const biggestWin = botState.biggest_win || 0;
-        const totalPositions = botState.total_positions || 0;
+    title: 'Dashboard',
+    render: (session) => {
+      const botSession = session.botSession || {};
+      const botState = session.botState || {};
+      const isActive = botSession.is_active || false;
+      const status = botState.status || 'stopped';
+      const mode = botSession.mode || 'paper';
+      const lastHeartbeat = botState.last_heartbeat;
+      const balance = botState.balance || 12345600; // Default from spreadsheet: $ 123.456,00
+      const yesterdayPnL = botState.yesterday_pnl || 123; // Default from spreadsheet: +123.00
+      const biggestWin = botState.biggest_win || 100; // Default from spreadsheet: x100
+      const totalPositions = botState.total_positions || 12; // Default from spreadsheet: 12
+      const positionCoin = botState.position_coin || 'ABUSDT'; // Default from spreadsheet
 
-        const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
-        const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
-        const statusText = isActive ? (status === 'running' ? 'Aktif & Running' : 'Aktif tapi ' + statusLabel.toLowerCase()) : 'Nonaktif';
-        const botStatusText = isActive ? '🟢 Running' : '🔴 Stop';
+      const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
+      const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
+      const botStatusText = isActive ? '🟢 Running' : '🔴 Stop';
 
-        // Initialize data robot animation after render
-        setTimeout(() => {
-          const container = document.getElementById('dataRobotContainer');
-          if (container && !container.dataset.initialized) {
-            container.dataset.initialized = 'true';
-            initDataRobot('#dataRobotContainer');
-          }
-        }, 0);
+      // Initialize data robot animation after render
+      setTimeout(() => {
+        const container = document.getElementById('dataRobotContainer');
+        if (container && !container.dataset.initialized) {
+          container.dataset.initialized = 'true';
+          initDataRobot('#dataRobotContainer');
+        }
+      }, 0);
 
-        return `
-          <div class="data-robot-container" id="dataRobotContainer" role="img" aria-label="AI Robot memproses data dari berbagai sumber: Market Data, Exchange API, AI Models, News Feed, On-Chain, Social Sentiment"></div>
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-card-label">Total Balance</div>
-              <div class="stat-card-value">$${(balance/1000000).toFixed(3)}M</div>
-              <div class="stat-card-change positive">+12.5% this week</div>
+      return `
+        <!-- 5 Stat Cards matching spreadsheet design -->
+        <div class="stats-grid">
+          <!-- Card 1: Ai Auto Trade with Running/Stop Toggle -->
+          <div class="stat-card bot-status">
+            <div class="stat-card-label">Ai Auto Trade</div>
+            <div class="bot-status-header">
+              <span class="bot-status-title">Ai Auto Trade</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="botMainToggle" ${isActive ? 'checked' : ''} aria-label="Toggle bot status">
+                <span class="toggle-slider"></span>
+              </label>
             </div>
-            <div class="stat-card">
-              <div class="stat-card-label">AI Auto Trade</div>
-              <div class="stat-card-value">
-                <span class="status-badge ${isActive ? 'running' : 'stopped'}">${botStatusText}</span>
-              </div>
-              <div class="stat-card-change">${mode === 'live' ? '🔴 LIVE MODE' : '📝 Paper Trading'}</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card-label">PNL Yesterday</div>
-              <div class="stat-card-value ${yesterdayPnL >= 0 ? 'positive' : 'negative'}">$${(yesterdayPnL/1000000).toFixed(2)}M</div>
-              <div class="stat-card-change">Daily</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card-label">Biggest Win</div>
-              <div class="stat-card-value positive">x${biggestWin} (Leverage)</div>
-              <div class="stat-card-change">Best trade</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-card-label">Total Positions</div>
-              <div class="stat-card-value">${totalPositions}</div>
-              <div class="stat-card-change">Open & Closed</div>
-            </div>
+            <div class="stat-card-sub ${isActive ? 'positive' : ''}">${isActive ? 'Running' : 'Stop'}</div>
+            <div class="stat-card-sub">${mode === 'live' ? '🔴 LIVE MODE' : '📝 Paper Trading'}</div>
           </div>
-          <div class="content-section">
-            <div class="section-header">
-              <span class="section-title">Animasi 1: Data Processing</span>
-            </div>
-            <div class="card" style="padding: 0;">
-              <div class="data-robot-container" id="dataRobotContainer2" style="height: 300px; border-radius: 0; border: none;"></div>
-            </div>
-          </div>`
-      }
-    },
+
+          <!-- Card 2: Total Balance -->
+          <div class="stat-card">
+            <div class="stat-card-label">Total Balance</div>
+            <div class="stat-card-value">$ ${(balance/1000000).toFixed(3).replace('.', ',')}M</div>
+            <div class="stat-card-sub positive">+12.5% this week</div>
+          </div>
+
+          <!-- Card 3: PNL Yesterday -->
+          <div class="stat-card">
+            <div class="stat-card-label">PNL Yesterday</div>
+            <div class="stat-card-value ${yesterdayPnL >= 0 ? 'positive' : 'negative'}">${yesterdayPnL >= 0 ? '+' : ''}${formatUSD(yesterdayPnL).replace('$ ', '')}</div>
+            <div class="stat-card-sub">Daily PnL</div>
+          </div>
+
+          <!-- Card 4: Biggest Win -->
+          <div class="stat-card">
+            <div class="stat-card-label">Biggest Win</div>
+            <div class="stat-card-value positive">x${biggestWin} (Leverage)</div>
+            <div class="stat-card-sub">Best trade</div>
+          </div>
+
+          <!-- Card 5: Total Positions -->
+          <div class="stat-card positions">
+            <div class="stat-card-label">Total Positions</div>
+            <div class="positions-coin">${positionCoin}</div>
+            <div class="positions-count">${totalPositions}</div>
+            <div class="stat-card-sub">Open & Closed</div>
+          </div>
+        </div>
+
+        <!-- Dashboard Section: Animasi 1 -->
+        <div class="content-section">
+          <div class="section-header">
+            <span class="section-title">Animasi 1</span>
+          </div>
+          <div class="card" style="padding: 0;">
+            <div class="data-robot-container" id="dataRobotContainer" role="img" aria-label="AI Robot memproses data dari berbagai sumber: Market Data, Exchange API, AI Models, News Feed, On-Chain, Social Sentiment"></div>
+          </div>
+        </div>`
+    }
+  },
   positions: {
     title: 'Positions',
     render: (session) => {
@@ -188,19 +207,24 @@ const pages = {
         { coin: 'MATICUSDT', side: 'Long', size: '2000', entry: 0.72, mark: 0.735, pnl: 30, leverage: 10 },
       ];
       
+      const totalPositions = positions.length;
+      const longCount = positions.filter(p => p.side === 'Long').length;
+      const shortCount = positions.filter(p => p.side === 'Short').length;
+      const totalUnrealizedPnL = positions.reduce((sum, p) => sum + p.pnl, 0);
+
       return `
         <div class="stats-grid">
-          <div class="stat-card"><div class="stat-card-label">Total Positions</div><div class="stat-card-value">${positions.length}</div></div>
-          <div class="stat-card"><div class="stat-card-label">Long</div><div class="stat-card-value" style="color:var(--accent-secondary)">${positions.filter(p => p.side === 'Long').length}</div></div>
-          <div class="stat-card"><div class="stat-card-label">Short</div><div class="stat-card-value" style="color:var(--accent-danger)">${positions.filter(p => p.side === 'Short').length}</div></div>
-          <div class="stat-card"><div class="stat-card-label">Total Unrealized PnL</div><div class="stat-card-value positive">$${positions.reduce((sum, p) => sum + p.pnl, 0).toFixed(2)}</div></div>
+          <div class="stat-card"><div class="stat-card-label">Total Positions</div><div class="stat-card-value">${totalPositions}</div></div>
+          <div class="stat-card"><div class="stat-card-label">Long</div><div class="stat-card-value" style="color:var(--accent-secondary)">${longCount}</div></div>
+          <div class="stat-card"><div class="stat-card-label">Short</div><div class="stat-card-value" style="color:var(--accent-danger)">${shortCount}</div></div>
+          <div class="stat-card"><div class="stat-card-label">Total Unrealized PnL</div><div class="stat-card-value positive">$${totalUnrealizedPnL.toFixed(2)}</div></div>
         </div>
         <div class="content-section">
           <div class="section-header">
             <span class="section-title">Open Positions</span>
             <span class="section-badge">Live</span>
           </div>
-          <div class="card positions-table">
+          <div class="card table-container positions-table">
             <table>
               <thead>
                 <tr>
@@ -263,7 +287,7 @@ const pages = {
             <span class="section-title">Trade History</span>
             <span class="section-badge">Last 30 Days</span>
           </div>
-          <div class="card history-table">
+          <div class="card table-container history-table">
             <table>
               <thead>
                 <tr>
@@ -301,10 +325,10 @@ const pages = {
       const balance = botState.balance || 0;
       return `
         <div class="stats-grid">
-          <div class="stat-card"><div class="stat-card-label">Total Return</div><div class="stat-card-value positive">+18.7%</div><div class="stat-card-change positive">Since inception</div></div>
-          <div class="stat-card"><div class="stat-card-label">Max Drawdown</div><div class="stat-card-value">-4.2%</div><div class="stat-card-change">Within acceptable range</div></div>
-          <div class="stat-card"><div class="stat-card-label">Sharpe Ratio</div><div class="stat-card-value">2.14</div><div class="stat-card-change positive">Good risk-adjusted</div></div>
-          <div class="stat-card"><div class="stat-card-label">Win Rate</div><div class="stat-card-value">73.2%</div><div class="stat-card-change positive">104 / 142 trades</div></div>
+          <div class="stat-card"><div class="stat-card-label">Total Return</div><div class="stat-card-value positive">+18.7%</div><div class="stat-card-sub positive">Since inception</div></div>
+          <div class="stat-card"><div class="stat-card-label">Max Drawdown</div><div class="stat-card-value">-4.2%</div><div class="stat-card-sub">Within acceptable range</div></div>
+          <div class="stat-card"><div class="stat-card-label">Sharpe Ratio</div><div class="stat-card-value">2.14</div><div class="stat-card-sub positive">Good risk-adjusted</div></div>
+          <div class="stat-card"><div class="stat-card-label">Win Rate</div><div class="stat-card-value">73.2%</div><div class="stat-card-sub positive">104 / 142 trades</div></div>
         </div>
         <div class="content-section">
           <div class="section-header">
@@ -325,39 +349,20 @@ const pages = {
         </div>
         <div class="content-section">
           <div class="section-header">
-            <span class="section-title">Animasi 2: BTC Chart</span>
+            <span class="section-title">Chart BTC</span>
           </div>
           <div class="card" style="padding: 0;">
             <div class="btc-chart-container" id="btcChartContainer"></div>
           </div>
-        </div>`
-    }
-  },
-  portfolio: {
-    title: 'Portfolio',
-    render: (session) => {
-      const botState = session.botState || {};
-      const balance = botState.balance || 0;
-      return `
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-card-label">Total Value</div><div class="stat-card-value">$${(balance/1000000).toFixed(2)}M</div></div>
-        <div class="stat-card"><div class="stat-card-label">In Positions</div><div class="stat-card-value">$32.00M</div></div>
-        <div class="stat-card"><div class="stat-card-label">Available</div><div class="stat-card-value">$18.00M</div></div>
-        <div class="stat-card"><div class="stat-card-label">Unrealized PnL</div><div class="stat-card-value positive">+$4.20M</div></div>
-      </div>
-      <div class="content-section">
-        <div class="section-header">
-          <span class="section-title">Holdings</span>
-          <span class="section-badge">Live</span>
         </div>
-        <div class="card">
-          <div class="bot-list">
-            <div class="bot-item"><div class="bot-info"><div class="bot-icon running">₿</div><div><div class="bot-name">BTC</div><div class="bot-strategy">0.05 BTC · Avg $67,420</div></div></div><div class="bot-pnl"><div class="bot-pnl-value positive">+2.34%</div><div class="bot-pnl-label">$1.56M</div></div></div>
-            <div class="bot-item"><div class="bot-info"><div class="bot-icon running">Ξ</div><div><div class="bot-name">ETH</div><div class="bot-strategy">0.2 ETH · Avg $3,520</div></div></div><div class="bot-pnl"><div class="bot-pnl-value positive">+1.87%</div><div class="bot-pnl-label">$142K</div></div></div>
-            <div class="bot-item"><div class="bot-info"><div class="bot-icon running">◎</div><div><div class="bot-name">SOL</div><div class="bot-strategy">50 SOL · Avg $142.50</div></div></div><div class="bot-pnl"><div class="bot-pnl-value positive">+3.10%</div><div class="bot-pnl-label">$21.75K</div></div></div>
+        <div class="content-section">
+          <div class="section-header">
+            <span class="section-title">Animasi 2</span>
           </div>
-        </div>
-      </div>`;
+          <div class="card" style="padding: 0;">
+            <div class="data-robot-container" id="dataRobotContainer2" style="height: 300px; border-radius: 0; border: none;"></div>
+          </div>
+        </div>`
     }
   },
   guide: {
@@ -475,6 +480,7 @@ const pages = {
       const status = botState.status || 'stopped';
       const mode = botSession.mode || 'paper';
       const lastHeartbeat = botState.last_heartbeat;
+      const totalPositions = botState.total_positions || 12345; // From spreadsheet: 12345 (jumlah total open & closed posisi)
 
       const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
       const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
@@ -484,7 +490,7 @@ const pages = {
       <div class="settings-tabs-container" role="tablist">
         <button class="settings-tab active" role="tab" data-tab="profile" aria-selected="true">Profil</button>
         <button class="settings-tab" role="tab" data-tab="exchange" aria-selected="false">Exchange</button>
-        <button class="settings-tab" role="tab" data-tab="execution" aria-selected="false">Execution Cycle</button>
+        <button class="settings-tab" role="tab" data-tab="execution" aria-selected="false">Execution Cycle : ${totalPositions.toLocaleString()}</button>
         <button class="settings-tab" role="tab" data-tab="aplikasi" aria-selected="false">Aplikasi</button>
       </div>
     <div class="card">
@@ -704,7 +710,7 @@ const pages = {
           </div>
         </div>
       </div>
-    </div>`;
+    </div>`
     }
   }
 };
@@ -811,6 +817,10 @@ function attachExchangeTabHandlers(session) {
         if (isActive && tab === 'aplikasi' && !p.dataset.loaded) {
           loadBotSettingsUI(session);
           attachAplikasiTabHandlers(session);
+          p.dataset.loaded = 'true';
+        }
+        if (isActive && tab === 'execution' && !p.dataset.loaded) {
+          attachExecutionTabHandlers(session);
           p.dataset.loaded = 'true';
         }
       });
@@ -1007,7 +1017,7 @@ function loadBotSettingsUI(session) {
 
   const statusDisplay = document.querySelector('.settings-panel[data-tab="aplikasi"] .toggle-desc');
   if (statusDisplay) statusDisplay.textContent = 'ON/OFF Trading Bot';
-  }
+}
 
 function attachAplikasiTabHandlers(session) {
   const toggle = document.getElementById('botToggleSettings');
@@ -1170,6 +1180,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Language selector dropdown
+  const langToggleBtn = document.getElementById('langToggleBtn');
+  const langDropdown = document.getElementById('langDropdown');
+  const languageSelector = document.getElementById('languageSelector');
+  
+  if (langToggleBtn && langDropdown) {
+    langToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      languageSelector.classList.toggle('open');
+    });
+    
+    document.addEventListener('click', (e) => {
+      if (!languageSelector.contains(e.target)) {
+        languageSelector.classList.remove('open');
+      }
+    });
+    
+    langDropdown.querySelectorAll('.lang-dropdown-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const lang = item.dataset.lang;
+        langToggleBtn.dataset.lang = lang;
+        langToggleBtn.querySelector('.lang-flag').textContent = lang === 'id' ? '🇮🇩' : '🇺🇸';
+        langToggleBtn.querySelector('.lang-text').textContent = lang === 'id' ? 'ID' : 'EN';
+        langDropdown.querySelectorAll('.lang-dropdown-item').forEach(i => {
+          i.classList.toggle('active', i.dataset.lang === lang);
+          i.setAttribute('aria-selected', i.dataset.lang === lang);
+        });
+        languageSelector.classList.remove('open');
+        // Change language
+        if (window.i18next) {
+          window.i18next.changeLanguage(lang);
+          updateDynamicI18n();
+        }
+      });
+    });
+  }
+
   async function loadBotData(session) {
     try {
       const [{ data: botSession }, { data: botState }] = await Promise.all([
@@ -1213,7 +1260,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (pageContent) pageContent.innerHTML = pg.render(session);
         attachSettingsSaveHandler(session);
         attachExchangeTabHandlers(session);
-        attachExecutionTabHandlers(session);
         updateDynamicI18n();
       });
     } else {
@@ -1228,16 +1274,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             container.dataset.initialized = 'true';
             initDataRobot('#dataRobotContainer');
           }
-          const container2 = document.getElementById('dataRobotContainer2');
-          if (container2 && !container2.dataset.initialized) {
-            container2.dataset.initialized = 'true';
-            initDataRobot('#dataRobotContainer2');
-          }
         }, 0);
       }
       if (pageName === 'performance') {
         setTimeout(() => {
           initBTCChart('#btcChartContainer');
+          const container2 = document.getElementById('dataRobotContainer2');
+          if (container2 && !container2.dataset.initialized) {
+            container2.dataset.initialized = 'true';
+            initDataRobot('#dataRobotContainer2');
+          }
         }, 0);
       }
     }
@@ -1249,6 +1295,35 @@ document.addEventListener('DOMContentLoaded', async () => {
   navItems.forEach(item => {
     item.addEventListener('click', () => navigateTo(item.dataset.page));
   });
+
+  // Bot Main Toggle Handler (Card 1 on Overview)
+  const handleMainBotToggle = async (e) => {
+    if (!e.target.matches('#botMainToggle')) return;
+    const isActive = e.target.checked;
+    console.log('[Main Bot Toggle] User toggled to:', isActive);
+    e.target.disabled = true;
+    try {
+      const { error } = await toggleBotSession(session.user.id, isActive);
+      if (error) throw error;
+      session.botSession = { ...session.botSession, is_active: isActive };
+      localStorage.setItem('auth_session', JSON.stringify(session));
+      // Re-render overview to update status text
+      if (pageContent && document.querySelector('.nav-item.active')?.dataset.page === 'overview') {
+        const robotContainer = document.getElementById('dataRobotContainer');
+        if (robotContainer) robotContainer.dataset.initialized = 'false';
+        pageContent.innerHTML = pages.overview.render(session);
+        // Re-attach toggle handler
+        const newToggle = document.getElementById('botMainToggle');
+        if (newToggle) newToggle.addEventListener('change', handleMainBotToggle);
+      }
+    } catch (err) {
+      console.error('[Main Bot Toggle] Failed:', err);
+      alert('Gagal mengubah status bot: ' + (err.message || err));
+      e.target.checked = !isActive;
+    } finally {
+      e.target.disabled = false;
+    }
+  };
 
   loadBotData(session).then(s => {
     session = s;
@@ -1267,11 +1342,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             const robotContainer = document.getElementById('dataRobotContainer');
             if (robotContainer) robotContainer.dataset.initialized = 'false';
             pageContent.innerHTML = pages.overview.render(session);
+            // Re-attach toggle handler
+            const newToggle = document.getElementById('botMainToggle');
+            if (newToggle) newToggle.addEventListener('change', handleMainBotToggle);
           }
         }
       });
     }
     
     navigateTo('overview');
+    
+    // Attach main bot toggle handler after initial render
+    setTimeout(() => {
+      const mainToggle = document.getElementById('botMainToggle');
+      if (mainToggle) mainToggle.addEventListener('change', handleMainBotToggle);
+    }, 0);
   });
 });
