@@ -14,6 +14,7 @@ import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
 import { subscribeBotState } from './supabase.js';
 import { initTheme, initLanguage, updateDynamicI18n } from './language-theme.js';
 import { initDataRobot } from './data-robot-animation.js';
+import { initBTCChart } from './btc-chart-animation.js';
 import './styles.css';
 import './styles/settings-tabs.css';
 import './data-robot-animation.css';
@@ -105,7 +106,7 @@ function getCountryOptions(selectedCode = 'ID') {
 // ============ Page Content ============
 const pages = {
   overview: {
-      title: 'Overview',
+      title: 'Dashboard',
       render: (session) => {
         const botSession = session.botSession || {};
         const botState = session.botState || {};
@@ -116,10 +117,14 @@ const pages = {
         const dailyPnL = botState.daily_pnl || 0;
         const totalPnL = botState.total_pnl || 0;
         const balance = botState.balance || 0;
+        const yesterdayPnL = botState.yesterday_pnl || 0;
+        const biggestWin = botState.biggest_win || 0;
+        const totalPositions = botState.total_positions || 0;
 
         const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
         const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
         const statusText = isActive ? (status === 'running' ? 'Aktif & Running' : 'Aktif tapi ' + statusLabel.toLowerCase()) : 'Nonaktif';
+        const botStatusText = isActive ? '🟢 Running' : '🔴 Stop';
 
         // Initialize data robot animation after render
         setTimeout(() => {
@@ -135,154 +140,198 @@ const pages = {
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-card-label">Total Balance</div>
-              <div class="stat-card-value">${formatIDR(balance)}</div>
+              <div class="stat-card-value">$${(balance/1000000).toFixed(3)}M</div>
               <div class="stat-card-change positive">+12.5% this week</div>
             </div>
             <div class="stat-card">
-              <div class="stat-card-label">Trading Bot</div>
+              <div class="stat-card-label">AI Auto Trade</div>
               <div class="stat-card-value">
-                <span class="status-badge ${isActive ? 'running' : 'stopped'}">${statusText}</span>
+                <span class="status-badge ${isActive ? 'running' : 'stopped'}">${botStatusText}</span>
               </div>
               <div class="stat-card-change">${mode === 'live' ? '🔴 LIVE MODE' : '📝 Paper Trading'}</div>
             </div>
             <div class="stat-card">
-              <div class="stat-card-label">Today's PnL</div>
-              <div class="stat-card-value ${dailyPnL >= 0 ? 'positive' : 'negative'}">${formatIDR(dailyPnL)}</div>
+              <div class="stat-card-label">PNL Yesterday</div>
+              <div class="stat-card-value ${yesterdayPnL >= 0 ? 'positive' : 'negative'}">$${(yesterdayPnL/1000000).toFixed(2)}M</div>
               <div class="stat-card-change">Daily</div>
             </div>
             <div class="stat-card">
-              <div class="stat-card-label">Win Rate</div>
-              <div class="stat-card-value">73.2%</div>
-              <div class="stat-card-change positive">+2.1% vs last week</div>
+              <div class="stat-card-label">Biggest Win</div>
+              <div class="stat-card-value positive">x${biggestWin} (Leverage)</div>
+              <div class="stat-card-change">Best trade</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-label">Total Positions</div>
+              <div class="stat-card-value">${totalPositions}</div>
+              <div class="stat-card-change">Open & Closed</div>
             </div>
           </div>
-          <div class="content-grid">
-            <div class="card">
-              <div class="card-header">
-                <span class="card-title">Active Bots</span>
-                <span class="card-badge">Live</span>
-              </div>
-              <div class="bot-list">
-                <div class="bot-item">
-                  <div class="bot-info">
-                    <div class="bot-icon running"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
-                    <div><div class="bot-name">Grid Bot - BTC/USDT</div><div class="bot-strategy">Grid Trading · 0.5% spread</div></div>
-                  </div>
-                  <div class="bot-pnl"><div class="bot-pnl-value positive">+2.34%</div><div class="bot-pnl-label">Today</div></div>
-                </div>
-                <div class="bot-item">
-                  <div class="bot-info">
-                    <div class="bot-icon running"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z"/></svg></div>
-                    <div><div class="bot-name">DCA Bot - ETH/USDT</div><div class="bot-strategy">Dollar Cost Average</div></div>
-                  </div>
-                  <div class="bot-pnl"><div class="bot-pnl-value positive">+1.87%</div><div class="bot-pnl-label">Today</div></div>
-                </div>
-                <div class="bot-item">
-                  <div class="bot-info">
-                    <div class="bot-icon paused"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></div>
-                    <div><div class="bot-name">AI Adaptive - SOL/USDT</div><div class="bot-strategy">AI Adaptive · ML-based</div></div>
-                  </div>
-                  <div class="bot-pnl"><div class="bot-pnl-value">0.00%</div><div class="bot-pnl-label">Paused</div></div>
-                </div>
-              </div>
+          <div class="content-section">
+            <div class="section-header">
+              <span class="section-title">Animasi 1: Data Processing</span>
             </div>
-          </div>
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">Recent Activity</span>
-              <span class="card-badge">Today</span>
+            <div class="card" style="padding: 0;">
+              <div class="data-robot-container" id="dataRobotContainer2" style="height: 300px; border-radius: 0; border: none;"></div>
             </div>
-            <div class="activity-feed">
-              <div class="activity-item">
-                <div class="activity-icon buy">↑</div>
-                <div class="activity-text"><strong>Buy</strong> 0.05 BTC at $67,420</div>
-                <span class="activity-time">12m ago</span>
-              </div>
-              <div class="activity-item">
-                <div class="activity-icon sell">↓</div>
-                <div class="activity-text"><strong>Sell</strong> 0.2 ETH at $3,520</div>
-                <span class="activity-time">28m ago</span>
-              </div>
-              <div class="activity-item">
-                <div class="activity-icon info">i</div>
-                <div class="activity-text">Grid Bot rebalanced BTC/USDT</div>
-                <span class="activity-time">1h ago</span>
-              </div>
-              <div class="activity-item">
-                <div class="activity-icon buy">↑</div>
-                <div class="activity-text"><strong>Buy</strong> 50 SOL at $142.50</div>
-                <span class="activity-time">3h ago</span>
-              </div>
-              <div class="activity-item">
-                <div class="activity-icon sell">↓</div>
-                <div class="activity-text"><strong>Take Profit</strong> ETH +2.34%</div>
-                <span class="activity-time">5h ago</span>
-              </div>
-            </div>
-          </div>
-        </div>`
+          </div>`
       }
     },
-  bots: {
-    title: 'Bots',
-    render: (session) => `
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-card-label">Total Bots</div><div class="stat-card-value">5</div></div>
-        <div class="stat-card"><div class="stat-card-label">Running</div><div class="stat-card-value" style="color:var(--accent-secondary)">3</div></div>
-        <div class="stat-card"><div class="stat-card-label">Paused</div><div class="stat-card-value" style="color:var(--accent-warm)">1</div></div>
-        <div class="stat-card"><div class="stat-card-label">Stopped</div><div class="stat-card-value" style="color:var(--accent-danger)">1</div></div>
-      </div>
-      <div class="card">
-        <div class="bot-list">
-          <div class="bot-item"><div class="bot-info"><div class="bot-icon running">⬡</div><div><div class="bot-name">Grid Bot - BTC/USDT</div><div class="bot-strategy">Grid Trading · 0.5% spread · $5,000 range</div></div></div><div class="bot-pnl"><div class="bot-pnl-value positive">+2.34%</div><div class="bot-pnl-label">Running</div></div></div>
-          <div class="bot-item"><div class="bot-info"><div class="bot-icon running">◉</div><div><div class="bot-name">DCA Bot - ETH/USDT</div><div class="bot-strategy">Dollar Cost Average · $500/week</div></div></div><div class="bot-pnl"><div class="bot-pnl-value positive">+1.87%</div><div class="bot-pnl-label">Running</div></div></div>
-          <div class="bot-item"><div class="bot-info"><div class="bot-icon paused">⏸</div><div><div class="bot-name">AI Adaptive - SOL/USDT</div><div class="bot-strategy">ML-based · paused for review</div></div></div><div class="bot-pnl"><div class="bot-pnl-value">0.00%</div><div class="bot-pnl-label">Paused</div></div></div>
-          <div class="bot-item"><div class="bot-info"><div class="bot-icon stopped">■</div><div><div class="bot-name">Scalper - ADA/USDT</div><div class="bot-strategy">Scalping · stopped manually</div></div></div><div class="bot-pnl"><div class="bot-pnl-value negative">-0.12%</div><div class="bot-pnl-label">Stopped</div></div></div>
-          <div class="bot-item"><div class="bot-info"><div class="bot-icon stopped">■</div><div><div class="bot-name">Arbitrage - ETH/MATIC</div><div class="bot-strategy">Cross-exchange arb · inactive</div></div></div><div class="bot-pnl"><div class="bot-pnl-value">—</div><div class="bot-pnl-label">No data</div></div></div>
+  positions: {
+    title: 'Positions',
+    render: (session) => {
+      const botState = session.botState || {};
+      const positions = botState.positions || [
+        { coin: 'BTCUSDT', side: 'Long', size: '0.05', entry: 67420, mark: 68100, pnl: 34, leverage: 10 },
+        { coin: 'ETHUSDT', side: 'Long', size: '2.5', entry: 3520, mark: 3580, pnl: 150, leverage: 20 },
+        { coin: 'SOLUSDT', side: 'Short', size: '150', entry: 142.5, mark: 140.2, pnl: 345, leverage: 10 },
+        { coin: 'ADAUSDT', side: 'Long', size: '5000', entry: 0.45, mark: 0.462, pnl: 60, leverage: 5 },
+        { coin: 'MATICUSDT', side: 'Long', size: '2000', entry: 0.72, mark: 0.735, pnl: 30, leverage: 10 },
+      ];
+      
+      return `
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-card-label">Total Positions</div><div class="stat-card-value">${positions.length}</div></div>
+          <div class="stat-card"><div class="stat-card-label">Long</div><div class="stat-card-value" style="color:var(--accent-secondary)">${positions.filter(p => p.side === 'Long').length}</div></div>
+          <div class="stat-card"><div class="stat-card-label">Short</div><div class="stat-card-value" style="color:var(--accent-danger)">${positions.filter(p => p.side === 'Short').length}</div></div>
+          <div class="stat-card"><div class="stat-card-label">Total Unrealized PnL</div><div class="stat-card-value positive">$${positions.reduce((sum, p) => sum + p.pnl, 0).toFixed(2)}</div></div>
         </div>
-      </div>`
+        <div class="content-section">
+          <div class="section-header">
+            <span class="section-title">Open Positions</span>
+            <span class="section-badge">Live</span>
+          </div>
+          <div class="card positions-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Coin</th>
+                  <th>Side</th>
+                  <th>Size</th>
+                  <th>Entry Price</th>
+                  <th>Mark Price</th>
+                  <th>Unrealized PnL</th>
+                  <th>Leverage</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${positions.map(p => `
+                  <tr>
+                    <td class="coin-name">${p.coin}</td>
+                    <td>${p.side}</td>
+                    <td>${p.size}</td>
+                    <td>$${Number(p.entry).toLocaleString()}</td>
+                    <td>$${Number(p.mark).toLocaleString()}</td>
+                    <td class="pnl ${p.pnl >= 0 ? 'positive' : 'negative'}">$${p.pnl >= 0 ? '+' : ''}${p.pnl.toFixed(2)}</td>
+                    <td class="leverage">x${p.leverage}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>`
+    }
   },
-  trades: {
-    title: 'Trades',
-    render: (session) => `
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-card-label">Total Trades (30d)</div><div class="stat-card-value">142</div></div>
-        <div class="stat-card"><div class="stat-card-label">Wins</div><div class="stat-card-value positive">104</div></div>
-        <div class="stat-card"><div class="stat-card-label">Losses</div><div class="stat-card-value negative">38</div></div>
-        <div class="stat-card"><div class="stat-card-label">Avg Trade</div><div class="stat-card-value">$350</div></div>
-      </div>
-      <div class="card">
-        <div class="activity-feed">
-          <div class="activity-item"><div class="activity-icon buy">↑</div><div class="activity-text"><strong>BUY</strong> 0.05 BTC/USDT @ $67,420 — Grid Bot</div><span class="activity-time">12m ago</span></div>
-          <div class="activity-item"><div class="activity-icon sell">↓</div><div class="activity-text"><strong>SELL</strong> 0.2 ETH/USDT @ $3,520 — DCA Bot</div><span class="activity-time">28m ago</span></div>
-          <div class="activity-item"><div class="activity-icon buy">↑</div><div class="activity-text"><strong>BUY</strong> 50 SOL/USDT @ $142.50 — AI Adaptive</div><span class="activity-time">3h ago</span></div>
-          <div class="activity-item"><div class="activity-icon sell">↓</div><div class="activity-text"><strong>SELL</strong> 0.1 BTC/USDT @ $67,800 — Grid Bot (TP)</div><span class="activity-time">5h ago</span></div>
-          <div class="activity-item"><div class="activity-icon buy">↑</div><div class="activity-text"><strong>BUY</strong> 100 MATIC/USDT @ $0.72 — DCA Bot</div><span class="activity-time">8h ago</span></div>
-          <div class="activity-item"><div class="activity-icon sell">↓</div><div class="activity-text"><strong>SELL</strong> 200 ADA/USDT @ $0.45 — Scalper (SL)</div><span class="activity-time">1d ago</span></div>
+  history: {
+    title: 'History Trade',
+    render: (session) => {
+      const botState = session.botState || {};
+      const trades = botState.trade_history || [
+        { time: '2024-01-15 14:32', coin: 'BTCUSDT', type: 'Buy', size: '0.05', price: 67420, pnl: 34, bot: 'Grid Bot' },
+        { time: '2024-01-15 13:15', coin: 'ETHUSDT', type: 'Sell', size: '2.5', price: 3520, pnl: 150, bot: 'DCA Bot' },
+        { time: '2024-01-15 11:42', coin: 'SOLUSDT', type: 'Sell', size: '150', price: 142.5, pnl: 345, bot: 'AI Adaptive' },
+        { time: '2024-01-15 09:20', coin: 'ADAUSDT', type: 'Buy', size: '5000', price: 0.45, pnl: -12, bot: 'Scalper' },
+        { time: '2024-01-15 07:05', coin: 'MATICUSDT', type: 'Buy', size: '2000', price: 0.72, pnl: 30, bot: 'Grid Bot' },
+        { time: '2024-01-14 22:10', coin: 'BTCUSDT', type: 'Sell', size: '0.1', price: 67800, pnl: 240, bot: 'Grid Bot (TP)' },
+        { time: '2024-01-14 18:30', coin: 'ETHUSDT', type: 'Buy', size: '1.2', price: 3480, pnl: 80, bot: 'DCA Bot' },
+        { time: '2024-01-14 15:45', coin: 'SOLUSDT', type: 'Buy', size: '200', price: 140.2, pnl: 45, bot: 'AI Adaptive' },
+      ];
+      
+      const totalTrades = trades.length;
+      const wins = trades.filter(t => t.pnl > 0).length;
+      const losses = trades.filter(t => t.pnl < 0).length;
+      const avgTrade = (trades.reduce((sum, t) => sum + t.pnl, 0) / trades.length).toFixed(2);
+      
+      return `
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-card-label">Total Trades (30d)</div><div class="stat-card-value">${totalTrades}</div></div>
+          <div class="stat-card"><div class="stat-card-label">Wins</div><div class="stat-card-value positive">${wins}</div></div>
+          <div class="stat-card"><div class="stat-card-label">Losses</div><div class="stat-card-value negative">${losses}</div></div>
+          <div class="stat-card"><div class="stat-card-label">Avg Trade PnL</div><div class="stat-card-value ${avgTrade >= 0 ? 'positive' : 'negative'}">$${avgTrade >= 0 ? '+' : ''}${avgTrade}</div></div>
         </div>
-      </div>`
+        <div class="content-section">
+          <div class="section-header">
+            <span class="section-title">Trade History</span>
+            <span class="section-badge">Last 30 Days</span>
+          </div>
+          <div class="card history-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Coin</th>
+                  <th>Type</th>
+                  <th>Size</th>
+                  <th>Price</th>
+                  <th>PnL</th>
+                  <th>Bot</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${trades.map(t => `
+                  <tr>
+                    <td>${t.time}</td>
+                    <td class="coin-name">${t.coin}</td>
+                    <td class="type ${t.type.toLowerCase()}">${t.type}</td>
+                    <td>${t.size}</td>
+                    <td>$${Number(t.price).toLocaleString()}</td>
+                    <td class="pnl ${t.pnl >= 0 ? 'positive' : 'negative'}">$${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}</td>
+                    <td>${t.bot}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>`
+    }
   },
   performance: {
     title: 'Performance',
-    render: (session) => `
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-card-label">Total Return</div><div class="stat-card-value positive">+18.7%</div><div class="stat-card-change positive">Since inception</div></div>
-        <div class="stat-card"><div class="stat-card-label">Max Drawdown</div><div class="stat-card-value">-4.2%</div><div class="stat-card-change">Within acceptable range</div></div>
-        <div class="stat-card"><div class="stat-card-label">Sharpe Ratio</div><div class="stat-card-value">2.14</div><div class="stat-card-change positive">Good risk-adjusted</div></div>
-        <div class="stat-card"><div class="stat-card-label">Win Rate</div><div class="stat-card-value">73.2%</div><div class="stat-card-change positive">104 / 142 trades</div></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span class="card-title">Weekly PnL</span><span class="card-badge">7 days</span></div>
-        <div class="activity-feed">
-          <div class="activity-item"><div class="activity-icon info">📊</div><div class="activity-text"><strong>Mon</strong> — Portfolio: $51,245,000 (+0.49%)</div><span class="activity-time">Mon</span></div>
-          <div class="activity-item"><div class="activity-icon buy">↑</div><div class="activity-text"><strong>Tue</strong> — Portfolio: $51,890,000 (+1.26%)</div><span class="activity-time">Tue</span></div>
-          <div class="activity-item"><div class="activity-icon sell">↓</div><div class="activity-text"><strong>Wed</strong> — Portfolio: $51,420,000 (-0.91%)</div><span class="activity-time">Wed</span></div>
-          <div class="activity-item"><div class="activity-icon buy">↑</div><div class="activity-text"><strong>Thu</strong> — Portfolio: $52,100,000 (+1.32%)</div><span class="activity-time">Thu</span></div>
-          <div class="activity-item"><div class="activity-icon buy">↑</div><div class="activity-text"><strong>Fri</strong> — Portfolio: $52,480,000 (+0.73%)</div><span class="activity-time">Fri</span></div>
-          <div class="activity-item"><div class="activity-icon info">📊</div><div class="activity-text"><strong>Sat</strong> — Portfolio: $52,480,000 (no trades)</div><span class="activity-time">Sat</span></div>
-          <div class="activity-item"><div class="activity-icon info">📊</div><div class="activity-text"><strong>Sun</strong> — Portfolio: $52,480,000 (no trades)</div><span class="activity-time">Sun</span></div>
+    render: (session) => {
+      const botState = session.botState || {};
+      const balance = botState.balance || 0;
+      return `
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-card-label">Total Return</div><div class="stat-card-value positive">+18.7%</div><div class="stat-card-change positive">Since inception</div></div>
+          <div class="stat-card"><div class="stat-card-label">Max Drawdown</div><div class="stat-card-value">-4.2%</div><div class="stat-card-change">Within acceptable range</div></div>
+          <div class="stat-card"><div class="stat-card-label">Sharpe Ratio</div><div class="stat-card-value">2.14</div><div class="stat-card-change positive">Good risk-adjusted</div></div>
+          <div class="stat-card"><div class="stat-card-label">Win Rate</div><div class="stat-card-value">73.2%</div><div class="stat-card-change positive">104 / 142 trades</div></div>
         </div>
-      </div>`
+        <div class="content-section">
+          <div class="section-header">
+            <span class="section-title">Weekly PnL</span>
+            <span class="section-badge">7 days</span>
+          </div>
+          <div class="card">
+            <div class="activity-feed">
+              <div class="activity-item"><div class="activity-icon info">📊</div><div class="activity-text"><strong>Mon</strong> — Portfolio: $51,245,000 (+0.49%)</div><span class="activity-time">Mon</span></div>
+              <div class="activity-item"><div class="activity-icon buy">↑</div><div class="activity-text"><strong>Tue</strong> — Portfolio: $51,890,000 (+1.26%)</div><span class="activity-time">Tue</span></div>
+              <div class="activity-item"><div class="activity-icon sell">↓</div><div class="activity-text"><strong>Wed</strong> — Portfolio: $51,420,000 (-0.91%)</div><span class="activity-time">Wed</span></div>
+              <div class="activity-item"><div class="activity-icon buy">↑</div><div class="activity-text"><strong>Thu</strong> — Portfolio: $52,100,000 (+1.32%)</div><span class="activity-time">Thu</span></div>
+              <div class="activity-item"><div class="activity-icon buy">↑</div><div class="activity-text"><strong>Fri</strong> — Portfolio: $52,480,000 (+0.73%)</div><span class="activity-time">Fri</span></div>
+              <div class="activity-item"><div class="activity-icon info">📊</div><div class="activity-text"><strong>Sat</strong> — Portfolio: $52,480,000 (no trades)</div><span class="activity-time">Sat</span></div>
+              <div class="activity-item"><div class="activity-icon info">📊</div><div class="activity-text"><strong>Sun</strong> — Portfolio: $52,480,000 (no trades)</div><span class="activity-time">Sun</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="content-section">
+          <div class="section-header">
+            <span class="section-title">Animasi 2: BTC Chart</span>
+          </div>
+          <div class="card" style="padding: 0;">
+            <div class="btc-chart-container" id="btcChartContainer"></div>
+          </div>
+        </div>`
+    }
   },
   portfolio: {
     title: 'Portfolio',
@@ -291,23 +340,133 @@ const pages = {
       const balance = botState.balance || 0;
       return `
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-card-label">Total Value</div><div class="stat-card-value">${formatIDR(balance)}</div></div>
-        <div class="stat-card"><div class="stat-card-label">In Positions</div><div class="stat-card-value">${formatIDR(32000000)}</div></div>
-        <div class="stat-card"><div class="stat-card-label">Available</div><div class="stat-card-value">${formatIDR(18000000)}</div></div>
-        <div class="stat-card"><div class="stat-card-label">Unrealized PnL</div><div class="stat-card-value positive">+${formatIDR(4200000)}</div></div>
+        <div class="stat-card"><div class="stat-card-label">Total Value</div><div class="stat-card-value">$${(balance/1000000).toFixed(2)}M</div></div>
+        <div class="stat-card"><div class="stat-card-label">In Positions</div><div class="stat-card-value">$32.00M</div></div>
+        <div class="stat-card"><div class="stat-card-label">Available</div><div class="stat-card-value">$18.00M</div></div>
+        <div class="stat-card"><div class="stat-card-label">Unrealized PnL</div><div class="stat-card-value positive">+$4.20M</div></div>
       </div>
-      <div class="card">
-        <div class="card-header"><span class="card-title">Holdings</span><span class="card-badge">Live</span></div>
-        <div class="bot-list">
-          <div class="bot-item"><div class="bot-info"><div class="bot-icon running">₿</div><div><div class="bot-name">BTC</div><div class="bot-strategy">0.05 BTC · Avg $67,420</div></div></div><div class="bot-pnl"><div class="bot-pnl-value positive">+2.34%</div><div class="bot-pnl-label">$1,560,000</div></div></div>
-          <div class="bot-item"><div class="bot-info"><div class="bot-icon running">Ξ</div><div><div class="bot-name">ETH</div><div class="bot-strategy">0.2 ETH · Avg $3,520</div></div></div><div class="bot-pnl"><div class="bot-pnl-value positive">+1.87%</div><div class="bot-pnl-label">$142,000</div></div></div>
-          <div class="bot-item"><div class="bot-info"><div class="bot-icon running">◎</div><div><div class="bot-name">SOL</div><div class="bot-strategy">50 SOL · Avg $142.50</div></div></div><div class="bot-pnl"><div class="bot-pnl-value positive">+3.10%</div><div class="bot-pnl-label">$21,750</div></div></div>
+      <div class="content-section">
+        <div class="section-header">
+          <span class="section-title">Holdings</span>
+          <span class="section-badge">Live</span>
+        </div>
+        <div class="card">
+          <div class="bot-list">
+            <div class="bot-item"><div class="bot-info"><div class="bot-icon running">₿</div><div><div class="bot-name">BTC</div><div class="bot-strategy">0.05 BTC · Avg $67,420</div></div></div><div class="bot-pnl"><div class="bot-pnl-value positive">+2.34%</div><div class="bot-pnl-label">$1.56M</div></div></div>
+            <div class="bot-item"><div class="bot-info"><div class="bot-icon running">Ξ</div><div><div class="bot-name">ETH</div><div class="bot-strategy">0.2 ETH · Avg $3,520</div></div></div><div class="bot-pnl"><div class="bot-pnl-value positive">+1.87%</div><div class="bot-pnl-label">$142K</div></div></div>
+            <div class="bot-item"><div class="bot-info"><div class="bot-icon running">◎</div><div><div class="bot-name">SOL</div><div class="bot-strategy">50 SOL · Avg $142.50</div></div></div><div class="bot-pnl"><div class="bot-pnl-value positive">+3.10%</div><div class="bot-pnl-label">$21.75K</div></div></div>
+          </div>
         </div>
       </div>`;
     }
   },
+  guide: {
+    title: 'Guide',
+    render: (session) => `
+      <div class="content-section">
+        <div class="section-header">
+          <span class="section-title">Panduan AI Auto Trade</span>
+          <span class="section-badge">8 Langkah</span>
+        </div>
+        <div class="guide-steps">
+          <div class="guide-step">
+            <div class="step-header">
+              <div class="step-number scan">1</div>
+              <div class="step-title">Scan</div>
+            </div>
+            <div class="step-desc">Memindai pasar 24/7 mencari peluang trading terbaik menggunakan algoritma AI canggih.</div>
+          </div>
+          <div class="guide-step">
+            <div class="step-header">
+              <div class="step-number detect">2</div>
+              <div class="step-title">Detect</div>
+            </div>
+            <div class="step-desc">Mendeteksi pola harga, volume, dan indikator teknikal yang menguntungkan secara real-time.</div>
+          </div>
+          <div class="guide-step">
+            <div class="step-header">
+              <div class="step-number collect">3</div>
+              <div class="step-title">Collect Data</div>
+            </div>
+            <div class="step-desc">Mengumpulkan data dari multiple sources: Market Data, Exchange API, News, On-Chain, Social Sentiment.</div>
+          </div>
+          <div class="guide-step">
+            <div class="step-header">
+              <div class="step-number validate">4</div>
+              <div class="step-title">Validate</div>
+            </div>
+            <div class="step-desc">Memvalidasi sinyal trading melalui multiple AI models sebelum eksekusi untuk meminimalkan false signal.</div>
+          </div>
+          <div class="guide-step">
+            <div class="step-header">
+              <div class="step-number setup">5</div>
+              <div class="step-title">Setup</div>
+            </div>
+            <div class="step-desc">Menyiapkan parameter trading: leverage, position size, stop loss, take profit secara otomatis.</div>
+          </div>
+          <div class="guide-step">
+            <div class="step-header">
+              <div class="step-number execution">6</div>
+              <div class="step-title">Execution</div>
+            </div>
+            <div class="step-desc">Eksekusi order instan via Binance API dengan slippage minimal dan kecepatan tinggi.</div>
+          </div>
+          <div class="guide-step">
+            <div class="step-header">
+              <div class="step-number monitor">7</div>
+              <div class="step-title">Monitor</div>
+            </div>
+            <div class="step-desc">Memantau posisi real-time, trailing stop, dan manajemen risiko dinamis sepanjang trade berjalan.</div>
+          </div>
+          <div class="guide-step">
+            <div class="step-header">
+              <div class="step-number profit">8</div>
+              <div class="step-title">Profit</div>
+            </div>
+            <div class="step-desc">Realisasi profit otomatis, reinvest compound, dan laporan performa harian/mingguan/bulanan.</div>
+          </div>
+        </div>
+      </div>`
+  },
+  about: {
+    title: 'About',
+    render: (session) => `
+      <div class="content-section">
+        <div class="section-header">
+          <span class="section-title">Tentang AI Auto Trade</span>
+        </div>
+        <div class="about-grid">
+          <div class="about-card">
+            <h3>Cara Kerja (Workflow)</h3>
+            <div class="about-list">
+              <div class="about-item"><span class="about-dot scan"></span> <strong>Scan</strong> — Memindai pasar 24/7 mencari peluang</div>
+              <div class="about-item"><span class="about-dot detect"></span> <strong>Detect</strong> — Mendeteksi pola & sinyal teknikal</div>
+              <div class="about-item"><span class="about-dot collect"></span> <strong>Collect Data</strong> — Mengumpulkan data multi-source</div>
+              <div class="about-item"><span class="about-dot validate"></span> <strong>Validate</strong> — Validasi sinyal via multiple AI models</div>
+              <div class="about-item"><span class="about-dot setup"></span> <strong>Setup</strong> — Setup parameter trading otomatis</div>
+              <div class="about-item"><span class="about-dot execution"></span> <strong>Execution</strong> — Eksekusi order instan via Binance API</div>
+              <div class="about-item"><span class="about-dot monitor"></span> <strong>Monitor</strong> — Monitoring real-time & risk management</div>
+              <div class="about-item"><span class="about-dot profit"></span> <strong>Profit</strong> — Realisasi profit & compound reinvest</div>
+            </div>
+          </div>
+          <div class="about-card">
+            <h3>Fitur Utama</h3>
+            <div class="about-list">
+              <div class="about-item">🤖 <strong>AI-Powered</strong> — Multiple ML models untuk analisis pasar</div>
+              <div class="about-item">⚡ <strong>Real-time</strong> — Data streaming & eksekusi sub-second</div>
+              <div class="about-item">🔒 <strong>Secure</strong> — API keys encrypted, IP whitelist, read-only mode</div>
+              <div class="about-item">📊 <strong>Transparent</strong> — Full trade history, PnL tracking, audit trail</div>
+              <div class="about-item">🔄 <strong>24/7 Auto</strong> — Fully automated, no manual intervention needed</div>
+              <div class="about-item">📈 <strong>Multi-Strategy</strong> — Grid, DCA, AI Adaptive, Scalping, Arbitrage</div>
+              <div class="about-item">💰 <strong>Paper & Live</strong> — Test strategies risk-free before going live</div>
+              <div class="about-item">🔔 <strong>Notifications</strong> — Telegram alerts untuk setiap trade & event penting</div>
+            </div>
+          </div>
+        </div>
+      </div>`
+  },
   settings: {
-    title: 'Pengaturan',
+    title: 'Settings',
     render: (session) => {
       const exchangeKey = session.exchangeKey || {};
       const botSession = session.botSession || {};
@@ -325,6 +484,7 @@ const pages = {
       <div class="settings-tabs-container" role="tablist">
         <button class="settings-tab active" role="tab" data-tab="profile" aria-selected="true">Profil</button>
         <button class="settings-tab" role="tab" data-tab="exchange" aria-selected="false">Exchange</button>
+        <button class="settings-tab" role="tab" data-tab="execution" aria-selected="false">Execution Cycle</button>
         <button class="settings-tab" role="tab" data-tab="aplikasi" aria-selected="false">Aplikasi</button>
       </div>
     <div class="card">
@@ -348,7 +508,7 @@ const pages = {
             <div class="info-title">🔑 Kunci API Binance</div>
             Kunci API untuk Aplikasi AI Trading. Simpan dengan aman — Secret Key tidak akan ditampilkan kembali secara penuh.
           </div>
-    
+
           <div class="exchange-section">
             <div class="exchange-section-title">Koneksi</div>
             <div class="exchange-field">
@@ -365,7 +525,7 @@ const pages = {
               </div>
             </div>
           </div>
-    
+
           <div class="exchange-section">
             <div class="exchange-section-title">Konfigurasi</div>
             <div class="exchange-field">
@@ -395,10 +555,120 @@ const pages = {
               <input type="text" id="exchangeLabel" value="${exchangeKey.label || 'Main Account'}" placeholder="Contoh: Main Account, Sub Bot 1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
             </div>
           </div>
-    
+
           <div class="action-row">
             <button class="btn btn-primary" id="exchangeSaveBtn">Simpan Exchange</button>
             <button class="btn btn-danger" id="exchangeDeleteBtn" style="display:${exchangeKey.api_key ? 'inline-flex' : 'none'}">Hapus Kunci</button>
+          </div>
+        </div>
+
+        <div class="settings-panel" role="tabpanel" data-tab="execution" hidden>
+          <div class="info-banner">
+            <div class="info-title">⚙️ Execution Cycle Settings</div>
+            Konfigurasi siklus eksekusi trading bot: interval scanning, validasi sinyal, dan parameter eksekusi order.
+          </div>
+
+          <div class="exchange-section">
+            <div class="exchange-section-title">Scan Interval</div>
+            <div class="exchange-field">
+              <label>Market Scan Interval (detik)</label>
+              <input type="number" id="executionScanInterval" value="${botSession.scan_interval || 30}" min="10" max="300" step="10" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+              <div class="hint">Interval pemindaian pasar untuk mencari peluang trading. Lebih cepat = lebih responsif tapi lebih banyak API calls.</div>
+            </div>
+            <div class="exchange-field">
+              <label>Signal Validation Interval (detik)</label>
+              <input type="number" id="executionValidationInterval" value="${botSession.validation_interval || 60}" min="30" max="600" step="30" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+              <div class="hint">Interval validasi sinyal melalui multiple AI models sebelum eksekusi.</div>
+            </div>
+          </div>
+
+          <div class="exchange-section">
+            <div class="exchange-section-title">Risk Parameters</div>
+            <div class="exchange-field">
+              <label>Max Position Size (% dari balance)</label>
+              <input type="number" id="executionMaxPosition" value="${botSession.max_position_pct || 5}" min="1" max="50" step="1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+              <div class="hint">Persentase maksimum balance per posisi. Disarankan 1-10%.</div>
+            </div>
+            <div class="exchange-field">
+              <label>Max Leverage</label>
+              <input type="number" id="executionMaxLeverage" value="${botSession.max_leverage || 20}" min="1" max="125" step="1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+              <div class="hint">Leverage maksimum yang diizinkan. Futures Binance max 125x.</div>
+            </div>
+            <div class="exchange-field">
+              <label>Default Stop Loss (%)</label>
+              <input type="number" id="executionStopLoss" value="${botSession.default_stop_loss || 2}" min="0.5" max="20" step="0.5" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+              <div class="hint">Stop loss default untuk semua posisi. 0 = tidak ada SL otomatis.</div>
+            </div>
+            <div class="exchange-field">
+              <label>Default Take Profit (%)</label>
+              <input type="number" id="executionTakeProfit" value="${botSession.default_take_profit || 4}" min="0.5" max="50" step="0.5" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+              <div class="hint">Take profit default untuk semua posisi. 0 = tidak ada TP otomatis.</div>
+            </div>
+          </div>
+
+          <div class="exchange-section">
+            <div class="exchange-section-title">Execution Mode</div>
+            <div class="exchange-field">
+              <label>Order Type</label>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="executionOrderType" value="market" ${botSession.order_type === 'market' ? 'checked' : ''}>
+                  <span>Market Order</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="executionOrderType" value="limit" ${botSession.order_type === 'limit' ? 'checked' : ''}>
+                  <span>Limit Order</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="executionOrderType" value="post_only" ${botSession.order_type === 'post_only' ? 'checked' : ''}>
+                  <span>Post Only (Maker)</span>
+                </label>
+              </div>
+              <div class="hint">Market = eksekusi instan, Limit = harga tertentu, Post Only = hanya maker fee.</div>
+            </div>
+            <div class="exchange-field">
+              <label>Slippage Tolerance (%)</label>
+              <input type="number" id="executionSlippage" value="${botSession.slippage_tolerance || 0.5}" min="0.1" max="5" step="0.1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+              <div class="hint">Toleransi slippage untuk market order. Lebih kecil = lebih aman tapi mungkin tidak terekseskusi.</div>
+            </div>
+            <div class="exchange-field">
+              <label>Max Concurrent Positions</label>
+              <input type="number" id="executionMaxPositions" value="${botSession.max_concurrent_positions || 10}" min="1" max="50" step="1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+              <div class="hint">Jumlah posisi terbuka maksimum sekaligus.</div>
+            </div>
+          </div>
+
+          <div class="exchange-section">
+            <div class="exchange-section-title">AI Model Configuration</div>
+            <div class="exchange-field">
+              <label>AI Confidence Threshold</label>
+              <input type="number" id="executionAIConfidence" value="${botSession.ai_confidence_threshold || 75}" min="50" max="99" step="1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+              <div class="hint">Minimum confidence score (0-100) dari AI models untuk mengeksekusi trade.</div>
+            </div>
+            <div class="exchange-field">
+              <label>Models Required for Consensus</label>
+              <input type="number" id="executionModelsRequired" value="${botSession.models_required || 2}" min="1" max="5" step="1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+              <div class="hint">Jumlah model AI yang harus sepakat sebelum sinyal divalidasi.</div>
+            </div>
+            <div class="exchange-field">
+              <label>Enable Multi-Timeframe Analysis</label>
+              <div class="toggle-container">
+                <div class="toggle-info">
+                  <div class="toggle-title">Multi-Timeframe</div>
+                  <div class="toggle-desc">Analisis 1m, 5m, 15m, 1h, 4h timeframe</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="executionMultiTimeframe" ${botSession.multi_timeframe !== false ? 'checked' : ''}>
+                  <span class="toggle-slider">
+                    <span class="toggle-thumb"></span>
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button class="btn btn-primary" id="executionSaveBtn">Simpan Execution Cycle</button>
           </div>
         </div>
 
@@ -799,6 +1069,79 @@ function attachAplikasiTabHandlers(session) {
   }
 }
 
+// ============ Execution Cycle Tab Handlers ============
+function attachExecutionTabHandlers(session) {
+  const saveBtn = document.getElementById('executionSaveBtn');
+  if (saveBtn && !saveBtn.dataset.listener) {
+    saveBtn.dataset.listener = 'true';
+    saveBtn.addEventListener('click', async () => {
+      const scanInterval = parseInt(document.getElementById('executionScanInterval')?.value) || 30;
+      const validationInterval = parseInt(document.getElementById('executionValidationInterval')?.value) || 60;
+      const maxPositionPct = parseFloat(document.getElementById('executionMaxPosition')?.value) || 5;
+      const maxLeverage = parseInt(document.getElementById('executionMaxLeverage')?.value) || 20;
+      const stopLoss = parseFloat(document.getElementById('executionStopLoss')?.value) || 2;
+      const takeProfit = parseFloat(document.getElementById('executionTakeProfit')?.value) || 4;
+      const orderType = document.querySelector('input[name="executionOrderType"]:checked')?.value || 'market';
+      const slippage = parseFloat(document.getElementById('executionSlippage')?.value) || 0.5;
+      const maxPositions = parseInt(document.getElementById('executionMaxPositions')?.value) || 10;
+      const aiConfidence = parseInt(document.getElementById('executionAIConfidence')?.value) || 75;
+      const modelsRequired = parseInt(document.getElementById('executionModelsRequired')?.value) || 2;
+      const multiTimeframe = document.getElementById('executionMultiTimeframe')?.checked !== false;
+
+      const originalText = saveBtn.textContent;
+      saveBtn.textContent = 'Menyimpan...';
+      saveBtn.disabled = true;
+
+      try {
+        const updates = {
+          scan_interval: scanInterval,
+          validation_interval: validationInterval,
+          max_position_pct: maxPositionPct,
+          max_leverage: maxLeverage,
+          default_stop_loss: stopLoss,
+          default_take_profit: takeProfit,
+          order_type: orderType,
+          slippage_tolerance: slippage,
+          max_concurrent_positions: maxPositions,
+          ai_confidence_threshold: aiConfidence,
+          models_required: modelsRequired,
+          multi_timeframe: multiTimeframe
+        };
+
+        const { error } = await updateBotSession(session.botSession.id, updates);
+        if (error) throw error;
+
+        session.botSession = { ...session.botSession, ...updates };
+        localStorage.setItem('auth_session', JSON.stringify(session));
+
+        saveBtn.textContent = 'Tersimpan!';
+        saveBtn.style.background = 'var(--accent-secondary)';
+        saveBtn.style.borderColor = 'var(--accent-secondary)';
+
+        setTimeout(() => {
+          saveBtn.textContent = originalText;
+          saveBtn.style.background = '';
+          saveBtn.style.borderColor = '';
+        }, 2000);
+
+      } catch (err) {
+        console.error('Failed to save execution settings:', err);
+        const errorMsg = err?.message || err?.details || err?.hint || JSON.stringify(err) || 'Unknown error';
+        saveBtn.textContent = 'Gagal: ' + errorMsg.substring(0, 80);
+        saveBtn.style.background = 'var(--accent-danger)';
+        saveBtn.style.borderColor = 'var(--accent-danger)';
+        setTimeout(() => {
+          saveBtn.textContent = originalText;
+          saveBtn.style.background = '';
+          saveBtn.style.borderColor = '';
+        }, 8000);
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+  }
+}
+
 // ============ Init ============
 document.addEventListener('DOMContentLoaded', async () => {
   let session = await requireAuthWrapper();
@@ -870,11 +1213,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (pageContent) pageContent.innerHTML = pg.render(session);
         attachSettingsSaveHandler(session);
         attachExchangeTabHandlers(session);
+        attachExecutionTabHandlers(session);
         updateDynamicI18n();
       });
     } else {
       if (pageContent) pageContent.innerHTML = pg.render(session);
       updateDynamicI18n();
+
+      // Initialize animations for specific pages
+      if (pageName === 'overview') {
+        setTimeout(() => {
+          const container = document.getElementById('dataRobotContainer');
+          if (container && !container.dataset.initialized) {
+            container.dataset.initialized = 'true';
+            initDataRobot('#dataRobotContainer');
+          }
+          const container2 = document.getElementById('dataRobotContainer2');
+          if (container2 && !container2.dataset.initialized) {
+            container2.dataset.initialized = 'true';
+            initDataRobot('#dataRobotContainer2');
+          }
+        }, 0);
+      }
+      if (pageName === 'performance') {
+        setTimeout(() => {
+          initBTCChart('#btcChartContainer');
+        }, 0);
+      }
     }
     
     if (sidebar) sidebar.classList.remove('open');
