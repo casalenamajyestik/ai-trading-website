@@ -179,15 +179,8 @@ const pages = {
             <div class="stat-card-sub">Open & Closed</div>
           </div>
         </div>
-
-        <!-- Dashboard Section: Animasi 1 -->
-        <div class="content-section">
-          <div class="section-header">
-            <span class="section-title">Animasi 1</span>
-          </div>
-          <div class="card" style="padding: 0;">
-            <div class="data-robot-container" id="dataRobotContainer" role="img" aria-label="AI Robot memproses data dari berbagai sumber: Market Data, Exchange API, AI Models, News Feed, On-Chain, Social Sentiment"></div>
-          </div>
+        <div class="card" style="padding: 0;">
+          <div class="data-robot-container" id="dataRobotContainer" role="img" aria-label="AI Robot memproses data dari berbagai sumber: Market Data, Exchange API, AI Models, News Feed, On-Chain, Social Sentiment"></div>
         </div>`
     }
   },
