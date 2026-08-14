@@ -137,6 +137,15 @@ const pages = {
         }
       }, 0);
 
+      // Initialize BTC chart animation after render
+      setTimeout(() => {
+        const container = document.getElementById('btcChartContainer');
+        if (container && !container.dataset.initialized) {
+          container.dataset.initialized = 'true';
+          initBTCChart('#btcChartContainer');
+        }
+      }, 0);
+
       return `
         <!-- 5 Stat Cards matching spreadsheet design -->
         <div class="stats-grid">
@@ -179,8 +188,51 @@ const pages = {
             <div class="stat-card-sub">Open & Closed</div>
           </div>
         </div>
-        <div class="card" style="padding: 0;">
-          <div class="data-robot-container" id="dataRobotContainer" role="img" aria-label="AI Robot memproses data dari berbagai sumber: Market Data, Exchange API, AI Models, News Feed, On-Chain, Social Sentiment"></div>
+
+        <!-- 3-Column Layout: BTC Chart | Data Robot | Animasi 2 -->
+        <div class="content-section">
+          <div class="section-header">
+            <span class="section-title">Dashboard Analytics</span>
+          </div>
+          <div class="three-column-grid">
+            <!-- Left: BTC Chart -->
+            <div class="column-card">
+              <div class="column-header">
+                <span class="column-title">Chart BTC</span>
+                <span class="column-badge live">LIVE</span>
+              </div>
+              <div class="card" style="padding: 0;">
+                <div class="btc-chart-container" id="btcChartContainer"></div>
+              </div>
+            </div>
+
+            <!-- Center: Animasi Robot (Data Robot) -->
+            <div class="column-card">
+              <div class="column-header">
+                <span class="column-title">Animasi Robot</span>
+                <span class="column-badge">AI Processing</span>
+              </div>
+              <div class="card" style="padding: 0;">
+                <div class="data-robot-container" id="dataRobotContainer" role="img" aria-label="AI Robot memproses data dari berbagai sumber: Market Data, Exchange API, AI Models, News Feed, On-Chain, Social Sentiment"></div>
+              </div>
+            </div>
+
+            <!-- Right: Animasi 2 (Placeholder) -->
+            <div class="column-card">
+              <div class="column-header">
+                <span class="column-title">Animasi ke 2</span>
+                <span class="column-badge placeholder">Coming Soon</span>
+              </div>
+              <div class="card animation2-placeholder" style="padding: 0; display: flex; align-items: center; justify-content: center;">
+                <div class="placeholder-content">
+                  <div class="placeholder-icon">🎬</div>
+                  <div class="placeholder-text">Animasi ke 2</div>
+                  <div class="placeholder-desc">Posisi reservasi untuk animasi ke-2</div>
+                  <div class="placeholder-label">[ANIMASI KE 2]</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>`
     }
   },
