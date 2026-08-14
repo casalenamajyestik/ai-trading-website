@@ -3,7 +3,7 @@
  * Real-time candlestick chart with WebSocket live updates
  */
 
-import { createChart, CrosshairMode } from 'lightweight-charts';
+import { createChart, CrosshairMode, CandlestickSeries, HistogramSeries, LineSeries } from 'lightweight-charts';
 
 export class BTCRealTimeChart {
   constructor(container, options = {}) {
@@ -136,7 +136,7 @@ export class BTCRealTimeChart {
     });
 
     // Candlestick series
-    this.candleSeries = this.chart.addCandlestickSeries({
+    this.candleSeries = this.chart.addSeries(CandlestickSeries, {
       upColor: '#22d3a7',
       downColor: '#f04e4e',
       borderUpColor: '#22d3a7',
@@ -148,7 +148,7 @@ export class BTCRealTimeChart {
     });
 
     // Volume series (histogram at bottom)
-    this.volumeSeries = this.chart.addHistogramSeries({
+    this.volumeSeries = this.chart.addSeries(HistogramSeries, {
       color: '#22d3a7',
       priceFormat: { type: 'volume', precision: 0 },
       priceScaleId: 'left',
@@ -157,21 +157,21 @@ export class BTCRealTimeChart {
     this.volumeSeries.applyOptions({ priceScaleId: '' }); // Hide left price scale for volume
 
     // Add MA lines
-    this.ma7Series = this.chart.addLineSeries({
+    this.ma7Series = this.chart.addSeries(LineSeries, {
       color: '#4f8eff',
       lineWidth: 1,
       priceLineVisible: false,
       lastValueVisible: false,
       title: 'MA7',
     });
-    this.ma25Series = this.chart.addLineSeries({
+    this.ma25Series = this.chart.addSeries(LineSeries, {
       color: '#f5a623',
       lineWidth: 1,
       priceLineVisible: false,
       lastValueVisible: false,
       title: 'MA25',
     });
-    this.ma99Series = this.chart.addLineSeries({
+    this.ma99Series = this.chart.addSeries(LineSeries, {
       color: '#a855f7',
       lineWidth: 1,
       priceLineVisible: false,
