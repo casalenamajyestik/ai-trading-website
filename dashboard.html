@@ -275,6 +275,12 @@
           border-radius: var(--radius-lg);
           box-shadow: var(--shadow-card);
           overflow: hidden;
+          transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .column-card:hover {
+          border-color: var(--border-active);
+          box-shadow: var(--shadow-card-hover);
         }
 
         .column-card > .card {
