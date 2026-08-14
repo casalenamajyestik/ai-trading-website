@@ -101,12 +101,12 @@ export class BTCRealTimeChart {
       },
       rightPriceScale: {
         borderColor: 'rgba(136, 153, 180, 0.3)',
-        scaleMargins: { top: 0.1, bottom: 0.25 },
+        scaleMargins: { top: 0.1, bottom: 0.15 },
       },
       leftPriceScale: {
         borderColor: 'rgba(136, 153, 180, 0.3)',
-        scaleMargins: { top: 0.1, bottom: 0.25 },
-        visible: false, // Hide left price scale (volume uses it)
+        scaleMargins: { top: 0.1, bottom: 0.15 },
+        visible: false,
       },
       timeScale: {
         borderColor: 'rgba(136, 153, 180, 0.3)',
@@ -135,7 +135,10 @@ export class BTCRealTimeChart {
       },
     });
 
-    // Candlestick series
+    // Create a second pane for volume (bottom 25% of chart)
+    const volumePane = this.chart.addPane();
+
+    // Candlestick series (main pane - top 75%)
     this.candleSeries = this.chart.addSeries(CandlestickSeries, {
       upColor: '#22d3a7',
       downColor: '#f04e4e',
@@ -145,24 +148,31 @@ export class BTCRealTimeChart {
       wickDownColor: '#f04e4e',
       priceScaleId: 'right',
       priceFormat: { type: 'price', precision: 2, minMove: 0.01 },
+      paneIndex: 0,
     });
 
-    // Volume series (histogram at bottom)
-    this.volumeSeries = this.chart.addSeries(HistogramSeries, {
+    // Volume series (bottom pane - 25%)
+    this.volumeSeries = volumePane.addSeries(HistogramSeries, {
       color: '#22d3a7',
       priceFormat: { type: 'volume', precision: 0 },
       priceScaleId: 'left',
       base: 0,
+      paneIndex: 1,
     });
     this.volumeSeries.applyOptions({ priceScaleId: '' }); // Hide left price scale for volume
 
-    // Add MA lines
+    // Set pane sizes: main pane 75%, volume pane 25%
+    this.chart.resize(this.container.clientWidth, this.container.clientHeight);
+    // Note: lightweight-charts v5 handles pane sizing automatically, but we can adjust via price scale margins
+
+    // Add MA lines to main pane
     this.ma7Series = this.chart.addSeries(LineSeries, {
       color: '#4f8eff',
       lineWidth: 1,
       priceLineVisible: false,
       lastValueVisible: false,
       title: 'MA7',
+      paneIndex: 0,
     });
     this.ma25Series = this.chart.addSeries(LineSeries, {
       color: '#f5a623',
@@ -170,6 +180,7 @@ export class BTCRealTimeChart {
       priceLineVisible: false,
       lastValueVisible: false,
       title: 'MA25',
+      paneIndex: 0,
     });
     this.ma99Series = this.chart.addSeries(LineSeries, {
       color: '#a855f7',
@@ -177,6 +188,7 @@ export class BTCRealTimeChart {
       priceLineVisible: false,
       lastValueVisible: false,
       title: 'MA99',
+      paneIndex: 0,
     });
   }
 
