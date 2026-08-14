@@ -12,7 +12,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",
     "i18next": "^23.10.1",
-    "i18next-browser-languagedetector": "^7.2.0"
+    "i18next-browser-languagedetector": "^7.2.0",
+    "lightweight-charts": "^5.2.1"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",

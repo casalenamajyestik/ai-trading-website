@@ -14,7 +14,7 @@ import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
 import { subscribeBotState } from './supabase.js';
 import { initTheme, initLanguage, updateDynamicI18n } from './language-theme.js';
 import { initDataRobot } from './data-robot-animation.js';
-import { initBTCChart } from './btc-chart-animation.js';
+import { initBTCRealTimeChart } from './btc-chart-realtime.js';
 import './styles.css';
 import './styles/settings-tabs.css';
 import './data-robot-animation.css';
@@ -137,12 +137,16 @@ const pages = {
         }
       }, 0);
 
-      // Initialize BTC chart animation after render
+      // Initialize BTC real-time chart after render
       setTimeout(() => {
         const container = document.getElementById('btcChartContainer');
         if (container && !container.dataset.initialized) {
           container.dataset.initialized = 'true';
-          initBTCChart('#btcChartContainer');
+          initBTCRealTimeChart('#btcChartContainer', {
+            interval: '1m',
+            symbol: 'BTCUSDT',
+            maxCandles: 200
+          });
         }
       }, 0);
 
@@ -1314,7 +1318,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       if (pageName === 'performance') {
         setTimeout(() => {
-          initBTCChart('#btcChartContainer');
+          initBTCRealTimeChart('#btcChartContainer', {
+            interval: '1m',
+            symbol: 'BTCUSDT',
+            maxCandles: 200
+          });
           const container2 = document.getElementById('dataRobotContainer2');
           if (container2 && !container2.dataset.initialized) {
             container2.dataset.initialized = 'true';
