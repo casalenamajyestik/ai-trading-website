@@ -114,7 +114,7 @@ export class BTCRealTimeChart {
         secondsVisible: false,
         fixLeftEdge: false,
         fixRightEdge: true,
-        rightOffset: 12,  // Increased from 5 to give space for MA labels
+        rightOffset: 30,  // Increased from 12 to 30 - more space for MA labels on right
         barSpacing: 8,
         minBarSpacing: 4,
       },
