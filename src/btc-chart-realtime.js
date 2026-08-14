@@ -7,11 +7,22 @@ import { createChart, CrosshairMode } from 'lightweight-charts';
 
 export class BTCRealTimeChart {
   constructor(container, options = {}) {
-    this.container = container;
+    // Handle both selector string and element
+    if (typeof container === 'string') {
+      this.container = document.querySelector(container);
+    } else {
+      this.container = container;
+    }
+    
+    if (!this.container) {
+      console.error('[BTC Chart] Container not found:', container);
+      return;
+    }
+
     this.options = {
-      width: options.width || container.clientWidth || 800,
-      height: options.height || container.clientHeight || 300,
-      interval: options.interval || '1m', // 1m, 3m, 5m, 15m, 1h, 4h, 1d
+      width: options.width || this.container.clientWidth || 800,
+      height: options.height || this.container.clientHeight || 300,
+      interval: options.interval || '1m',
       symbol: options.symbol || 'BTCUSDT',
       maxCandles: options.maxCandles || 200,
       ...options
@@ -20,6 +31,9 @@ export class BTCRealTimeChart {
     this.chart = null;
     this.candleSeries = null;
     this.volumeSeries = null;
+    this.ma7Series = null;
+    this.ma25Series = null;
+    this.ma99Series = null;
     this.ws = null;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 10;
@@ -28,7 +42,27 @@ export class BTCRealTimeChart {
     this.isConnected = false;
     this.lastCandleTime = 0;
 
-    this.init();
+    // Wait for container to have dimensions if needed
+    if (this.container.clientWidth === 0 || this.container.clientHeight === 0) {
+      this.waitForContainerSize().then(() => this.init());
+    } else {
+      this.init();
+    }
+  }
+
+  waitForContainerSize() {
+    return new Promise((resolve) => {
+      const checkSize = () => {
+        if (this.container.clientWidth > 0 && this.container.clientHeight > 0) {
+          this.options.width = this.container.clientWidth;
+          this.options.height = this.container.clientHeight;
+          resolve();
+        } else {
+          requestAnimationFrame(checkSize);
+        }
+      };
+      checkSize();
+    });
   }
 
   init() {
@@ -39,10 +73,9 @@ export class BTCRealTimeChart {
   }
 
   createChart() {
-    // Create chart with Lightweight Charts
+    // Create chart with Lightweight Charts - let it use container's CSS size
+    // Don't pass explicit width/height, let the library handle responsive sizing
     this.chart = createChart(this.container, {
-      width: this.options.width,
-      height: this.options.height,
       layout: {
         background: { type: 'solid', color: '#0d1321' },
         textColor: '#e4e9f2',
@@ -73,6 +106,7 @@ export class BTCRealTimeChart {
       leftPriceScale: {
         borderColor: 'rgba(136, 153, 180, 0.3)',
         scaleMargins: { top: 0.1, bottom: 0.25 },
+        visible: false, // Hide left price scale (volume uses it)
       },
       timeScale: {
         borderColor: 'rgba(136, 153, 180, 0.3)',
@@ -143,13 +177,6 @@ export class BTCRealTimeChart {
       priceLineVisible: false,
       lastValueVisible: false,
       title: 'MA99',
-    });
-
-    // Subscribe to click events for debugging
-    this.chart.subscribeCrosshairMove((param) => {
-      if (param.time) {
-        // Optional: show tooltip data
-      }
     });
   }
 
