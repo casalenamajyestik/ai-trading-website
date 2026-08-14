@@ -114,9 +114,11 @@ export class BTCRealTimeChart {
         secondsVisible: false,
         fixLeftEdge: false,
         fixRightEdge: true,
-        rightOffset: 130,  // Increased from 12 to 30 - more space for MA labels on right
+        rightOffset: 130,  // Larger offset for MA labels space (remote has 130)
         barSpacing: 8,
         minBarSpacing: 4,
+        shiftVisibleRangeOnNewBar: false,  // Prevent auto-shift on new bars
+        lockVisibleTimeRangeOnResize: true,  // Lock time range on resize
       },
       localization: {
         locale: 'id-ID',
