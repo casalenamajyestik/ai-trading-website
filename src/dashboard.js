@@ -13,11 +13,9 @@ import { supabase } from './supabase.js';
 import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
 import { subscribeBotState } from './supabase.js';
 import { initTheme, initLanguage, updateDynamicI18n } from './language-theme.js';
-import { initDataRobot } from './data-robot-animation.js';
 import { initBTCRealTimeChart } from './btc-chart-realtime.js';
 import './styles.css';
 import './styles/settings-tabs.css';
-import './data-robot-animation.css';
 
 // ============ Auth Guard ============
 async function requireAuthWrapper() {
@@ -128,15 +126,6 @@ const pages = {
       const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
       const botStatusText = isActive ? '🟢 Running' : '🔴 Stop';
 
-      // Initialize data robot animation after render
-      setTimeout(() => {
-        const container = document.getElementById('dataRobotContainer');
-        if (container && !container.dataset.initialized) {
-          container.dataset.initialized = 'true';
-          initDataRobot('#dataRobotContainer');
-        }
-      }, 0);
-
       // Initialize BTC real-time chart after render
       setTimeout(() => {
         const container = document.getElementById('btcChartContainer');
@@ -193,36 +182,41 @@ const pages = {
           </div>
         </div>
 
-        <!-- 3-Column Layout: BTC Chart | Data Robot | Animasi 2 -->
-                <div class="content-section">
-                  <div class="three-column-grid">
-                    <!-- Left: BTC Chart -->
-                    <div class="column-card">
-                      <div class="card" style="padding: 0;">
-                        <div class="btc-chart-container" id="btcChartContainer"></div>
-                      </div>
-                    </div>
+        <!-- 3-Column Layout: BTC Chart | Animasi 1 -->
+        <div class="content-section">
+          <div class="three-column-grid">
+            <!-- Left: BTC Chart -->
+            <div class="column-card">
+              <div class="card" style="padding: 0;">
+                <div class="btc-chart-container" id="btcChartContainer"></div>
+              </div>
+            </div>
 
-                    <!-- Center: Animasi Robot (Data Robot) -->
-                    <div class="column-card">
-                      <div class="card" style="padding: 0;">
-                        <div class="data-robot-container" id="dataRobotContainer" role="img" aria-label="AI Robot memproses data dari berbagai sumber: Market Data, Exchange API, AI Models, News Feed, On-Chain, Social Sentiment"></div>
-                      </div>
-                    </div>
+            <!-- Center: Animasi 1 (Placeholder - was Animasi Robot) -->
+            <div class="column-card">
+              <div class="card animation2-placeholder" style="padding: 0; display: flex; align-items: center; justify-content: center;">
+                <div class="placeholder-content">
+                  <div class="placeholder-icon">����</div>
+                  <div class="placeholder-text">Animasi ke 1</div>
+                  <div class="placeholder-desc">Posisi reservasi untuk animasi ke-1</div>
+                  <div class="placeholder-label">[ANIMASI KE 1]</div>
+                </div>
+              </div>
+            </div>
 
-                    <!-- Right: Animasi 2 (Placeholder) -->
-                    <div class="column-card">
-                      <div class="card animation2-placeholder" style="padding: 0; display: flex; align-items: center; justify-content: center;">
-                        <div class="placeholder-content">
-                          <div class="placeholder-icon">����</div>
-                          <div class="placeholder-text">Animasi ke 2</div>
-                          <div class="placeholder-desc">Posisi reservasi untuk animasi ke-2</div>
-                          <div class="placeholder-label">[ANIMASI KE 2]</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>`
+            <!-- Right: Animasi 2 (Placeholder) -->
+            <div class="column-card">
+              <div class="card animation2-placeholder" style="padding: 0; display: flex; align-items: center; justify-content: center;">
+                <div class="placeholder-content">
+                  <div class="placeholder-icon">����</div>
+                  <div class="placeholder-text">Animasi ke 2</div>
+                  <div class="placeholder-desc">Posisi reservasi untuk animasi ke-2</div>
+                  <div class="placeholder-label">[ANIMASI KE 2]</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`
     }
   },
   positions: {
@@ -1293,13 +1287,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Initialize animations for specific pages
       if (pageName === 'overview') {
-        setTimeout(() => {
-          const container = document.getElementById('dataRobotContainer');
-          if (container && !container.dataset.initialized) {
-            container.dataset.initialized = 'true';
-            initDataRobot('#dataRobotContainer');
-          }
-        }, 0);
+        // No animation initialization needed - placeholders are static
       }
       if (pageName === 'performance') {
         setTimeout(() => {
@@ -1308,11 +1296,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             symbol: 'BTCUSDT',
             maxCandles: 200
           });
-          const container2 = document.getElementById('dataRobotContainer2');
-          if (container2 && !container2.dataset.initialized) {
-            container2.dataset.initialized = 'true';
-            initDataRobot('#dataRobotContainer2');
-          }
         }, 0);
       }
     }
