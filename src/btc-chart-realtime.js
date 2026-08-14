@@ -114,11 +114,9 @@ export class BTCRealTimeChart {
         secondsVisible: false,
         fixLeftEdge: false,
         fixRightEdge: true,
-        rightOffset: 130,  // Larger offset for MA labels space (remote has 130)
+        rightOffset: 5,  // Back to small offset
         barSpacing: 8,
         minBarSpacing: 4,
-        shiftVisibleRangeOnNewBar: false,  // Prevent auto-shift on new bars
-        lockVisibleTimeRangeOnResize: true,  // Lock time range on resize
       },
       localization: {
         locale: 'id-ID',
@@ -167,13 +165,12 @@ export class BTCRealTimeChart {
     this.chart.resize(this.container.clientWidth, this.container.clientHeight);
     // Note: lightweight-charts v5 handles pane sizing automatically, but we can adjust via price scale margins
 
-    // Add MA lines to main pane
+    // Add MA lines to main pane (no title = no label on price scale)
     this.ma7Series = this.chart.addSeries(LineSeries, {
       color: '#4f8eff',
       lineWidth: 1,
       priceLineVisible: false,
       lastValueVisible: false,
-      title: 'MA7',
       paneIndex: 0,
     });
     this.ma25Series = this.chart.addSeries(LineSeries, {
@@ -181,7 +178,6 @@ export class BTCRealTimeChart {
       lineWidth: 1,
       priceLineVisible: false,
       lastValueVisible: false,
-      title: 'MA25',
       paneIndex: 0,
     });
     this.ma99Series = this.chart.addSeries(LineSeries, {
@@ -189,7 +185,6 @@ export class BTCRealTimeChart {
       lineWidth: 1,
       priceLineVisible: false,
       lastValueVisible: false,
-      title: 'MA99',
       paneIndex: 0,
     });
   }
@@ -222,53 +217,23 @@ export class BTCRealTimeChart {
       }));
 
       this.candleBuffer = candles;
-            this.lastCandleTime = candles[candles.length - 1]?.time || 0;
+      this.lastCandleTime = candles[candles.length - 1]?.time || 0;
 
-            // Set data to chart
-            this.candleSeries.setData(candles);
-            this.volumeSeries.setData(candles.map(c => ({ time: c.time, value: c.volume, color: c.close >= c.open ? '#22d3a7' : '#f04e4e' })));
+      // Set data to chart
+      this.candleSeries.setData(candles);
+      this.volumeSeries.setData(candles.map(c => ({ time: c.time, value: c.volume, color: c.close >= c.open ? '#22d3a7' : '#f04e4e' })));
 
-            // Calculate and set MAs
-            this.updateMovingAverages(candles);
+      // Calculate and set MAs
+      this.updateMovingAverages(candles);
 
-            // Set visible range to leave space on right for MA labels
-            this.setVisibleRangeWithRightMargin();
+      console.log(`[BTC Chart] Loaded ${candles.length} initial candles`);
+    } catch (error) {
+      console.error('[BTC Chart] Failed to load initial data:', error);
+      this.showError('Gagal memuat data awal. Mencoba WebSocket...');
+    }
+  }
 
-            console.log(`[BTC Chart] Loaded ${candles.length} initial candles`);
-          } catch (error) {
-            console.error('[BTC Chart] Failed to load initial data:', error);
-            this.showError('Gagal memuat data awal. Mencoba WebSocket...');
-          }
-        }
-
-        setVisibleRangeWithRightMargin() {
-          if (!this.chart || this.candleBuffer.length === 0) return;
-    
-          const lastCandle = this.candleBuffer[this.candleBuffer.length - 1];
-          const firstCandle = this.candleBuffer[0];
-    
-          // Add ~15 candles worth of time margin on the right
-          // For 1m interval: 15 * 60 = 900 seconds
-          // For other intervals, scale accordingly
-          const intervalSeconds = this.getIntervalSeconds();
-          const rightMargin = intervalSeconds * 15; // 15 bars margin
-    
-          const from = firstCandle.time;
-          const to = lastCandle.time + rightMargin;
-    
-          this.chart.timeScale().setVisibleRange({ from, to });
-        }
-
-        getIntervalSeconds() {
-          const intervalMap = {
-            '1m': 60, '3m': 180, '5m': 300, '15m': 900,
-            '30m': 1800, '1h': 3600, '2h': 7200, '4h': 14400,
-            '6h': 21600, '8h': 28800, '12h': 43200, '1d': 86400
-          };
-          return intervalMap[this.options.interval] || 60;
-        }
-
-        updateMovingAverages(candles) {
+  updateMovingAverages(candles) {
     const calculateMA = (data, period) => {
       const result = [];
       for (let i = period - 1; i < data.length; i++) {
@@ -392,15 +357,12 @@ export class BTCRealTimeChart {
     });
 
     // Recalculate MAs
-    if (this.candleBuffer.length >= 99) {
-      this.updateMovingAverages(this.candleBuffer);
-    }
+        if (this.candleBuffer.length >= 99) {
+          this.updateMovingAverages(this.candleBuffer);
+        }
 
-    // Maintain right margin for MA labels
-    this.setVisibleRangeWithRightMargin();
-
-    console.log(`[BTC Chart] New candle: ${new Date(candle.time * 1000).toLocaleTimeString()} O:${candle.open.toFixed(2)} H:${candle.high.toFixed(2)} L:${candle.low.toFixed(2)} C:${candle.close.toFixed(2)}`);
-  }
+        console.log(`[BTC Chart] New candle: ${new Date(candle.time * 1000).toLocaleTimeString()} O:${candle.open.toFixed(2)} H:${candle.high.toFixed(2)} L:${candle.low.toFixed(2)} C:${candle.close.toFixed(2)}`);
+      }
 
   scheduleReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
