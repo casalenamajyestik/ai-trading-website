@@ -121,6 +121,7 @@ export class BTCRealTimeChart {
       localization: {
         locale: 'id-ID',
         dateFormat: 'HH:mm',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,  // Use user's local timezone
       },
       handleScroll: {
         mouseWheel: true,
