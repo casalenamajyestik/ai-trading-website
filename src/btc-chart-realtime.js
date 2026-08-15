@@ -114,14 +114,22 @@ export class BTCRealTimeChart {
         secondsVisible: false,
         fixLeftEdge: false,
         fixRightEdge: true,
-        rightOffset: 5,  // Back to small offset
+        rightOffset: 5,
         barSpacing: 8,
         minBarSpacing: 4,
       },
       localization: {
         locale: 'id-ID',
         dateFormat: 'HH:mm',
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,  // Use user's local timezone
+        timeFormatter: (time) => {
+          // Convert UTC timestamp (seconds) to local time string
+          const date = new Date(time * 1000);
+          return date.toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          });
+        },
       },
       handleScroll: {
         mouseWheel: true,
