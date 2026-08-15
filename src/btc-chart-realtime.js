@@ -117,12 +117,21 @@ export class BTCRealTimeChart {
         rightOffset: 5,
         barSpacing: 8,
         minBarSpacing: 4,
+        tickMarkFormatter: (time) => {
+          // Format time axis tick marks to local time
+          const date = new Date(time * 1000);
+          return date.toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          });
+        },
       },
       localization: {
         locale: 'id-ID',
         dateFormat: 'HH:mm',
         timeFormatter: (time) => {
-          // Convert UTC timestamp (seconds) to local time string
+          // Format crosshair/hover time to local time
           const date = new Date(time * 1000);
           return date.toLocaleTimeString('id-ID', {
             hour: '2-digit',
