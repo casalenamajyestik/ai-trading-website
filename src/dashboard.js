@@ -133,7 +133,7 @@ const pages = {
         if (container && !container.dataset.initialized) {
           container.dataset.initialized = 'true';
           initBTCRealTimeChart('#btcChartContainer', {
-            interval: '1m',
+            interval: '5m',
             symbol: 'BTCUSDT',
             maxCandles: 200
           });
@@ -1290,7 +1290,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (container && !container.dataset.initialized) {
             container.dataset.initialized = 'true';
             initBTCRealTimeChart('#btcChartContainer', {
-              interval: '1m',
+              interval: '5m',
               symbol: 'BTCUSDT',
               maxCandles: 200
             });
@@ -1313,7 +1313,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (pageName === 'performance') {
         setTimeout(() => {
           initBTCRealTimeChart('#btcChartContainer', {
-            interval: '1m',
+            interval: '5m',
             symbol: 'BTCUSDT',
             maxCandles: 200
           });
