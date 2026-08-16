@@ -30,26 +30,41 @@ export class CinematicParticleAnimation {
     this.cameraOffset = { x: 0, y: 0 };
     this.cameraTarget = { x: 0, y: 0 };
 
-    // Crypto coin names and wallet address prefixes for text labels
+    // Expanded crypto coin names and wallet address prefixes for text labels
     this.cryptoLabels = [
-      // Major coins
+      // Major coins (Top 100+)
       'BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'MATIC', 'DOT', 'AVAX',
       'LINK', 'UNI', 'LTC', 'BCH', 'ATOM', 'NEAR', 'ALGO', 'ICP', 'VET', 'FIL',
       'THETA', 'XTZ', 'EOS', 'AAVE', 'MKR', 'COMP', 'SNX', 'YFI', 'SUSHI', 'CRV',
       '1INCH', 'BAL', 'REN', 'KNC', 'ZRX', 'BAT', 'MANA', 'SAND', 'AXS', 'GALA',
       'ENJ', 'CHZ', 'HOT', 'ANKR', 'CRO', 'FTM', 'ONE', 'HBAR', 'EGLD', 'FLOW',
-      // Wallet address prefixes (0x + 4-6 chars)
+      'RUNE', 'KSM', 'DASH', 'ZEC', 'XMR', 'ETC', 'QTUM', 'ZIL', 'ONT', 'IOST',
+      'WAVES', 'LSK', 'STEEM', 'HIVE', 'SC', 'DGB', 'RVN', 'NANO', 'BTT', 'WIN',
+      'TRX', 'SUN', 'JST', 'BTT', 'WIN', 'SEED', 'CRO', 'VRA', 'TVK', 'REEF',
+      'BAKE', 'BURGER', 'SUSHI', 'UNI', 'COMP', 'AAVE', 'MKR', 'SNX', 'YFI', 'CRV',
+      'SUSHI', 'BAL', 'REN', 'KNC', 'ZRX', 'BAT', 'UMA', 'NMR', 'MLN', 'REP',
+      'GNO', 'DXD', 'RAI', 'FEI', 'TRIBE', 'INDEX', 'DPI', 'MVI', 'DEFI', 'YFL',
+      
+      // Wallet address prefixes (0x + 4-8 chars) - more variety
       '0x7a3f', '0x9b2e', '0x1c4d', '0x8f6a', '0x3d9e', '0x5b1c', '0x2e8f', '0x4a7d',
       '0x6f3b', '0x9c1e', '0xad5f', '0x7e2a', '0x3b9c', '0x5d8f', '0x1a6e', '0x4f2b',
       '0x8c9d', '0x2e7a', '0x6b3f', '0x9d4c', '0x1e8a', '0x5f2d', '0x3a7b', '0x7c9e',
       '0x4b1f', '0x8d6a', '0x2c5e', '0x6f9b', '0x1a3d', '0x5e8c', '0x9f2a', '0x3d7b',
+      '0xa1b2', '0xc3d4', '0xe5f6', '0x7890', '0x1234', '0x5678', '0x9abc', '0xdef0',
+      '0x1357', '0x2468', '0x9753', '0x8642', '0xabcd', '0xef12', '0x3456', '0x789a',
+      '0xbcde', '0xf012', '0x3456', '0x7890', '0xabcd', '0xef12', '0x3456', '0x7890',
+      '0xdead', '0xbeef', '0xcafe', '0xbabe', '0xfeed', '0xface', '0xfade', '0xc0de',
+      '0x1bad', '0xfood', '0xbed', '0xdada', '0xbead', '0xseed', '0xneed', '0xfeel',
+      '0xcool', '0xwarm', '0xfire', '0xice', '0xwind', '0xrain', '0xstorm', '0xcalm',
+      '0xmoon', '0xmars', '0xstar', '0xsky', '0xcloud', '0xsun', '0xdawn', '0xdusk',
     ];
 
-    // Shuffle labels once at init for random distribution without repeats
+    // Shuffle labels for random distribution
     this.shuffledLabels = this.shuffleArray([...this.cryptoLabels]);
     this.labelIndex = 0;
-    this.labelAssignments = new Map(); // particle index -> label
     this.cyclesCompleted = 0;
+    this.lastLabelReassignTime = 0;
+    this.labelReassignInterval = 15000; // Reassign labels every 15 seconds
 
     // Color palette - cinematic tech colors - EXTENDED VARIETY
     this.colorPalette = [
@@ -116,6 +131,36 @@ export class CinematicParticleAnimation {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
+  }
+
+  // Periodically reassign labels to different particles for more randomness
+  reassignLabels(time) {
+    if (time - this.lastLabelReassignTime > this.labelReassignInterval) {
+      this.lastLabelReassignTime = time;
+      
+      // Reshuffle the label pool
+      this.shuffledLabels = this.shuffleArray([...this.cryptoLabels]);
+      this.labelIndex = 0;
+      
+      // Reassign labels to visible particles
+      this.particles.forEach(p => {
+        if (p.labelVisible) {
+          // 30% chance to get a new label
+          if (Math.random() < 0.3) {
+            p.label = this.getNextLabel();
+          }
+        } else {
+          // 15% chance for a previously unlabeled particle to get a label
+          if (Math.random() < 0.15) {
+            p.label = this.getNextLabel();
+            p.labelVisible = true;
+            p.labelAlpha = 0;
+            p.labelTargetAlpha = 0.3 + Math.random() * 0.4;
+            p.labelScale = 1;
+          }
+        }
+      });
+    }
   }
 
   getNextLabel() {
@@ -212,8 +257,8 @@ export class CinematicParticleAnimation {
       const sparkleInterval = 3000 + Math.random() * 7000; // 3-10 seconds between sparkles
       const sparkleDuration = 800 + Math.random() * 1200; // 0.8-2s sparkle duration
     
-      // Assign label to this particle (only some particles get labels)
-      const hasLabel = Math.random() < 0.12; // ~12% of particles get labels
+      // Assign label to this particle (more particles get labels)
+      const hasLabel = Math.random() < 0.25; // ~25% of particles get labels (increased from 12%)
       const label = hasLabel ? this.getNextLabel() : null;
     
       return {
@@ -391,6 +436,9 @@ export class CinematicParticleAnimation {
     this.cameraOffset.x += (this.cameraTarget.x - this.cameraOffset.x) * 0.02;
     this.cameraOffset.y += (this.cameraTarget.y - this.cameraOffset.y) * 0.02;
     
+    // Reassign labels periodically for more randomness
+    this.reassignLabels(time);
+    
     // Clear with dark background
     this.ctx.fillStyle = '#03050a'; // very dark charcoal
     this.ctx.fillRect(0, 0, this.options.width, this.options.height);
@@ -492,9 +540,9 @@ export class CinematicParticleAnimation {
     ctx2.translate(x, y);
     ctx2.scale(scale, scale);
     
-    // Text style based on particle depth
-    const fontSize = Math.max(10, Math.min(14, 12 * (0.5 + p.z * 0.5)));
-    ctx2.font = `600 ${fontSize}px 'Geist', 'SF Pro Display', -apple-system, sans-serif`;
+    // Text style based on particle depth - SMALLER FONT
+    const fontSize = Math.max(8, Math.min(11, 9 * (0.5 + p.z * 0.5)));
+    ctx2.font = `500 ${fontSize}px 'Geist', 'SF Pro Display', -apple-system, sans-serif`;
     ctx2.textAlign = 'center';
     ctx2.textBaseline = 'top';
     
