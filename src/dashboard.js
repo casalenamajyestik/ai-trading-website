@@ -224,36 +224,44 @@ const pages = {
           </div>
           <div class="guide-step-boxes">
             <div class="step-box">
+              <span class="step-number-badge">#1</span>
               <span class="step-dot scan"></span>
-              <span class="step-name">Scan</span>
+              <span class="step-name">🔴 Scan</span>
             </div>
             <div class="step-box">
+              <span class="step-number-badge">#2</span>
               <span class="step-dot detect"></span>
-              <span class="step-name">Detect</span>
+              <span class="step-name">🟤 Detect</span>
             </div>
             <div class="step-box">
+              <span class="step-number-badge">#3</span>
               <span class="step-dot collect"></span>
-              <span class="step-name">Collect Data</span>
+              <span class="step-name">🟡 Collect Data</span>
             </div>
             <div class="step-box">
+              <span class="step-number-badge">#4</span>
               <span class="step-dot validate"></span>
-              <span class="step-name">Validate</span>
+              <span class="step-name">🟣 Validate</span>
             </div>
             <div class="step-box">
+              <span class="step-number-badge">#5</span>
               <span class="step-dot setup"></span>
-              <span class="step-name">Setup</span>
+              <span class="step-name">🩵 Setup</span>
             </div>
             <div class="step-box">
+              <span class="step-number-badge">#6</span>
               <span class="step-dot execution"></span>
-              <span class="step-name">Execution</span>
+              <span class="step-name">🔵 Execution</span>
             </div>
             <div class="step-box">
+              <span class="step-number-badge">#7</span>
               <span class="step-dot monitor"></span>
-              <span class="step-name">Monitor</span>
+              <span class="step-name">🟠 Monitor</span>
             </div>
             <div class="step-box">
+              <span class="step-number-badge">#8</span>
               <span class="step-dot profit"></span>
-              <span class="step-name">Profit</span>
+              <span class="step-name">🟢 Profit</span>
             </div>
           </div>
         </div>`
