@@ -14,6 +14,7 @@ import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
 import { subscribeBotState } from './supabase.js';
 import { initTheme, initLanguage, updateDynamicI18n } from './language-theme.js';
 import { initBTCRealTimeChart } from './btc-chart-realtime.js';
+import { CinematicParticleAnimation } from './animasi-cinematic.js';
 import './styles.css';
 import './styles/settings-tabs.css';
 
@@ -139,6 +140,19 @@ const pages = {
         }
       }, 0);
 
+      // Initialize Cinematic Particle Animation
+      setTimeout(() => {
+        const animContainer = document.getElementById('animasiContainer');
+        if (animContainer && !animContainer.dataset.initialized) {
+          animContainer.dataset.initialized = 'true';
+          new CinematicParticleAnimation('#animasiContainer', {
+            particleCount: 400,
+            maxSparkleCount: 3,
+            sparkleInterval: 150
+          });
+        }
+      }, 100);
+
       return `
         <!-- 5 Stat Cards matching spreadsheet design -->
         <div class="stats-grid">
@@ -194,13 +208,8 @@ const pages = {
 
             <!-- Right: Animasi Merged (2/3) - SINGLE FULL-WIDTH ANIMATION BOX -->
             <div class="column-card animasi-merged">
-              <div class="card animation-merged-placeholder" style="padding: 0; display: flex; align-items: center; justify-content: center; height: 100%;">
-                <div class="placeholder-content">
-                  <div class="placeholder-icon">⚡</div>
-                  <div class="placeholder-text">Kotak Animasi</div>
-                  <div class="placeholder-desc">Design animasi single merged box (2/3 width)</div>
-                  <div class="placeholder-label">[ANIMASI MERGED]</div>
-                </div>
+              <div class="card" style="padding: 0; height: 100%;">
+                <div class="animasi-container" id="animasiContainer" style="width: 100%; height: 100%;"></div>
               </div>
             </div>
           </div>
@@ -1275,7 +1284,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Initialize animations for specific pages
       if (pageName === 'overview') {
-        // No animation initialization needed - placeholders are static
+        // Initialize BTC Chart
+        setTimeout(() => {
+          const container = document.getElementById('btcChartContainer');
+          if (container && !container.dataset.initialized) {
+            container.dataset.initialized = 'true';
+            initBTCRealTimeChart('#btcChartContainer', {
+              interval: '1m',
+              symbol: 'BTCUSDT',
+              maxCandles: 200
+            });
+          }
+        }, 0);
+
+        // Initialize Cinematic Particle Animation
+        setTimeout(() => {
+          const animContainer = document.getElementById('animasiContainer');
+          if (animContainer && !animContainer.dataset.initialized) {
+            animContainer.dataset.initialized = 'true';
+            new CinematicParticleAnimation('#animasiContainer', {
+              particleCount: 400,
+              maxSparkleCount: 3,
+              sparkleInterval: 150
+            });
+          }
+        }, 100);
       }
       if (pageName === 'performance') {
         setTimeout(() => {

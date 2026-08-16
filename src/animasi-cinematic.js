@@ -1,0 +1,388 @@
+/**
+ * Cinematic Particle Animation - Wide Horizontal Format
+ * Glowing particles with sequential sparkles, cinematic depth
+ * Designed for 2/3 width container (~1200x350px at desktop)
+ */
+
+export class CinematicParticleAnimation {
+  constructor(container, options = {}) {
+    this.container = typeof container === 'string' ? document.querySelector(container) : container;
+    if (!this.container) {
+      console.error('[CinematicAnimation] Container not found:', container);
+      return;
+    }
+
+    this.options = {
+      width: options.width || this.container.clientWidth || 1200,
+      height: options.height || this.container.clientHeight || 350,
+      particleCount: options.particleCount || 400,
+      maxSparkleCount: options.maxSparkleCount || 3, // max simultaneous sparkles
+      sparkleInterval: options.sparkleInterval || 150, // ms between sparkle triggers
+      ...options
+    };
+
+    this.canvas = null;
+    this.ctx = null;
+    this.particles = [];
+    this.animationId = null;
+    this.lastTime = 0;
+    this.sparkleTimer = 0;
+    this.cameraOffset = { x: 0, y: 0 };
+    this.cameraTarget = { x: 0, y: 0 };
+
+    // Color palette - cinematic tech colors
+    this.colorPalette = [
+      { base: '#00ffff', glow: '#00ffff', name: 'cyan' },           // electric cyan
+      { base: '#0088ff', glow: '#44aaff', name: 'electric-blue' },  // electric blue
+      { base: '#8844ff', glow: '#aa66ff', name: 'purple' },         // purple
+      { base: '#cc00ff', glow: '#dd66ff', name: 'magenta' },        // magenta
+      { base: '#ff3388', glow: '#ff66aa', name: 'pink' },           // hot pink
+      { base: '#ff4422', glow: '#ff6644', name: 'red' },            // red
+      { base: '#ff8800', glow: '#ffaa33', name: 'orange' },         // orange
+      { base: '#ffdd00', glow: '#ffee44', name: 'yellow' },         // yellow
+      { base: '#44ff88', glow: '#66ffaa', name: 'green' },          // neon green
+      { base: '#00ffcc', glow: '#44ffdd', name: 'teal' },           // teal
+    ];
+
+    this.init();
+  }
+
+  init() {
+    this.createCanvas();
+    this.createParticles();
+    this.bindResize();
+    this.animate(0);
+  }
+
+  createCanvas() {
+    this.canvas = document.createElement('canvas');
+    this.canvas.style.width = '100%';
+    this.canvas.style.height = '100%';
+    this.canvas.style.display = 'block';
+    this.canvas.style.borderRadius = 'var(--radius-lg, 16px)';
+    this.ctx = this.canvas.getContext('2d', { alpha: true, desynchronized: true });
+    
+    this.resize();
+    this.container.innerHTML = '';
+    this.container.appendChild(this.canvas);
+  }
+
+  resize() {
+    const rect = this.container.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    
+    this.options.width = rect.width;
+    this.options.height = rect.height;
+    
+    this.canvas.width = this.options.width * dpr;
+    this.canvas.height = this.options.height * dpr;
+    this.canvas.style.width = this.options.width + 'px';
+    this.canvas.style.height = this.options.height + 'px';
+    
+    this.ctx.scale(dpr, dpr);
+    
+    // Recreate particles if significant size change
+    if (this.particles.length > 0) {
+      this.particles.forEach(p => p.onResize(this.options.width, this.options.height));
+    }
+  }
+
+  bindResize() {
+    const ro = new ResizeObserver(() => this.resize());
+    ro.observe(this.container);
+    this.resizeObserver = ro;
+  }
+
+  createParticles() {
+    this.particles = [];
+    const { width, height } = this.options;
+    
+    for (let i = 0; i < this.options.particleCount; i++) {
+      this.particles.push(this.createParticle(width, height, i));
+    }
+    
+    // Sort by depth (z) for proper rendering order - far to near
+    this.particles.sort((a, b) => a.z - b.z);
+  }
+
+  createParticle(width, height, index) {
+    const color = this.colorPalette[Math.floor(Math.random() * this.colorPalette.length)];
+    const isForeground = Math.random() < 0.15; // 15% foreground particles
+    
+    // Depth layer: 0 = far, 1 = near
+    const z = isForeground ? 0.7 + Math.random() * 0.3 : Math.random() * 0.7;
+    
+    // Size based on depth
+    const baseSize = isForeground ? 2.5 + Math.random() * 3 : 0.5 + Math.random() * 2;
+    
+    // Position - distribute across full width, slight bias to center vertically
+    const x = -width * 0.1 + Math.random() * width * 1.2;
+    const y = height * 0.15 + Math.random() * height * 0.7;
+    
+    // Movement
+    const angle = Math.random() * Math.PI * 2;
+    const speed = (isForeground ? 0.3 + Math.random() * 0.5 : 0.05 + Math.random() * 0.2) * (0.5 + z * 0.5);
+    const vx = Math.cos(angle) * speed;
+    const vy = Math.sin(angle) * speed * 0.5; // less vertical movement
+    
+    // Sparkle timing - each particle has its own cycle
+    const sparklePhase = Math.random() * Math.PI * 2;
+    const sparkleInterval = 3000 + Math.random() * 7000; // 3-10 seconds between sparkles
+    const sparkleDuration = 800 + Math.random() * 1200; // 0.8-2s sparkle duration
+    
+    return {
+      // Position
+      x, y,
+      baseX: x,
+      baseY: y,
+      
+      // Velocity
+      vx, vy,
+      
+      // Visual
+      size: baseSize,
+      baseSize: baseSize,
+      color: color,
+      brightness: 0.2 + Math.random() * 0.4, // base brightness 0.2-0.6
+      z: z,
+      
+      // Sparkle state
+      isSparkling: false,
+      sparkleProgress: 0,
+      sparklePhase: sparklePhase,
+      sparkleInterval: sparkleInterval,
+      sparkleDuration: sparkleDuration,
+      lastSparkleTime: -sparkleInterval * Math.random(), // stagger initial
+      
+      // Glow
+      glowIntensity: 0.3 + Math.random() * 0.5,
+      
+      // Motion blur trail
+      trail: [],
+      maxTrailLength: isForeground ? 8 : 4,
+      
+      // Camera parallax
+      parallaxFactor: 0.5 + z * 1.5, // near particles move more
+      
+      // Methods
+      onResize(newWidth, newHeight) {
+        const scaleX = newWidth / width;
+        const scaleY = newHeight / height;
+        this.x *= scaleX;
+        this.y *= scaleY;
+        this.baseX *= scaleX;
+        this.baseY *= scaleY;
+      },
+      
+      update(deltaTime, cameraOffset, time) {
+        // Camera parallax movement
+        this.x += -cameraOffset.x * this.parallaxFactor * 0.01;
+        this.y += -cameraOffset.y * this.parallaxFactor * 0.01;
+        
+        // Natural drift
+        this.x += this.vx * deltaTime * 0.06;
+        this.y += this.vy * deltaTime * 0.06;
+        
+        // Subtle oscillation
+        this.x += Math.sin(time * 0.001 + this.sparklePhase) * 0.05 * deltaTime;
+        this.y += Math.cos(time * 0.0015 + this.sparklePhase) * 0.03 * deltaTime;
+        
+        // Wrap around horizontally (infinite field)
+        const margin = 100;
+        if (this.x < -margin) this.x = this.options?.width + margin;
+        if (this.x > this.options?.width + margin) this.x = -margin;
+        if (this.y < -margin) this.y = this.options?.height + margin;
+        if (this.y > this.options?.height + margin) this.y = -margin;
+        
+        // Update trail for motion blur
+        this.trail.unshift({ x: this.x, y: this.y, alpha: 1 });
+        if (this.trail.length > this.maxTrailLength) this.trail.pop();
+        
+        // Sparkle logic
+        const timeSinceSparkle = time - this.lastSparkleTime;
+        
+        if (!this.isSparkling && timeSinceSparkle > this.sparkleInterval) {
+          // Trigger sparkle
+          this.isSparkling = true;
+          this.sparkleProgress = 0;
+          this.lastSparkleTime = time;
+        }
+        
+        if (this.isSparkling) {
+          this.sparkleProgress += deltaTime / this.sparkleDuration;
+          if (this.sparkleProgress >= 1) {
+            this.isSparkling = false;
+            this.sparkleProgress = 0;
+            // Randomize next interval
+            this.sparkleInterval = 3000 + Math.random() * 7000;
+            this.sparkleDuration = 800 + Math.random() * 1200;
+          }
+        }
+      },
+      
+      getCurrentBrightness() {
+        if (!this.isSparkling) return this.brightness;
+        
+        // Sparkle curve: ease in → peak → ease out
+        const p = this.sparkleProgress;
+        let sparkleMult;
+        if (p < 0.15) {
+          // Quick ramp up
+          sparkleMult = 1 + (p / 0.15) * 8; // 1x to 9x
+        } else if (p < 0.35) {
+          // Peak flash
+          sparkleMult = 9 - (p - 0.15) / 0.2 * 3; // 9x to 6x
+        } else if (p < 0.65) {
+          // Expanding halo
+          sparkleMult = 6 - (p - 0.35) / 0.3 * 4; // 6x to 2x
+        } else {
+          // Fade out
+          sparkleMult = 2 - (p - 0.65) / 0.35 * 1; // 2x to 1x
+        }
+        return Math.min(this.brightness * sparkleMult, 1.0);
+      },
+      
+      getCurrentSize() {
+        if (!this.isSparkling) return this.size;
+        const p = this.sparkleProgress;
+        if (p < 0.35) {
+          return this.size * (1 + p * 1.5); // expand during flash
+        } else if (p < 0.65) {
+          return this.size * (1.5 - (p - 0.35) / 0.3 * 0.5); // halo expand
+        }
+        return this.size;
+      },
+      
+      getGlowRadius() {
+        const baseGlow = this.size * this.glowIntensity * 8;
+        if (!this.isSparkling) return baseGlow;
+        const p = this.sparkleProgress;
+        if (p < 0.35) return baseGlow * (1 + p * 6);
+        if (p < 0.65) return baseGlow * (4 - (p - 0.35) / 0.3 * 2);
+        return baseGlow * (1 + (1 - p) * 0.5);
+      }
+    };
+  }
+
+  animate(time) {
+    if (!this.ctx) return;
+    
+    const deltaTime = time - this.lastTime;
+    this.lastTime = time;
+    
+    // Subtle camera movement - slow float
+    const cameraSpeed = 0.00008;
+    this.cameraTarget.x = Math.sin(time * cameraSpeed) * 40;
+    this.cameraTarget.y = Math.cos(time * cameraSpeed * 0.7) * 20;
+    
+    // Smooth camera follow
+    this.cameraOffset.x += (this.cameraTarget.x - this.cameraOffset.x) * 0.02;
+    this.cameraOffset.y += (this.cameraTarget.y - this.cameraOffset.y) * 0.02;
+    
+    // Clear with dark background
+    this.ctx.fillStyle = '#03050a'; // very dark charcoal
+    this.ctx.fillRect(0, 0, this.options.width, this.options.height);
+    
+    // Update and draw particles (far to near for depth)
+    this.particles.forEach(p => {
+      p.options = this.options; // for wrap bounds
+      p.update(deltaTime, this.cameraOffset, time);
+      this.drawParticle(p);
+    });
+    
+    this.animationId = requestAnimationFrame((t) => this.animate(t));
+  }
+
+  drawParticle(p) {
+    const ctx = this.ctx;
+    const brightness = p.getCurrentBrightness();
+    const size = p.getCurrentSize();
+    const glowRadius = p.getGlowRadius();
+    const alpha = brightness * (0.4 + p.z * 0.6); // far = more transparent
+    
+    const x = p.x + this.cameraOffset.x * p.parallaxFactor;
+    const y = p.y + this.cameraOffset.y * p.parallaxFactor;
+    
+    // Draw trail (motion blur)
+    if (p.trail.length > 1) {
+      p.trail.forEach((pos, i) => {
+        const trailAlpha = alpha * (1 - i / p.trail.length) * 0.15;
+        const trailSize = size * (1 - i / p.trail.length) * 0.7;
+        if (trailAlpha > 0.01) {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, trailSize, 0, Math.PI * 2);
+          ctx.fillStyle = this.hexToRgba(p.color.base, trailAlpha);
+          ctx.fill();
+        }
+      });
+    }
+    
+    // Draw glow (soft bloom)
+    if (glowRadius > 1 && alpha > 0.05) {
+      const gradient = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
+      const glowAlpha = alpha * 0.6;
+      gradient.addColorStop(0, this.hexToRgba(p.color.glow, glowAlpha * 0.8));
+      gradient.addColorStop(0.3, this.hexToRgba(p.color.glow, glowAlpha * 0.4));
+      gradient.addColorStop(0.7, this.hexToRgba(p.color.glow, glowAlpha * 0.1));
+      gradient.addColorStop(1, this.hexToRgba(p.color.glow, 0));
+      
+      ctx.beginPath();
+      ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    }
+    
+    // Draw core particle
+    if (size > 0.3 && alpha > 0.02) {
+      // Bright core during sparkle
+      if (p.isSparkling && p.sparkleProgress < 0.35) {
+        // Intense white-hot core
+        const coreAlpha = Math.min(alpha * 2, 1);
+        const coreSize = size * 0.4;
+        ctx.beginPath();
+        ctx.arc(x, y, coreSize, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${coreAlpha})`;
+        ctx.fill();
+      }
+      
+      // Main colored particle
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fillStyle = this.hexToRgba(p.color.base, alpha);
+      ctx.fill();
+      
+      // Sparkle halo ring (during flash peak)
+      if (p.isSparkling && p.sparkleProgress > 0.15 && p.sparkleProgress < 0.5) {
+        const ringAlpha = alpha * (1 - (p.sparkleProgress - 0.15) / 0.35) * 0.8;
+        const ringSize = size * (1 + (p.sparkleProgress - 0.15) / 0.35 * 3);
+        ctx.beginPath();
+        ctx.arc(x, y, ringSize, 0, Math.PI * 2);
+        ctx.strokeStyle = this.hexToRgba(p.color.glow, ringAlpha);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  destroy() {
+    if (this.animationId) cancelAnimationFrame(this.animationId);
+    if (this.resizeObserver) this.resizeObserver.disconnect();
+    if (this.canvas && this.canvas.parentNode) this.canvas.parentNode.removeChild(this.canvas);
+    this.particles = [];
+  }
+}
+
+// Export for module usage
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = CinematicParticleAnimation;
+}
+
+// Global for direct script usage
+window.CinematicParticleAnimation = CinematicParticleAnimation;
