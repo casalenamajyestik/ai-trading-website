@@ -197,7 +197,7 @@ const pages = {
         </div>
 
         <!-- 2-Column Layout: BTC Chart (1/3) | Animasi Merged (2/3) -->
-        <div class="content-section">
+        <div class="content-section tight">
           <div class="two-column-grid">
             <!-- Left: BTC Chart (1/3) -->
             <div class="column-card">
@@ -216,7 +216,7 @@ const pages = {
         </div>
 
         <!-- Separator + Execution Cycle + 8 Step Boxes (per spreadsheet design) -->
-        <div class="content-section">
+        <div class="content-section tight">
           <div class="guide-separator"></div>
           <div class="execution-cycle-row">
             <span class="execution-cycle-label">Execution Cycle :</span>
