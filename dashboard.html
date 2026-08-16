@@ -292,6 +292,52 @@
           background: transparent;
         }
 
+        /* ============ Two Column Grid Layout (1/3 + 2/3) ============ */
+        .two-column-grid {
+          display: grid;
+          grid-template-columns: 1fr 2fr;  /* BTC Chart 1/3, Animasi 2/3 */
+          gap: 0.25rem;
+          margin-top: 1rem;
+        }
+
+        .animasi-merged {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .animasi-merged-inner {
+          display: flex;
+          flex: 1;
+          gap: 0.25rem;
+        }
+
+        .animasi-half {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .animasi-half > .card {
+          flex: 1;
+          height: 100%;
+        }
+
+        /* Responsive: Stack on mobile */
+        @media (max-width: 1024px) {
+          .two-column-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .two-column-grid {
+            grid-template-columns: 1fr;
+          }
+          .animasi-merged-inner {
+            flex-direction: column;
+          }
+        }
+
         /* ============ Animasi 2 Placeholder ============ */
         .animation2-placeholder {
           background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-card) 100%);

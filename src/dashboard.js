@@ -182,36 +182,40 @@ const pages = {
           </div>
         </div>
 
-        <!-- 3-Column Layout: BTC Chart | Animasi 1 -->
+        <!-- 2-Column Layout: BTC Chart (1/3) | Animasi Merged (2/3) -->
         <div class="content-section">
-          <div class="three-column-grid">
-            <!-- Left: BTC Chart -->
+          <div class="two-column-grid">
+            <!-- Left: BTC Chart (1/3) -->
             <div class="column-card">
               <div class="card" style="padding: 0;">
                 <div class="btc-chart-container" id="btcChartContainer"></div>
               </div>
             </div>
 
-            <!-- Center: Animasi 1 (Placeholder - was Animasi Robot) -->
-            <div class="column-card">
-              <div class="card animation2-placeholder" style="padding: 0; display: flex; align-items: center; justify-content: center;">
-                <div class="placeholder-content">
-                  <div class="placeholder-icon">����</div>
-                  <div class="placeholder-text">Animasi ke 1</div>
-                  <div class="placeholder-desc">Posisi reservasi untuk animasi ke-1</div>
-                  <div class="placeholder-label">[ANIMASI KE 1]</div>
+            <!-- Right: Animasi Merged (2/3) - Animasi 1 + Animasi 2 side by side -->
+            <div class="column-card animasi-merged">
+              <div class="animasi-merged-inner">
+                <!-- Animasi 1 -->
+                <div class="animasi-half">
+                  <div class="card animation2-placeholder" style="padding: 0; display: flex; align-items: center; justify-content: center; height: 100%;">
+                    <div class="placeholder-content">
+                      <div class="placeholder-icon">����</div>
+                      <div class="placeholder-text">Animasi ke 1</div>
+                      <div class="placeholder-desc">Posisi reservasi untuk animasi ke-1</div>
+                      <div class="placeholder-label">[ANIMASI KE 1]</div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            <!-- Right: Animasi 2 (Placeholder) -->
-            <div class="column-card">
-              <div class="card animation2-placeholder" style="padding: 0; display: flex; align-items: center; justify-content: center;">
-                <div class="placeholder-content">
-                  <div class="placeholder-icon">����</div>
-                  <div class="placeholder-text">Animasi ke 2</div>
-                  <div class="placeholder-desc">Posisi reservasi untuk animasi ke-2</div>
-                  <div class="placeholder-label">[ANIMASI KE 2]</div>
+                <!-- Animasi 2 -->
+                <div class="animasi-half">
+                  <div class="card animation2-placeholder" style="padding: 0; display: flex; align-items: center; justify-content: center; height: 100%;">
+                    <div class="placeholder-content">
+                      <div class="placeholder-icon">����</div>
+                      <div class="placeholder-text">Animasi ke 2</div>
+                      <div class="placeholder-desc">Posisi reservasi untuk animasi ke-2</div>
+                      <div class="placeholder-label">[ANIMASI KE 2]</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
