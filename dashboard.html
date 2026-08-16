@@ -507,9 +507,114 @@
     .step-number.monitor { background: var(--step-monitor); }
     .step-number.profit { background: var(--step-profit); }
     .step-title { font-weight: 600; font-size: 1rem; }
-    .step-desc { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; }
-    
-    /* ============ About Section ============ */
+        .step-desc { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; }
+
+        /* ============ Guide Step Boxes (Small boxes per spreadsheet) ============ */
+        .guide-separator {
+          height: 1rem;
+        }
+        .execution-cycle-row {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 1rem 1.5rem;
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-lg);
+          margin-bottom: 1rem;
+        }
+        .execution-cycle-label {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--text-secondary);
+          white-space: nowrap;
+        }
+        .execution-cycle-value {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--text-primary);
+          font-family: 'Geist Mono', monospace;
+        }
+        .guide-step-boxes {
+          display: grid;
+          grid-template-columns: repeat(8, 1fr);
+          gap: 0.5rem;
+          margin-bottom: 1.5rem;
+        }
+        .step-box {
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-md);
+          padding: 0.75rem 0.5rem;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.375rem;
+          transition: all var(--transition-fast);
+        }
+        .step-box:hover {
+          border-color: var(--border-active);
+          box-shadow: var(--shadow-card-hover);
+          transform: translateY(-2px);
+        }
+        .step-dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          flex-shrink: 0;
+          box-shadow: 0 0 8px currentColor;
+        }
+        .step-dot.scan { background: var(--step-scan); }
+        .step-dot.detect { background: var(--step-detect); }
+        .step-dot.collect { background: var(--step-collect); }
+        .step-dot.validate { background: var(--step-validate); }
+        .step-dot.setup { background: var(--step-setup); }
+        .step-dot.execution { background: var(--step-execution); }
+        .step-dot.monitor { background: var(--step-monitor); }
+        .step-dot.profit { background: var(--step-profit); }
+        .step-name {
+          font-size: 0.7rem;
+          font-weight: 600;
+          color: var(--text-secondary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          white-space: nowrap;
+        }
+        .step-box:hover .step-name {
+          color: var(--text-primary);
+        }
+
+        /* Responsive for step boxes */
+        @media (max-width: 1024px) {
+          .guide-step-boxes {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.375rem;
+          }
+          .step-box {
+            padding: 0.625rem 0.375rem;
+          }
+          .step-name {
+            font-size: 0.65rem;
+          }
+        }
+        @media (max-width: 768px) {
+          .guide-step-boxes {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        @media (max-width: 480px) {
+          .execution-cycle-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+          }
+          .guide-step-boxes {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        /* ============ About Section ============ */
     .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
     .about-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; }
     .about-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; }

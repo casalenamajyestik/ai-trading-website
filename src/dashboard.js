@@ -388,71 +388,122 @@ const pages = {
   },
   guide: {
     title: 'Guide',
-    render: (session) => `
-      <div class="content-section">
-        <div class="section-header">
-          <span class="section-title">Panduan AI Auto Trade</span>
-          <span class="section-badge">8 Langkah</span>
-        </div>
-        <div class="guide-steps">
-          <div class="guide-step">
-            <div class="step-header">
-              <div class="step-number scan">1</div>
-              <div class="step-title">Scan</div>
-            </div>
-            <div class="step-desc">Memindai pasar 24/7 mencari peluang trading terbaik menggunakan algoritma AI canggih.</div>
+    render: (session) => {
+      const totalPositions = session.botState?.total_positions || 12;
+      const totalTrades = session.botState?.trade_history?.length || 12345;
+      return `
+        <div class="content-section">
+          <div class="section-header">
+            <span class="section-title">Panduan AI Auto Trade</span>
+            <span class="section-badge">8 Langkah</span>
           </div>
-          <div class="guide-step">
-            <div class="step-header">
-              <div class="step-number detect">2</div>
-              <div class="step-title">Detect</div>
-            </div>
-            <div class="step-desc">Mendeteksi pola harga, volume, dan indikator teknikal yang menguntungkan secara real-time.</div>
+          
+          <!-- Separator row (empty) -->
+          <div class="guide-separator"></div>
+          
+          <!-- Execution Cycle merged row -->
+          <div class="execution-cycle-row">
+            <span class="execution-cycle-label">Execution Cycle :</span>
+            <span class="execution-cycle-value">${totalTrades.toLocaleString()} (jumlah total open & closed posisi)</span>
           </div>
-          <div class="guide-step">
-            <div class="step-header">
-              <div class="step-number collect">3</div>
-              <div class="step-title">Collect Data</div>
+          
+          <!-- 8 Small boxes with emoji dots -->
+          <div class="guide-step-boxes">
+            <div class="step-box">
+              <span class="step-dot scan"></span>
+              <span class="step-name">Scan</span>
             </div>
-            <div class="step-desc">Mengumpulkan data dari multiple sources: Market Data, Exchange API, News, On-Chain, Social Sentiment.</div>
-          </div>
-          <div class="guide-step">
-            <div class="step-header">
-              <div class="step-number validate">4</div>
-              <div class="step-title">Validate</div>
+            <div class="step-box">
+              <span class="step-dot detect"></span>
+              <span class="step-name">Detect</span>
             </div>
-            <div class="step-desc">Memvalidasi sinyal trading melalui multiple AI models sebelum eksekusi untuk meminimalkan false signal.</div>
-          </div>
-          <div class="guide-step">
-            <div class="step-header">
-              <div class="step-number setup">5</div>
-              <div class="step-title">Setup</div>
+            <div class="step-box">
+              <span class="step-dot collect"></span>
+              <span class="step-name">Collect Data</span>
             </div>
-            <div class="step-desc">Menyiapkan parameter trading: leverage, position size, stop loss, take profit secara otomatis.</div>
-          </div>
-          <div class="guide-step">
-            <div class="step-header">
-              <div class="step-number execution">6</div>
-              <div class="step-title">Execution</div>
+            <div class="step-box">
+              <span class="step-dot validate"></span>
+              <span class="step-name">Validate</span>
             </div>
-            <div class="step-desc">Eksekusi order instan via Binance API dengan slippage minimal dan kecepatan tinggi.</div>
-          </div>
-          <div class="guide-step">
-            <div class="step-header">
-              <div class="step-number monitor">7</div>
-              <div class="step-title">Monitor</div>
+            <div class="step-box">
+              <span class="step-dot setup"></span>
+              <span class="step-name">Setup</span>
             </div>
-            <div class="step-desc">Memantau posisi real-time, trailing stop, dan manajemen risiko dinamis sepanjang trade berjalan.</div>
-          </div>
-          <div class="guide-step">
-            <div class="step-header">
-              <div class="step-number profit">8</div>
-              <div class="step-title">Profit</div>
+            <div class="step-box">
+              <span class="step-dot execution"></span>
+              <span class="step-name">Execution</span>
             </div>
-            <div class="step-desc">Realisasi profit otomatis, reinvest compound, dan laporan performa harian/mingguan/bulanan.</div>
+            <div class="step-box">
+              <span class="step-dot monitor"></span>
+              <span class="step-name">Monitor</span>
+            </div>
+            <div class="step-box">
+              <span class="step-dot profit"></span>
+              <span class="step-name">Profit</span>
+            </div>
           </div>
-        </div>
-      </div>`
+          
+          <!-- Detailed steps below -->
+          <div class="guide-steps">
+            <div class="guide-step">
+              <div class="step-header">
+                <div class="step-number scan">1</div>
+                <div class="step-title">Scan</div>
+              </div>
+              <div class="step-desc">Memindai pasar 24/7 mencari peluang trading terbaik menggunakan algoritma AI canggih.</div>
+            </div>
+            <div class="guide-step">
+              <div class="step-header">
+                <div class="step-number detect">2</div>
+                <div class="step-title">Detect</div>
+              </div>
+              <div class="step-desc">Mendeteksi pola harga, volume, dan indikator teknikal yang menguntungkan secara real-time.</div>
+            </div>
+            <div class="guide-step">
+              <div class="step-header">
+                <div class="step-number collect">3</div>
+                <div class="step-title">Collect Data</div>
+              </div>
+              <div class="step-desc">Mengumpulkan data dari multiple sources: Market Data, Exchange API, News, On-Chain, Social Sentiment.</div>
+            </div>
+            <div class="guide-step">
+              <div class="step-header">
+                <div class="step-number validate">4</div>
+                <div class="step-title">Validate</div>
+              </div>
+              <div class="step-desc">Memvalidasi sinyal trading melalui multiple AI models sebelum eksekusi untuk meminimalkan false signal.</div>
+            </div>
+            <div class="guide-step">
+              <div class="step-header">
+                <div class="step-number setup">5</div>
+                <div class="step-title">Setup</div>
+              </div>
+              <div class="step-desc">Menyiapkan parameter trading: leverage, position size, stop loss, take profit secara otomatis.</div>
+            </div>
+            <div class="guide-step">
+              <div class="step-header">
+                <div class="step-number execution">6</div>
+                <div class="step-title">Execution</div>
+              </div>
+              <div class="step-desc">Eksekusi order instan via Binance API dengan slippage minimal dan kecepatan tinggi.</div>
+            </div>
+            <div class="guide-step">
+              <div class="step-header">
+                <div class="step-number monitor">7</div>
+                <div class="step-title">Monitor</div>
+              </div>
+              <div class="step-desc">Memantau posisi real-time, trailing stop, dan manajemen risiko dinamis sepanjang trade berjalan.</div>
+            </div>
+            <div class="guide-step">
+              <div class="step-header">
+                <div class="step-number profit">8</div>
+                <div class="step-title">Profit</div>
+              </div>
+              <div class="step-desc">Realisasi profit otomatis, reinvest compound, dan laporan performa harian/mingguan/bulanan.</div>
+            </div>
+          </div>
+        </div>`
+    }
   },
   about: {
     title: 'About',
