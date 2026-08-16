@@ -30,18 +30,59 @@ export class CinematicParticleAnimation {
     this.cameraOffset = { x: 0, y: 0 };
     this.cameraTarget = { x: 0, y: 0 };
 
-    // Color palette - cinematic tech colors
+    // Color palette - cinematic tech colors - EXTENDED VARIETY
     this.colorPalette = [
-      { base: '#00ffff', glow: '#00ffff', name: 'cyan' },           // electric cyan
-      { base: '#0088ff', glow: '#44aaff', name: 'electric-blue' },  // electric blue
-      { base: '#8844ff', glow: '#aa66ff', name: 'purple' },         // purple
-      { base: '#cc00ff', glow: '#dd66ff', name: 'magenta' },        // magenta
-      { base: '#ff3388', glow: '#ff66aa', name: 'pink' },           // hot pink
-      { base: '#ff4422', glow: '#ff6644', name: 'red' },            // red
-      { base: '#ff8800', glow: '#ffaa33', name: 'orange' },         // orange
-      { base: '#ffdd00', glow: '#ffee44', name: 'yellow' },         // yellow
-      { base: '#44ff88', glow: '#66ffaa', name: 'green' },          // neon green
-      { base: '#00ffcc', glow: '#44ffdd', name: 'teal' },           // teal
+      // Blues & Cyans
+      { base: '#00ffff', glow: '#00ffff', name: 'electric-cyan' },
+      { base: '#00ddff', glow: '#44eeff', name: 'bright-cyan' },
+      { base: '#00bbff', glow: '#55ccff', name: 'sky-cyan' },
+      { base: '#0099ff', glow: '#44aaff', name: 'electric-blue' },
+      { base: '#0077ff', glow: '#5599ff', name: 'deep-blue' },
+      { base: '#0055ff', glow: '#6688ff', name: 'royal-blue' },
+      { base: '#2288ff', glow: '#66aaff', name: 'azure' },
+      { base: '#44aaff', glow: '#88ccff', name: 'light-blue' },
+      
+      // Purples & Violets
+      { base: '#8844ff', glow: '#aa66ff', name: 'purple' },
+      { base: '#aa22ff', glow: '#cc66ff', name: 'vivid-purple' },
+      { base: '#bb00ff', glow: '#dd44ff', name: 'electric-purple' },
+      { base: '#9933ff', glow: '#bb66ff', name: 'amethyst' },
+      { base: '#7700ff', glow: '#9944ff', name: 'deep-violet' },
+      { base: '#aa44ff', glow: '#cc88ff', name: 'lavender' },
+      { base: '#cc66ff', glow: '#dd99ff', name: 'light-purple' },
+      
+      // Magentas & Pinks
+      { base: '#cc00ff', glow: '#dd66ff', name: 'magenta' },
+      { base: '#ff00cc', glow: '#ff44dd', name: 'hot-magenta' },
+      { base: '#ff3388', glow: '#ff66aa', name: 'pink' },
+      { base: '#ff1177', glow: '#ff5599', name: 'deep-pink' },
+      { base: '#ff55aa', glow: '#ff88cc', name: 'rose' },
+      { base: '#ff77bb', glow: '#ff99dd', name: 'light-pink' },
+      { base: '#ff0088', glow: '#ff44aa', name: 'fuchsia' },
+      
+      // Reds & Oranges
+      { base: '#ff4422', glow: '#ff6644', name: 'red' },
+      { base: '#ff3300', glow: '#ff5533', name: 'vermilion' },
+      { base: '#ff6600', glow: '#ff8833', name: 'orange-red' },
+      { base: '#ff8800', glow: '#ffaa33', name: 'orange' },
+      { base: '#ffaa00', glow: '#ffcc33', name: 'amber' },
+      { base: '#ffcc00', glow: '#ffdd44', name: 'gold' },
+      
+      // Yellows & Greens
+      { base: '#ffdd00', glow: '#ffee44', name: 'yellow' },
+      { base: '#ffee00', glow: '#ffff44', name: 'bright-yellow' },
+      { base: '#ccff00', glow: '#ddff44', name: 'lime' },
+      { base: '#aaff00', glow: '#ccff44', name: 'neon-green' },
+      { base: '#88ff44', glow: '#aaff66', name: 'spring-green' },
+      { base: '#44ff88', glow: '#66ffaa', name: 'green' },
+      { base: '#00ff88', glow: '#44ffaa', name: 'emerald' },
+      { base: '#00ffaa', glow: '#44ffcc', name: 'mint' },
+      
+      // Teals & Aquas
+      { base: '#00ffcc', glow: '#44ffdd', name: 'teal' },
+      { base: '#00ffaa', glow: '#44ffcc', name: 'aqua' },
+      { base: '#00ccaa', glow: '#44ddcc', name: 'turquoise' },
+      { base: '#00aa88', glow: '#33ccaa', name: 'sea-green' },
     ];
 
     this.init();
