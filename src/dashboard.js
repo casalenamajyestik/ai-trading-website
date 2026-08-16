@@ -192,30 +192,14 @@ const pages = {
               </div>
             </div>
 
-            <!-- Right: Animasi Merged (2/3) - Animasi 1 + Animasi 2 side by side -->
+            <!-- Right: Animasi Merged (2/3) - SINGLE FULL-WIDTH ANIMATION BOX -->
             <div class="column-card animasi-merged">
-              <div class="animasi-merged-inner">
-                <!-- Animasi 1 -->
-                <div class="animasi-half">
-                  <div class="card animation2-placeholder" style="padding: 0; display: flex; align-items: center; justify-content: center; height: 100%;">
-                    <div class="placeholder-content">
-                      <div class="placeholder-icon">����</div>
-                      <div class="placeholder-text">Animasi ke 1</div>
-                      <div class="placeholder-desc">Posisi reservasi untuk animasi ke-1</div>
-                      <div class="placeholder-label">[ANIMASI KE 1]</div>
-                    </div>
-                  </div>
-                </div>
-                <!-- Animasi 2 -->
-                <div class="animasi-half">
-                  <div class="card animation2-placeholder" style="padding: 0; display: flex; align-items: center; justify-content: center; height: 100%;">
-                    <div class="placeholder-content">
-                      <div class="placeholder-icon">����</div>
-                      <div class="placeholder-text">Animasi ke 2</div>
-                      <div class="placeholder-desc">Posisi reservasi untuk animasi ke-2</div>
-                      <div class="placeholder-label">[ANIMASI KE 2]</div>
-                    </div>
-                  </div>
+              <div class="card animation-merged-placeholder" style="padding: 0; display: flex; align-items: center; justify-content: center; height: 100%;">
+                <div class="placeholder-content">
+                  <div class="placeholder-icon">⚡</div>
+                  <div class="placeholder-text">Kotak Animasi</div>
+                  <div class="placeholder-desc">Design animasi single merged box (2/3 width)</div>
+                  <div class="placeholder-label">[ANIMASI MERGED]</div>
                 </div>
               </div>
             </div>
