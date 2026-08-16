@@ -32,7 +32,7 @@ export class CinematicParticleAnimation {
 
     // Expanded crypto coin names and wallet address prefixes for text labels
     this.cryptoLabels = [
-      // Major coins (Top 100+)
+      // Major coins (Top 200+)
       'BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'MATIC', 'DOT', 'AVAX',
       'LINK', 'UNI', 'LTC', 'BCH', 'ATOM', 'NEAR', 'ALGO', 'ICP', 'VET', 'FIL',
       'THETA', 'XTZ', 'EOS', 'AAVE', 'MKR', 'COMP', 'SNX', 'YFI', 'SUSHI', 'CRV',
@@ -40,12 +40,22 @@ export class CinematicParticleAnimation {
       'ENJ', 'CHZ', 'HOT', 'ANKR', 'CRO', 'FTM', 'ONE', 'HBAR', 'EGLD', 'FLOW',
       'RUNE', 'KSM', 'DASH', 'ZEC', 'XMR', 'ETC', 'QTUM', 'ZIL', 'ONT', 'IOST',
       'WAVES', 'LSK', 'STEEM', 'HIVE', 'SC', 'DGB', 'RVN', 'NANO', 'BTT', 'WIN',
-      'TRX', 'SUN', 'JST', 'BTT', 'WIN', 'SEED', 'CRO', 'VRA', 'TVK', 'REEF',
-      'BAKE', 'BURGER', 'SUSHI', 'UNI', 'COMP', 'AAVE', 'MKR', 'SNX', 'YFI', 'CRV',
-      'SUSHI', 'BAL', 'REN', 'KNC', 'ZRX', 'BAT', 'UMA', 'NMR', 'MLN', 'REP',
-      'GNO', 'DXD', 'RAI', 'FEI', 'TRIBE', 'INDEX', 'DPI', 'MVI', 'DEFI', 'YFL',
+      'TRX', 'SUN', 'JST', 'SEED', 'VRA', 'TVK', 'REEF', 'BAKE', 'BURGER',
+      'UMA', 'NMR', 'MLN', 'REP', 'GNO', 'DXD', 'RAI', 'FEI', 'TRIBE', 'INDEX',
+      'DPI', 'MVI', 'DEFI', 'YFL', 'PERP', 'DYDX', 'GMX', 'GNS', 'HXRO', 'LYRA',
+      'OP', 'ARB', 'METIS', 'BOBA', 'CQT', 'CTC', 'SPELL', 'MIM', 'ALCX', 'FORTH',
+      'RGT', 'FEI', 'TRIBE', 'INDEX', 'DPI', 'MVI', 'DEFI', 'YFL', 'PERP', 'DYDX',
+      'SHIB', 'PEPE', 'FLOKI', 'BONK', 'WIF', 'POPCAT', 'MEW', 'BOME', 'SLERF', 'MYRO',
+      'JUP', 'W', 'ZRO', 'LAYER', 'SYN', 'STG', 'CBR', 'HFT', 'VELO', 'VELA',
+      'GMX', 'GLP', 'GNS', 'HXRO', 'LYRA', 'OP', 'ARB', 'METIS', 'BOBA', 'CQT',
+      'CTC', 'SPELL', 'MIM', 'ALCX', 'FORTH', 'RGT', 'FEI', 'TRIBE', 'INDEX', 'DPI',
+      'MVI', 'DEFI', 'YFL', 'PERP', 'DYDX', 'GMX', 'GNS', 'HXRO', 'LYRA', 'OP',
+      'ARB', 'METIS', 'BOBA', 'CQT', 'CTC', 'SPELL', 'MIM', 'ALCX', 'FORTH', 'RGT',
+      'TON', 'TAO', 'FET', 'RENDER', 'INJ', 'TIA', 'SEI', 'PYTH', 'JTO', 'DYM',
+      'STRK', 'ENA', 'REZ', 'EIGEN', 'ZK', 'ZRO', 'LAYER', 'SYN', 'STG', 'CBR',
+      'HFT', 'VELO', 'VELA', 'GMX', 'GLP', 'GNS', 'HXRO', 'LYRA', 'OP', 'ARB',
       
-      // Wallet address prefixes (0x + 4-8 chars) - more variety
+      // Wallet address prefixes (0x + 4-10 chars) - huge variety
       '0x7a3f', '0x9b2e', '0x1c4d', '0x8f6a', '0x3d9e', '0x5b1c', '0x2e8f', '0x4a7d',
       '0x6f3b', '0x9c1e', '0xad5f', '0x7e2a', '0x3b9c', '0x5d8f', '0x1a6e', '0x4f2b',
       '0x8c9d', '0x2e7a', '0x6b3f', '0x9d4c', '0x1e8a', '0x5f2d', '0x3a7b', '0x7c9e',
@@ -57,6 +67,12 @@ export class CinematicParticleAnimation {
       '0x1bad', '0xfood', '0xbed', '0xdada', '0xbead', '0xseed', '0xneed', '0xfeel',
       '0xcool', '0xwarm', '0xfire', '0xice', '0xwind', '0xrain', '0xstorm', '0xcalm',
       '0xmoon', '0xmars', '0xstar', '0xsky', '0xcloud', '0xsun', '0xdawn', '0xdusk',
+      '0xalpha', '0xbeta', '0xgamma', '0xdelta', '0xepsilon', '0xzeta', '0xeta', '0xtheta',
+      '0xiota', '0xkappa', '0xlambda', '0xmu', '0xnu', '0xxi', '0xomicron', '0xpi',
+      '0xrho', '0xsigma', '0xtau', '0xupsilon', '0xphi', '0xchi', '0xpsi', '0xomega',
+      '0xvitalik', '0xsatoshi', '0xnakamoto', '0xbuterin', '0xgavin', '0xwood', '0xheiko', '0xrobert',
+      '0x1a2b3c', '0x4d5e6f', '0x7a8b9c', '0xde0f1a', '0x2b3c4d', '0x5e6f7a', '0x8b9c0d', '0x1e2f3a',
+      '0x4b5c6d', '0x7e8f9a', '0x0b1c2d', '0x3e4f5a', '0x6b7c8d', '0x9e0f1a', '0x2b3c4d', '0x5e6f7a',
     ];
 
     // Shuffle labels for random distribution
@@ -64,7 +80,7 @@ export class CinematicParticleAnimation {
     this.labelIndex = 0;
     this.cyclesCompleted = 0;
     this.lastLabelReassignTime = 0;
-    this.labelReassignInterval = 15000; // Reassign labels every 15 seconds
+    this.labelReassignInterval = 12000; // Reassign labels every 12 seconds (faster)
 
     // Color palette - cinematic tech colors - EXTENDED VARIETY
     this.colorPalette = [
@@ -257,8 +273,8 @@ export class CinematicParticleAnimation {
       const sparkleInterval = 3000 + Math.random() * 7000; // 3-10 seconds between sparkles
       const sparkleDuration = 800 + Math.random() * 1200; // 0.8-2s sparkle duration
     
-      // Assign label to this particle (more particles get labels)
-      const hasLabel = Math.random() < 0.25; // ~25% of particles get labels (increased from 12%)
+      // Assign label to this particle (most particles get labels)
+      const hasLabel = Math.random() < 0.45; // ~45% of particles get labels (increased from 25%)
       const label = hasLabel ? this.getNextLabel() : null;
     
       return {
