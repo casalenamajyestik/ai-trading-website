@@ -213,6 +213,49 @@ const pages = {
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Separator + Execution Cycle + 8 Step Boxes (per spreadsheet design) -->
+        <div class="content-section">
+          <div class="guide-separator"></div>
+          <div class="execution-cycle-row">
+            <span class="execution-cycle-label">Execution Cycle :</span>
+            <span class="execution-cycle-value">${(session.botState?.trade_history?.length || 12345).toLocaleString()} (jumlah total open & closed posisi)</span>
+          </div>
+          <div class="guide-step-boxes">
+            <div class="step-box">
+              <span class="step-dot scan"></span>
+              <span class="step-name">Scan</span>
+            </div>
+            <div class="step-box">
+              <span class="step-dot detect"></span>
+              <span class="step-name">Detect</span>
+            </div>
+            <div class="step-box">
+              <span class="step-dot collect"></span>
+              <span class="step-name">Collect Data</span>
+            </div>
+            <div class="step-box">
+              <span class="step-dot validate"></span>
+              <span class="step-name">Validate</span>
+            </div>
+            <div class="step-box">
+              <span class="step-dot setup"></span>
+              <span class="step-name">Setup</span>
+            </div>
+            <div class="step-box">
+              <span class="step-dot execution"></span>
+              <span class="step-name">Execution</span>
+            </div>
+            <div class="step-box">
+              <span class="step-dot monitor"></span>
+              <span class="step-name">Monitor</span>
+            </div>
+            <div class="step-box">
+              <span class="step-dot profit"></span>
+              <span class="step-name">Profit</span>
+            </div>
+          </div>
         </div>`
     }
   },
@@ -387,63 +430,13 @@ const pages = {
     }
   },
   guide: {
-    title: 'Guide',
-    render: (session) => {
-      const totalPositions = session.botState?.total_positions || 12;
-      const totalTrades = session.botState?.trade_history?.length || 12345;
-      return `
+      title: 'Guide',
+      render: (session) => `
         <div class="content-section">
           <div class="section-header">
             <span class="section-title">Panduan AI Auto Trade</span>
             <span class="section-badge">8 Langkah</span>
           </div>
-          
-          <!-- Separator row (empty) -->
-          <div class="guide-separator"></div>
-          
-          <!-- Execution Cycle merged row -->
-          <div class="execution-cycle-row">
-            <span class="execution-cycle-label">Execution Cycle :</span>
-            <span class="execution-cycle-value">${totalTrades.toLocaleString()} (jumlah total open & closed posisi)</span>
-          </div>
-          
-          <!-- 8 Small boxes with emoji dots -->
-          <div class="guide-step-boxes">
-            <div class="step-box">
-              <span class="step-dot scan"></span>
-              <span class="step-name">Scan</span>
-            </div>
-            <div class="step-box">
-              <span class="step-dot detect"></span>
-              <span class="step-name">Detect</span>
-            </div>
-            <div class="step-box">
-              <span class="step-dot collect"></span>
-              <span class="step-name">Collect Data</span>
-            </div>
-            <div class="step-box">
-              <span class="step-dot validate"></span>
-              <span class="step-name">Validate</span>
-            </div>
-            <div class="step-box">
-              <span class="step-dot setup"></span>
-              <span class="step-name">Setup</span>
-            </div>
-            <div class="step-box">
-              <span class="step-dot execution"></span>
-              <span class="step-name">Execution</span>
-            </div>
-            <div class="step-box">
-              <span class="step-dot monitor"></span>
-              <span class="step-name">Monitor</span>
-            </div>
-            <div class="step-box">
-              <span class="step-dot profit"></span>
-              <span class="step-name">Profit</span>
-            </div>
-          </div>
-          
-          <!-- Detailed steps below -->
           <div class="guide-steps">
             <div class="guide-step">
               <div class="step-header">
@@ -503,8 +496,7 @@ const pages = {
             </div>
           </div>
         </div>`
-    }
-  },
+    },
   about: {
     title: 'About',
     render: (session) => `
