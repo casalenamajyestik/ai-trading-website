@@ -30,6 +30,27 @@ export class CinematicParticleAnimation {
     this.cameraOffset = { x: 0, y: 0 };
     this.cameraTarget = { x: 0, y: 0 };
 
+    // Crypto coin names and wallet address prefixes for text labels
+    this.cryptoLabels = [
+      // Major coins
+      'BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'MATIC', 'DOT', 'AVAX',
+      'LINK', 'UNI', 'LTC', 'BCH', 'ATOM', 'NEAR', 'ALGO', 'ICP', 'VET', 'FIL',
+      'THETA', 'XTZ', 'EOS', 'AAVE', 'MKR', 'COMP', 'SNX', 'YFI', 'SUSHI', 'CRV',
+      '1INCH', 'BAL', 'REN', 'KNC', 'ZRX', 'BAT', 'MANA', 'SAND', 'AXS', 'GALA',
+      'ENJ', 'CHZ', 'HOT', 'ANKR', 'CRO', 'FTM', 'ONE', 'HBAR', 'EGLD', 'FLOW',
+      // Wallet address prefixes (0x + 4-6 chars)
+      '0x7a3f', '0x9b2e', '0x1c4d', '0x8f6a', '0x3d9e', '0x5b1c', '0x2e8f', '0x4a7d',
+      '0x6f3b', '0x9c1e', '0xad5f', '0x7e2a', '0x3b9c', '0x5d8f', '0x1a6e', '0x4f2b',
+      '0x8c9d', '0x2e7a', '0x6b3f', '0x9d4c', '0x1e8a', '0x5f2d', '0x3a7b', '0x7c9e',
+      '0x4b1f', '0x8d6a', '0x2c5e', '0x6f9b', '0x1a3d', '0x5e8c', '0x9f2a', '0x3d7b',
+    ];
+
+    // Shuffle labels once at init for random distribution without repeats
+    this.shuffledLabels = this.shuffleArray([...this.cryptoLabels]);
+    this.labelIndex = 0;
+    this.labelAssignments = new Map(); // particle index -> label
+    this.cyclesCompleted = 0;
+
     // Color palette - cinematic tech colors - EXTENDED VARIETY
     this.colorPalette = [
       // Blues & Cyans
@@ -86,6 +107,26 @@ export class CinematicParticleAnimation {
     ];
 
     this.init();
+  }
+
+  shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
+
+  getNextLabel() {
+    const label = this.shuffledLabels[this.labelIndex];
+    this.labelIndex = (this.labelIndex + 1) % this.shuffledLabels.length;
+    if (this.labelIndex === 0) {
+      this.cyclesCompleted++;
+      // Reshuffle after each full cycle for more randomness
+      this.shuffledLabels = this.shuffleArray([...this.cryptoLabels]);
+    }
+    return label;
   }
 
   init() {
@@ -147,73 +188,85 @@ export class CinematicParticleAnimation {
   }
 
   createParticle(width, height, index) {
-    const color = this.colorPalette[Math.floor(Math.random() * this.colorPalette.length)];
-    const isForeground = Math.random() < 0.15; // 15% foreground particles
+      const color = this.colorPalette[Math.floor(Math.random() * this.colorPalette.length)];
+      const isForeground = Math.random() < 0.15; // 15% foreground particles
     
-    // Depth layer: 0 = far, 1 = near
-    const z = isForeground ? 0.7 + Math.random() * 0.3 : Math.random() * 0.7;
+      // Depth layer: 0 = far, 1 = near
+      const z = isForeground ? 0.7 + Math.random() * 0.3 : Math.random() * 0.7;
     
-    // Size based on depth
-    const baseSize = isForeground ? 2.5 + Math.random() * 3 : 0.5 + Math.random() * 2;
+      // Size based on depth
+      const baseSize = isForeground ? 2.5 + Math.random() * 3 : 0.5 + Math.random() * 2;
     
-    // Position - distribute across full width, slight bias to center vertically
-    const x = -width * 0.1 + Math.random() * width * 1.2;
-    const y = height * 0.15 + Math.random() * height * 0.7;
+      // Position - distribute across full width, slight bias to center vertically
+      const x = -width * 0.1 + Math.random() * width * 1.2;
+      const y = height * 0.15 + Math.random() * height * 0.7;
     
-    // Movement
-    const angle = Math.random() * Math.PI * 2;
-    const speed = (isForeground ? 0.3 + Math.random() * 0.5 : 0.05 + Math.random() * 0.2) * (0.5 + z * 0.5);
-    const vx = Math.cos(angle) * speed;
-    const vy = Math.sin(angle) * speed * 0.5; // less vertical movement
+      // Movement
+      const angle = Math.random() * Math.PI * 2;
+      const speed = (isForeground ? 0.3 + Math.random() * 0.5 : 0.05 + Math.random() * 0.2) * (0.5 + z * 0.5);
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed * 0.5; // less vertical movement
     
-    // Sparkle timing - each particle has its own cycle
-    const sparklePhase = Math.random() * Math.PI * 2;
-    const sparkleInterval = 3000 + Math.random() * 7000; // 3-10 seconds between sparkles
-    const sparkleDuration = 800 + Math.random() * 1200; // 0.8-2s sparkle duration
+      // Sparkle timing - each particle has its own cycle
+      const sparklePhase = Math.random() * Math.PI * 2;
+      const sparkleInterval = 3000 + Math.random() * 7000; // 3-10 seconds between sparkles
+      const sparkleDuration = 800 + Math.random() * 1200; // 0.8-2s sparkle duration
     
-    return {
-      // Position
-      x, y,
-      baseX: x,
-      baseY: y,
+      // Assign label to this particle (only some particles get labels)
+      const hasLabel = Math.random() < 0.12; // ~12% of particles get labels
+      const label = hasLabel ? this.getNextLabel() : null;
+    
+      return {
+        // Position
+        x, y,
+        baseX: x,
+        baseY: y,
+        index: index,
       
-      // Velocity
-      vx, vy,
+        // Velocity
+        vx, vy,
       
-      // Visual
-      size: baseSize,
-      baseSize: baseSize,
-      color: color,
-      brightness: 0.2 + Math.random() * 0.4, // base brightness 0.2-0.6
-      z: z,
+        // Visual
+        size: baseSize,
+        baseSize: baseSize,
+        color: color,
+        brightness: 0.2 + Math.random() * 0.4, // base brightness 0.2-0.6
+        z: z,
       
-      // Sparkle state
-      isSparkling: false,
-      sparkleProgress: 0,
-      sparklePhase: sparklePhase,
-      sparkleInterval: sparkleInterval,
-      sparkleDuration: sparkleDuration,
-      lastSparkleTime: -sparkleInterval * Math.random(), // stagger initial
+        // Label
+        label: label,
+        labelScale: 1,
+        labelAlpha: 0,
+        labelTargetAlpha: hasLabel ? 0.3 + Math.random() * 0.4 : 0,
+        labelVisible: hasLabel,
       
-      // Glow
-      glowIntensity: 0.3 + Math.random() * 0.5,
+        // Sparkle state
+        isSparkling: false,
+        sparkleProgress: 0,
+        sparklePhase: sparklePhase,
+        sparkleInterval: sparkleInterval,
+        sparkleDuration: sparkleDuration,
+        lastSparkleTime: -sparkleInterval * Math.random(), // stagger initial
       
-      // Motion blur trail
-      trail: [],
-      maxTrailLength: isForeground ? 8 : 4,
+        // Glow
+        glowIntensity: 0.3 + Math.random() * 0.5,
       
-      // Camera parallax
-      parallaxFactor: 0.5 + z * 1.5, // near particles move more
+        // Motion blur trail
+        trail: [],
+        maxTrailLength: isForeground ? 8 : 4,
       
-      // Methods
-      onResize(newWidth, newHeight) {
-        const scaleX = newWidth / width;
-        const scaleY = newHeight / height;
-        this.x *= scaleX;
-        this.y *= scaleY;
-        this.baseX *= scaleX;
-        this.baseY *= scaleY;
-      },
+        // Camera parallax
+        parallaxFactor: 0.5 + z * 1.5, // near particles move more
+      
+        // Methods
+        onResize(newWidth, newHeight) {
+          const scaleX = newWidth / width;
+          const scaleY = newHeight / height;
+          this.x *= scaleX;
+          this.y *= scaleY;
+          this.baseX *= scaleX;
+          this.baseY *= scaleY;
+        },
       
       update(deltaTime, cameraOffset, time) {
         // Camera parallax movement
@@ -257,6 +310,24 @@ export class CinematicParticleAnimation {
             // Randomize next interval
             this.sparkleInterval = 3000 + Math.random() * 7000;
             this.sparkleDuration = 800 + Math.random() * 1200;
+          }
+        }
+        
+        // Label animation - sync with sparkle
+        if (this.labelVisible) {
+          const targetAlpha = this.isSparkling ? 1.0 : this.labelTargetAlpha;
+          this.labelAlpha += (targetAlpha - this.labelAlpha) * 0.08;
+          
+          // Scale pulse during sparkle
+          if (this.isSparkling) {
+            const p = this.sparkleProgress;
+            if (p < 0.35) {
+              this.labelScale = 1 + p * 1.2; // grow during flash
+            } else {
+              this.labelScale = 1.5 - (p - 0.35) / 0.65 * 0.5; // shrink back
+            }
+          } else {
+            this.labelScale += (1 - this.labelScale) * 0.05; // return to 1
           }
         }
       },
@@ -403,6 +474,53 @@ export class CinematicParticleAnimation {
         ctx.stroke();
       }
     }
+    
+    // Draw label text (below particle, synced with sparkle)
+    if (p.labelVisible && p.label && p.labelAlpha > 0.02) {
+      this.drawLabel(ctx, x, y + size + 8, p);
+    }
+  }
+  
+  drawLabel(ctx, x, y, p) {
+    const ctx2 = ctx;
+    const scale = p.labelScale || 1;
+    const alpha = Math.min(p.labelAlpha * (0.4 + p.z * 0.6), 1);
+    
+    if (alpha < 0.02) return;
+    
+    ctx2.save();
+    ctx2.translate(x, y);
+    ctx2.scale(scale, scale);
+    
+    // Text style based on particle depth
+    const fontSize = Math.max(10, Math.min(14, 12 * (0.5 + p.z * 0.5)));
+    ctx2.font = `600 ${fontSize}px 'Geist', 'SF Pro Display', -apple-system, sans-serif`;
+    ctx2.textAlign = 'center';
+    ctx2.textBaseline = 'top';
+    
+    // Text color matches particle color
+    const textColor = this.hexToRgba(p.color.glow, alpha);
+    const shadowColor = this.hexToRgba(p.color.glow, alpha * 0.5);
+    
+    // Glow/shadow for readability
+    ctx2.shadowColor = shadowColor;
+    ctx2.shadowBlur = 8 * scale;
+    ctx2.shadowOffsetX = 0;
+    ctx2.shadowOffsetY = 0;
+    
+    ctx2.fillStyle = textColor;
+    ctx2.fillText(p.label, 0, 0);
+    
+    // Additional bright core during sparkle
+    if (p.isSparkling && p.sparkleProgress < 0.5) {
+      const sparkleAlpha = alpha * (1 - p.sparkleProgress / 0.5) * 0.8;
+      ctx2.shadowColor = `rgba(255, 255, 255, ${sparkleAlpha})`;
+      ctx2.shadowBlur = 16 * scale;
+      ctx2.fillStyle = `rgba(255, 255, 255, ${sparkleAlpha})`;
+      ctx2.fillText(p.label, 0, 0);
+    }
+    
+    ctx2.restore();
   }
 
   hexToRgba(hex, alpha) {
