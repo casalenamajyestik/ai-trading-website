@@ -1047,6 +1047,16 @@ async function deleteExchangeKeyFn(userId, exchange) {
   return { error };
 }
 
+// ============ Global Sidebar Status Updater ============
+function updateSidebarBotStatus(isActive) {
+  const statusEl = document.getElementById('sidebarBotStatus');
+  if (statusEl) {
+    statusEl.textContent = isActive ? 'Running' : 'Stop';
+    statusEl.className = 'status-badge ' + (isActive ? 'running' : 'stopped');
+    statusEl.style.fontSize = '0.75rem';
+  }
+}
+
 // ============ Aplikasi Tab Handlers ============
 function loadBotSettingsUI(session) {
   const botSession = session.botSession || {};
