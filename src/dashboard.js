@@ -1361,6 +1361,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadBotData(session).then(s => {
     session = s;
     
+    // Update sidebar status with fresh data from Supabase
+    updateSidebarBotStatus(session.botSession?.is_active);
+    
     // Start realtime subscription for bot_state updates
     if (session.botSession?.id) {
       console.log('[Dashboard] Starting realtime subscription for bot_state:', session.botSession.id);
@@ -1375,10 +1378,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const robotContainer = document.getElementById('dataRobotContainer');
             if (robotContainer) robotContainer.dataset.initialized = 'false';
             pageContent.innerHTML = pages.overview.render(session);
-            // Re-attach sidebar toggle handler
-            const newToggle = document.getElementById('botSidebarToggle');
-            if (newToggle) newToggle.addEventListener('change', handleSidebarBotToggle);
           }
+          // Update sidebar status badge from realtime update
+          updateSidebarBotStatus(session.botSession?.is_active);
         }
       });
     }
