@@ -685,17 +685,16 @@
         <div class="sidebar-logo">AI</div>
         <span class="sidebar-brand">AI Auto Trade</span>
       </div>
-      <!-- Bot Toggle in Sidebar -->
-      <div class="sidebar-bot-toggle" style="padding: 0 1.5rem 1rem; border-bottom: 1px solid var(--border-subtle);">
+      <!-- Bot Status in Sidebar (display only, no toggle) -->
+      <div class="sidebar-bot-status" style="padding: 0 1.5rem 1rem; border-bottom: 1px solid var(--border-subtle);">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
           <div>
             <div style="font-size: 0.875rem; font-weight: 600;">AI Auto Trade</div>
             <div style="font-size: 0.75rem; color: var(--text-muted);">Trading Bot Status</div>
           </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="botSidebarToggle" aria-label="Toggle bot status">
-            <span class="toggle-slider"></span>
-          </label>
+          <span class="status-badge stopped" id="sidebarBotStatus" style="font-size: 0.75rem;">
+            Stop
+          </span>
         </div>
       </div>
       <nav class="sidebar-nav">

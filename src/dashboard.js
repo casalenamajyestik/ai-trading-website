@@ -154,40 +154,30 @@ const pages = {
       }, 100);
 
       return `
-        <!-- 5 Stat Cards matching spreadsheet design -->
+        <!-- 4 Stat Cards matching spreadsheet design (removed AI Auto Trade status card) -->
         <div class="stats-grid">
-          <!-- Card 1: Ai Auto Trade (no toggle, just status) -->
-          <div class="stat-card">
-            <div class="stat-card-label">AI Auto Trade</div>
-            <div class="stat-card-value">
-              <span class="status-badge ${isActive ? 'running' : 'stopped'}">${isActive ? 'Running' : 'Stop'}</span>
-            </div>
-            <div class="stat-card-sub ${isActive ? 'positive' : ''}">${isActive ? 'Running' : 'Stop'}</div>
-            <div class="stat-card-sub">${mode === 'live' ? '🔴 LIVE MODE' : '📝 Paper Trading'}</div>
-          </div>
-
-          <!-- Card 2: Total Balance -->
+          <!-- Card 1: Total Balance -->
           <div class="stat-card">
             <div class="stat-card-label">Total Balance</div>
             <div class="stat-card-value">$ ${(balance/1000000).toFixed(3).replace('.', ',')}M</div>
             <div class="stat-card-sub positive">+12.5% this week</div>
           </div>
 
-          <!-- Card 3: PNL Yesterday -->
+          <!-- Card 2: PNL Yesterday -->
           <div class="stat-card">
             <div class="stat-card-label">PNL Yesterday</div>
             <div class="stat-card-value ${yesterdayPnL >= 0 ? 'positive' : 'negative'}">${yesterdayPnL >= 0 ? '+' : ''}${formatUSD(yesterdayPnL).replace('$ ', '')}</div>
             <div class="stat-card-sub">Daily PnL</div>
           </div>
 
-          <!-- Card 4: Biggest Win -->
+          <!-- Card 3: Biggest Win -->
           <div class="stat-card">
             <div class="stat-card-label">Biggest Win</div>
             <div class="stat-card-value positive">x${biggestWin} (Leverage)</div>
             <div class="stat-card-sub">Best trade</div>
           </div>
 
-          <!-- Card 5: Total Positions -->
+          <!-- Card 4: Total Positions -->
           <div class="stat-card positions">
             <div class="stat-card-label">Total Positions</div>
             <div class="positions-coin">${positionCoin}</div>
@@ -1103,6 +1093,8 @@ function attachAplikasiTabHandlers(session) {
         
         session.botSession = { ...session.botSession, is_active: isActive };
         localStorage.setItem('auth_session', JSON.stringify(session));
+        // Update sidebar status badge
+        updateSidebarBotStatus(isActive);
         loadBotSettingsUI(session);
         console.log('[Bot Toggle] UI updated, localStorage saved');
         
@@ -1244,37 +1236,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Sidebar Bot Toggle Handler
-  const sidebarBotToggle = document.getElementById('botSidebarToggle');
-  const handleSidebarBotToggle = async (e) => {
-    if (!e.target.matches('#botSidebarToggle')) return;
-    const isActive = e.target.checked;
-    console.log('[Sidebar Bot Toggle] User toggled to:', isActive);
-    e.target.disabled = true;
-    try {
-      const { error } = await toggleBotSession(session.user.id, isActive);
-      if (error) throw error;
-      session.botSession = { ...session.botSession, is_active: isActive };
-      localStorage.setItem('auth_session', JSON.stringify(session));
-      // Re-render overview to update status text
-      if (pageContent && document.querySelector('.nav-item.active')?.dataset.page === 'overview') {
-        const robotContainer = document.getElementById('dataRobotContainer');
-        if (robotContainer) robotContainer.dataset.initialized = 'false';
-        pageContent.innerHTML = pages.overview.render(session);
-        // Re-attach toggle handler
-        const newToggle = document.getElementById('botSidebarToggle');
-        if (newToggle) newToggle.addEventListener('change', handleSidebarBotToggle);
-      }
-    } catch (err) {
-      console.error('[Sidebar Bot Toggle] Failed:', err);
-      alert('Gagal mengubah status bot: ' + (err.message || err));
-      e.target.checked = !isActive;
-    } finally {
-      e.target.disabled = false;
+  // Sidebar Bot Status Update (called when bot status changes)
+  function updateSidebarBotStatus(isActive) {
+    const statusEl = document.getElementById('sidebarBotStatus');
+    if (statusEl) {
+      statusEl.textContent = isActive ? 'Running' : 'Stop';
+      statusEl.className = 'status-badge ' + (isActive ? 'running' : 'stopped');
+      statusEl.style.fontSize = '0.75rem';
     }
-  };
+  }
 
-  if (sidebarBotToggle) sidebarBotToggle.addEventListener('change', handleSidebarBotToggle);
+  // Initialize sidebar status on load
+  const sidebarBotStatus = document.getElementById('sidebarBotStatus');
+  if (sidebarBotStatus && session.botSession) {
+    updateSidebarBotStatus(session.botSession.is_active);
+  }
 
   async function loadBotData(session) {
     try {
