@@ -1302,6 +1302,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (pageName === 'settings') {
       loadBotData(session).then(updatedSession => {
         session = updatedSession;
+        // Update sidebar status with fresh data from Supabase
+        updateSidebarBotStatus(session.botSession?.is_active);
         if (pageContent) pageContent.innerHTML = pg.render(session);
         attachSettingsSaveHandler(session);
         attachExchangeTabHandlers(session);
@@ -1310,6 +1312,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
       if (pageContent) pageContent.innerHTML = pg.render(session);
       updateDynamicI18n();
+
+      // Update sidebar status when navigating to any page (in case of realtime updates)
+      updateSidebarBotStatus(session.botSession?.is_active);
 
       // Initialize animations for specific pages
       if (pageName === 'overview') {
