@@ -189,29 +189,10 @@ const pages = {
         <!-- 2-Column Layout: BTC Chart (1/3) | Animasi Merged (2/3) -->
         <div class="content-section tight">
           <div class="two-column-grid">
-            <!-- Left: BTC Chart (1/3) + Small Metric Boxes Below -->
+            <!-- Left: BTC Chart (1/3) -->
             <div class="column-card">
               <div class="card" style="padding: 0;">
                 <div class="btc-chart-container" id="btcChartContainer"></div>
-              </div>
-              <!-- Small Metric Boxes Below BTC Chart -->
-              <div class="btc-metric-boxes">
-                <div class="metric-box">
-                  <div class="metric-label">24h High</div>
-                  <div class="metric-value" style="color: var(--accent-secondary);">$68,450</div>
-                </div>
-                <div class="metric-box">
-                  <div class="metric-label">24h Low</div>
-                  <div class="metric-value" style="color: var(--accent-danger);">$66,200</div>
-                </div>
-                <div class="metric-box">
-                  <div class="metric-label">24h Volume</div>
-                  <div class="metric-value" style="color: var(--accent-primary);">45.2K BTC</div>
-                </div>
-                <div class="metric-box">
-                  <div class="metric-label">Funding Rate</div>
-                  <div class="metric-value" style="color: var(--accent-warm);">0.0125%</div>
-                </div>
               </div>
             </div>
 
