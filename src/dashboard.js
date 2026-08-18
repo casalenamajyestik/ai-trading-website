@@ -1285,6 +1285,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const navItems = document.querySelectorAll('.nav-item');
   const pageTitle = document.getElementById('pageTitle');
   const pageContent = document.getElementById('pageContent');
+  const topbarLogo = document.getElementById('topbarLogo');
+
+  // Logo click -> navigate to overview
+  if (topbarLogo) {
+    topbarLogo.addEventListener('click', () => navigateTo('overview'));
+    topbarLogo.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        navigateTo('overview');
+      }
+    });
+  }
 
   function navigateTo(pageName) {
     if (pageName === 'logout') {
