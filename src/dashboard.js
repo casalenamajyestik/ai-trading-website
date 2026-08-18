@@ -109,7 +109,7 @@ function getCountryOptions(selectedCode = 'ID') {
 // ============ Page Content ============
 const pages = {
   overview: {
-    title: 'Overview',
+    title: 'overview',
     render: (session) => {
       const botSession = session.botSession || {};
       const botState = session.botState || {};
@@ -252,7 +252,7 @@ const pages = {
     }
   },
   positions: {
-    title: 'Positions',
+    title: 'position',
     render: (session) => {
       const botState = session.botState || {};
       const positions = botState.positions || [
@@ -312,7 +312,7 @@ const pages = {
     }
   },
   history: {
-    title: 'History Trade',
+    title: 'history trade',
     render: (session) => {
       const botState = session.botState || {};
       const trades = botState.trade_history || [
@@ -375,7 +375,7 @@ const pages = {
     }
   },
   performance: {
-    title: 'Performance',
+    title: 'performance',
     render: (session) => {
       const botState = session.botState || {};
       const balance = botState.balance || 0;
@@ -422,7 +422,7 @@ const pages = {
     }
   },
   guide: {
-      title: 'Guide',
+      title: 'guide',
       render: (session) => `
         <div class="content-section">
           <div class="section-header">
@@ -490,7 +490,7 @@ const pages = {
         </div>`
     },
   about: {
-    title: 'About',
+    title: 'about',
     render: (session) => `
       <div class="content-section">
         <div class="section-header">
@@ -527,7 +527,7 @@ const pages = {
       </div>`
   },
   settings: {
-    title: 'Settings',
+    title: 'pengaturan',
     render: (session) => {
       const exchangeKey = session.exchangeKey || {};
       const botSession = session.botSession || {};
