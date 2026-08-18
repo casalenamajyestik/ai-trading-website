@@ -324,6 +324,80 @@
           }
         }
 
+        /* ============ BTC Metric Boxes (Small boxes below BTC Chart) ============ */
+        .btc-metric-boxes {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0.5rem;
+          margin-top: 0.75rem;
+        }
+
+        .metric-box {
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-md);
+          padding: 0.75rem;
+          text-align: center;
+          transition: all var(--transition-fast);
+          cursor: default;
+        }
+
+        .metric-box:hover {
+          border-color: var(--border-active);
+          box-shadow: var(--shadow-card-hover);
+          transform: translateY(-2px);
+        }
+
+        .metric-box .metric-label {
+          font-size: 0.7rem;
+          color: var(--text-muted);
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.25rem;
+        }
+
+        .metric-box .metric-value {
+          font-size: 1.1rem;
+          font-weight: 700;
+          font-variant-numeric: tabular-nums;
+        }
+
+        /* Responsive for metric boxes */
+        @media (max-width: 1024px) {
+          .btc-metric-boxes {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.375rem;
+          }
+          .metric-box {
+            padding: 0.625rem;
+          }
+          .metric-box .metric-value {
+            font-size: 1rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .btc-metric-boxes {
+            grid-template-columns: 1fr;
+            gap: 0.25rem;
+          }
+          .metric-box {
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: left;
+          }
+          .metric-box .metric-label {
+            margin-bottom: 0;
+            font-size: 0.65rem;
+          }
+          .metric-box .metric-value {
+            font-size: 0.95rem;
+          }
+        }
+
         /* ============ Animation Merged Placeholder (Single Full-Width Box) ============ */
         .animation-merged-placeholder {
           background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-card) 100%);
