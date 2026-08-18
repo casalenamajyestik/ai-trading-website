@@ -604,23 +604,24 @@ export class BTCRealTimeChart {
     noticeDiv.id = 'btc-chart-fallback-notice';
     noticeDiv.style.cssText = `
       position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(245, 166, 35, 0.95);
+      top: 6px;
+      left: 8px;
+      background: rgba(245, 166, 35, 0.9);
       color: #0d1321;
-      padding: 0.5rem 0.75rem;
-      border-radius: 6px;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
       font-family: 'Geist', -apple-system, sans-serif;
-      font-size: 0.75rem;
-      font-weight: 500;
+      font-size: 0.65rem;
+      font-weight: 600;
       z-index: 100;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.3rem;
+      white-space: nowrap;
     `;
     noticeDiv.innerHTML = `
       <span>📡</span>
-      <span>Data dari CoinGecko (Binance tidak tersedia)</span>
+      <span>CoinGecko</span>
     `;
     this.container.style.position = 'relative';
     this.container.appendChild(noticeDiv);
