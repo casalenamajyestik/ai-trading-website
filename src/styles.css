@@ -1557,6 +1557,60 @@ input::placeholder, textarea::placeholder {
   animation: fadeInUp 0.2s ease-out;
 }
 
+/* Password Input Wrapper with Show/Hide Toggle */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.password-input-wrapper input {
+  flex: 1;
+  padding-right: 3rem; /* Space for the toggle button */
+  min-width: 0;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 10;
+}
+
+.password-toggle:hover {
+  background: var(--bg-glass);
+  color: var(--accent-primary);
+}
+
+.password-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-primary-glow);
+}
+
+.password-toggle .icon-eye-off {
+  display: none;
+}
+
+.password-toggle[aria-pressed="true"] .icon-eye {
+  display: none;
+}
+
+.password-toggle[aria-pressed="true"] .icon-eye-off {
+  display: block;
+}
+
 .checkbox-label {
   display: flex;
   align-items: flex-start;

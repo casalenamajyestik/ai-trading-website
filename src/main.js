@@ -114,6 +114,27 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// ============ Password Show/Hide Toggle ============
+function initPasswordToggles() {
+  document.querySelectorAll('.password-toggle').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const targetId = toggle.dataset.target;
+      const passwordInput = document.getElementById(targetId);
+      if (!passwordInput) return;
+
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+      
+      // Update aria-pressed attribute
+      toggle.setAttribute('aria-pressed', isPassword);
+      toggle.setAttribute('aria-label', isPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+    });
+  });
+}
+
+// Initialize password toggles
+initPasswordToggles();
+
 // ============ Social Login Buttons ============
 document.querySelectorAll('.btn-social[data-provider]').forEach(btn => {
   btn.addEventListener('click', async () => {
