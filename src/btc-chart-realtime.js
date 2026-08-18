@@ -1,6 +1,6 @@
 /**
- * BTC Real-time Chart - Binance WebSocket + Lightweight Charts
- * Real-time candlestick chart with WebSocket live updates
+ * BTC Real-time Chart - Binance WebSocket + Lightweight Charts with CoinGecko Fallback
+ * Real-time candlestick chart with WebSocket live updates and automatic failover
  */
 
 import { createChart, CrosshairMode, CandlestickSeries, HistogramSeries, LineSeries } from 'lightweight-charts';
@@ -25,6 +25,9 @@ export class BTCRealTimeChart {
       interval: options.interval || '1m',
       symbol: options.symbol || 'BTCUSDT',
       maxCandles: options.maxCandles || 200,
+      // New options for fallback
+      useFallback: options.useFallback !== false, // Enable fallback by default
+      fallbackProvider: options.fallbackProvider || 'coingecko', // 'coingecko' or 'binance'
       ...options
     };
 
@@ -41,6 +44,13 @@ export class BTCRealTimeChart {
     this.candleBuffer = [];
     this.isConnected = false;
     this.lastCandleTime = 0;
+    
+    // Fallback tracking
+    this.currentProvider = 'binance'; // 'binance' or 'coingecko'
+    this.fallbackAttempted = false;
+    this.pollingInterval = null;
+    this.pollingAttempts = 0;
+    this.maxPollingAttempts = 5;
 
     // Wait for container to have dimensions if needed
     if (this.container.clientWidth === 0 || this.container.clientHeight === 0) {
@@ -218,36 +228,108 @@ export class BTCRealTimeChart {
       const binanceInterval = intervalMap[this.options.interval] || '1m';
       const limit = Math.min(this.options.maxCandles, 1000);
 
-      const url = `https://api.binance.com/api/v3/klines?symbol=${this.options.symbol}&interval=${binanceInterval}&limit=${limit}`;
+      // Try Binance first
+      if (this.currentProvider === 'binance') {
+        try {
+          const url = `https://api.binance.com/api/v3/klines?symbol=${this.options.symbol}&interval=${binanceInterval}&limit=${limit}`;
+          const response = await fetch(url);
+          
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          
+          const data = await response.json();
+          
+          const candles = data.map(kline => ({
+            time: kline[0] / 1000, // Convert to seconds
+            open: parseFloat(kline[1]),
+            high: parseFloat(kline[2]),
+            low: parseFloat(kline[3]),
+            close: parseFloat(kline[4]),
+            volume: parseFloat(kline[5]),
+          }));
+
+          this.candleBuffer = candles;
+          this.lastCandleTime = candles[candles.length - 1]?.time || 0;
+
+          // Set data to chart
+          this.candleSeries.setData(candles);
+          this.volumeSeries.setData(candles.map(c => ({ time: c.time, value: c.volume, color: c.close >= c.open ? '#22d3a7' : '#f04e4e' })));
+
+          // Calculate and set MAs
+          this.updateMovingAverages(candles);
+
+          console.log(`[BTC Chart] Loaded ${candles.length} initial candles from Binance`);
+          return;
+        } catch (binanceError) {
+          console.warn('[BTC Chart] Binance initial data failed:', binanceError.message);
+          // Fall through to fallback
+        }
+      }
+
+      // Fallback to CoinGecko
+      if (this.options.useFallback && !this.fallbackAttempted) {
+        console.log('[BTC Chart] Falling back to CoinGecko for initial data...');
+        this.fallbackAttempted = true;
+        await this.loadInitialDataFromCoinGecko();
+      } else {
+        throw new Error('Failed to load initial data from all providers');
+      }
+    } catch (error) {
+      console.error('[BTC Chart] Failed to load initial data:', error);
+      this.showError('Gagal memuat data awal. Mencoba WebSocket...');
+    }
+  }
+
+  async loadInitialDataFromCoinGecko() {
+    try {
+      // Map interval to CoinGecko days parameter
+      const intervalToDays = {
+        '1m': 1, '3m': 1, '5m': 1, '15m': 1,
+        '30m': 1, '1h': 1, '2h': 1, '4h': 1,
+        '6h': 7, '8h': 7, '12h': 7, '1d': 30
+      };
+      const days = intervalToDays[this.options.interval] || 1;
+      
+      // CoinGecko OHLC endpoint provides OHLC data
+      const url = `https://api.coingecko.com/api/v3/coins/bitcoin/ohlc?vs_currency=usd&days=${days}`;
       const response = await fetch(url);
       
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       
       const data = await response.json();
       
-      const candles = data.map(kline => ({
-        time: kline[0] / 1000, // Convert to seconds
-        open: parseFloat(kline[1]),
-        high: parseFloat(kline[2]),
-        low: parseFloat(kline[3]),
-        close: parseFloat(kline[4]),
-        volume: parseFloat(kline[5]),
+      // CoinGecko returns: [timestamp, open, high, low, close]
+      // Need to convert to our format and add volume (CoinGecko OHLC doesn't have volume)
+      const candles = data.map(item => ({
+        time: item[0] / 1000, // Convert to seconds
+        open: parseFloat(item[1]),
+        high: parseFloat(item[2]),
+        low: parseFloat(item[3]),
+        close: parseFloat(item[4]),
+        volume: 0, // CoinGecko OHLC doesn't provide volume
       }));
 
-      this.candleBuffer = candles;
-      this.lastCandleTime = candles[candles.length - 1]?.time || 0;
+      // Limit to maxCandles
+      const limitedCandles = candles.slice(-this.options.maxCandles);
+      
+      this.candleBuffer = limitedCandles;
+      this.lastCandleTime = limitedCandles[limitedCandles.length - 1]?.time || 0;
+      this.currentProvider = 'coingecko';
 
       // Set data to chart
-      this.candleSeries.setData(candles);
-      this.volumeSeries.setData(candles.map(c => ({ time: c.time, value: c.volume, color: c.close >= c.open ? '#22d3a7' : '#f04e4e' })));
+      this.candleSeries.setData(limitedCandles);
+      // For volume, we'll use a placeholder since CoinGecko OHLC doesn't have volume
+      this.volumeSeries.setData(limitedCandles.map(c => ({ time: c.time, value: 0, color: '#888' })));
 
       // Calculate and set MAs
-      this.updateMovingAverages(candles);
+      this.updateMovingAverages(limitedCandles);
 
-      console.log(`[BTC Chart] Loaded ${candles.length} initial candles`);
+      console.log(`[BTC Chart] Loaded ${limitedCandles.length} initial candles from CoinGecko (${days}d)`);
+      
+      // Show fallback indicator
+      this.showFallbackNotice();
     } catch (error) {
-      console.error('[BTC Chart] Failed to load initial data:', error);
-      this.showError('Gagal memuat data awal. Mencoba WebSocket...');
+      console.error('[BTC Chart] CoinGecko initial data failed:', error);
+      throw error;
     }
   }
 
@@ -272,6 +354,12 @@ export class BTCRealTimeChart {
   }
 
   connectWebSocket() {
+    // If using CoinGecko fallback, use polling instead of WebSocket
+    if (this.currentProvider === 'coingecko') {
+      this.startCoinGeckoPolling();
+      return;
+    }
+
     const intervalMap = {
       '1m': '1m', '3m': '3m', '5m': '5m', '15m': '15m',
       '30m': '30m', '1h': '1h', '2h': '2h', '4h': '4h',
@@ -313,6 +401,101 @@ export class BTCRealTimeChart {
       console.error('[BTC Chart] WebSocket error:', error);
       this.isConnected = false;
     };
+  }
+
+  startCoinGeckoPolling() {
+    console.log('[BTC Chart] Starting CoinGecko polling...');
+    this.isConnected = true;
+    this.hideError();
+    
+    // Initial poll
+    this.pollCoinGecko();
+    
+    // Set up periodic polling (every 30 seconds for 1m interval, adjust based on interval)
+    const pollInterval = this.getPollInterval();
+    this.pollingInterval = setInterval(() => {
+      this.pollCoinGecko();
+    }, pollInterval);
+  }
+
+  getPollInterval() {
+    // Adjust polling frequency based on interval
+    const intervals = {
+      '1m': 30000,   // 30 seconds
+      '3m': 60000,   // 1 minute
+      '5m': 60000,   // 1 minute
+      '15m': 120000, // 2 minutes
+      '30m': 180000, // 3 minutes
+      '1h': 300000,  // 5 minutes
+      '2h': 600000,  // 10 minutes
+      '4h': 600000,  // 10 minutes
+      '6h': 900000,  // 15 minutes
+      '8h': 900000,  // 15 minutes
+      '12h': 1800000, // 30 minutes
+      '1d': 3600000, // 1 hour
+    };
+    return intervals[this.options.interval] || 60000;
+  }
+
+  async pollCoinGecko() {
+    try {
+      const intervalToDays = {
+        '1m': 1, '3m': 1, '5m': 1, '15m': 1,
+        '30m': 1, '1h': 1, '2h': 1, '4h': 1,
+        '6h': 7, '8h': 7, '12h': 7, '1d': 30
+      };
+      const days = intervalToDays[this.options.interval] || 1;
+      
+      const url = `https://api.coingecko.com/api/v3/coins/bitcoin/ohlc?vs_currency=usd&days=${days}`;
+      const response = await fetch(url);
+      
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      
+      const data = await response.json();
+      
+      const candles = data.map(item => ({
+        time: item[0] / 1000,
+        open: parseFloat(item[1]),
+        high: parseFloat(item[2]),
+        low: parseFloat(item[3]),
+        close: parseFloat(item[4]),
+        volume: 0,
+      }));
+
+      const limitedCandles = candles.slice(-this.options.maxCandles);
+      
+      // Update chart with new data
+      this.candleSeries.setData(limitedCandles);
+      this.volumeSeries.setData(limitedCandles.map(c => ({ time: c.time, value: 0, color: '#888' })));
+      
+      // Update buffer and last time
+      this.candleBuffer = limitedCandles;
+      this.lastCandleTime = limitedCandles[limitedCandles.length - 1]?.time || 0;
+      
+      // Update MAs
+      this.updateMovingAverages(limitedCandles);
+      
+      this.pollingAttempts = 0; // Reset on success
+      
+      console.log(`[BTC Chart] CoinGecko poll updated: ${new Date(this.lastCandleTime * 1000).toLocaleTimeString()}`);
+    } catch (error) {
+      console.error('[BTC Chart] CoinGecko polling error:', error);
+      this.pollingAttempts++;
+      
+      if (this.pollingAttempts >= this.maxPollingAttempts) {
+        console.error('[BTC Chart] Max polling attempts reached');
+        this.showError('Gagal memuat data dari CoinGecko. Periksa koneksi internet.');
+        this.stopPolling();
+      }
+    }
+  }
+
+  stopPolling() {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
+    this.isConnected = false;
   }
 
   handleKlineUpdate(kline) {
@@ -383,6 +566,17 @@ export class BTCRealTimeChart {
       }
 
   scheduleReconnect() {
+    // If we're on Binance and fallback is enabled but not yet attempted, try fallback
+    if (this.currentProvider === 'binance' && this.options.useFallback && !this.fallbackAttempted) {
+      console.log('[BTC Chart] Binance connection failed, attempting fallback to CoinGecko...');
+      this.fallbackAttempted = true;
+      this.currentProvider = 'coingecko';
+      this.disconnect();
+      this.loadInitialData();
+      this.connectWebSocket();
+      return;
+    }
+
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.error('[BTC Chart] Max reconnect attempts reached');
       this.showError('Koneksi terputus. Refresh halaman untuk mencoba lagi.');
@@ -400,6 +594,43 @@ export class BTCRealTimeChart {
         this.connectWebSocket();
       }
     }, delay);
+  }
+
+  showFallbackNotice() {
+    // Remove existing notice
+    this.hideFallbackNotice();
+    
+    const noticeDiv = document.createElement('div');
+    noticeDiv.id = 'btc-chart-fallback-notice';
+    noticeDiv.style.cssText = `
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(245, 166, 35, 0.95);
+      color: #0d1321;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-family: 'Geist', -apple-system, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    `;
+    noticeDiv.innerHTML = `
+      <span>📡</span>
+      <span>Data dari CoinGecko (Binance tidak tersedia)</span>
+    `;
+    this.container.style.position = 'relative';
+    this.container.appendChild(noticeDiv);
+  }
+
+  hideFallbackNotice() {
+    const noticeDiv = document.getElementById('btc-chart-fallback-notice');
+    if (noticeDiv) {
+      noticeDiv.remove();
+    }
   }
 
   setupResizeHandler() {
@@ -452,6 +683,8 @@ export class BTCRealTimeChart {
     if (this.options.interval !== interval) {
       this.options.interval = interval;
       this.disconnect();
+      this.fallbackAttempted = false; // Reset fallback for new interval
+      this.currentProvider = 'binance'; // Reset to primary provider
       this.loadInitialData();
       this.connectWebSocket();
     }
@@ -461,6 +694,8 @@ export class BTCRealTimeChart {
     if (this.options.symbol !== symbol) {
       this.options.symbol = symbol;
       this.disconnect();
+      this.fallbackAttempted = false; // Reset fallback for new symbol
+      this.currentProvider = 'binance'; // Reset to primary provider
       this.loadInitialData();
       this.connectWebSocket();
     }
@@ -471,6 +706,7 @@ export class BTCRealTimeChart {
       this.ws.close();
       this.ws = null;
     }
+    this.stopPolling();
     this.isConnected = false;
   }
 
@@ -480,6 +716,8 @@ export class BTCRealTimeChart {
       this.chart.remove();
       this.chart = null;
     }
+    this.hideError();
+    this.hideFallbackNotice();
     this.candleBuffer = [];
   }
 }

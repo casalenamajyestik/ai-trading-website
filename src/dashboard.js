@@ -135,7 +135,9 @@ const pages = {
           initBTCRealTimeChart('#btcChartContainer', {
             interval: '5m',
             symbol: 'BTCUSDT',
-            maxCandles: 200
+            maxCandles: 200,
+            useFallback: true,
+            fallbackProvider: 'coingecko'
           });
         }
       }, 0);
@@ -1326,7 +1328,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             initBTCRealTimeChart('#btcChartContainer', {
               interval: '5m',
               symbol: 'BTCUSDT',
-              maxCandles: 200
+              maxCandles: 200,
+              useFallback: true,
+              fallbackProvider: 'coingecko'
             });
           }
         }, 0);
@@ -1349,7 +1353,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           initBTCRealTimeChart('#btcChartContainer', {
             interval: '5m',
             symbol: 'BTCUSDT',
-            maxCandles: 200
+            maxCandles: 200,
+            useFallback: true,
+            fallbackProvider: 'coingecko'
           });
         }, 0);
       }
