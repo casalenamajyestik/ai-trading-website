@@ -105,13 +105,31 @@ export function initLanguage(selectorConfig = {}) {
     langToggle.classList.toggle('active', isOpen);
   });
   
-  // Dropdown item clicks - use event delegation on dropdown container
-  langDropdown.addEventListener('click', (e) => {
-    const item = e.target.closest('.lang-dropdown-item');
-    if (item) {
-      setLanguage(item.dataset.lang);
-    }
-  });
+  // Dropdown item clicks - attach listeners directly to each item (more reliable than delegation)
+  function attachItemListeners() {
+    getDropdownItems().forEach(item => {
+      // Remove existing listener to avoid duplicates
+      item.removeEventListener('click', handleItemClick);
+      item.addEventListener('click', handleItemClick);
+    });
+  }
+  
+  function handleItemClick(e) {
+    const lang = e.currentTarget.dataset.lang;
+    if (lang) setLanguage(lang);
+  }
+  
+  // Initial attachment
+  attachItemListeners();
+  
+  // Re-attach after language change (since items may be re-rendered)
+  const originalSetLanguage = setLanguage;
+  setLanguage = function(lang) {
+    return originalSetLanguage(lang).then(() => {
+      // Re-attach listeners after dropdown updates
+      setTimeout(attachItemListeners, 0);
+    });
+  };
   
   // Close dropdown on outside click
   document.addEventListener('click', (e) => {
@@ -129,6 +147,16 @@ export function initLanguage(selectorConfig = {}) {
 }
 
 // ============ Update i18n for Dynamic Content ============
+// Keys that contain HTML markup and should use innerHTML instead of textContent
+const HTML_KEYS = new Set([
+  'hero.title',
+  'hero.subtitle',
+  'login.noaccount',
+  'register.hasaccount',
+  'verification.no_email',
+  'form.terms'
+]);
+
 export function updateDynamicI18n() {
   if (typeof i18next === 'undefined') return;
   
@@ -139,7 +167,14 @@ export function updateDynamicI18n() {
     for (let i = 1; i < parts.length; i++) {
       text = text?.[parts[i]];
     }
-    if (text) el.textContent = text;
+    if (text) {
+      // Use innerHTML for keys that contain HTML markup
+      if (HTML_KEYS.has(key)) {
+        el.innerHTML = text;
+      } else {
+        el.textContent = text;
+      }
+    }
   });
 }
 
