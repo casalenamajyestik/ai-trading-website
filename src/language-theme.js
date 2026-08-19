@@ -43,35 +43,44 @@ export function initTheme(toggleSelector = '#themeToggle') {
 // ============ Language Management ============
 let langToggle = null;
 let langDropdown = null;
-let langDropdownItems = null;
 let langFlag = null;
 let langText = null;
+let isLanguageInitialized = false;
+
+function getDropdownItems() {
+  return langDropdown ? langDropdown.querySelectorAll('.lang-dropdown-item') : [];
+}
 
 export function setLanguage(lang) {
-  i18next.changeLanguage(lang);
-  localStorage.setItem('i18next', lang);
-  
-  // Update toggle button
-  if (langFlag && langText) {
-    langFlag.textContent = lang === 'id' ? '🇮🇩' : '🇺🇸';
-    langText.textContent = lang === 'id' ? 'ID' : 'EN';
-  }
-  
-  // Update dropdown items
-  if (langDropdownItems) {
-    langDropdownItems.forEach(item => {
+  i18next.changeLanguage(lang).then(() => {
+    localStorage.setItem('i18next', lang);
+    
+    // Update toggle button
+    if (langFlag && langText) {
+      langFlag.textContent = lang === 'id' ? '🇮🇩' : '🇺🇸';
+      langText.textContent = lang === 'id' ? 'ID' : 'EN';
+    }
+    
+    // Update dropdown items (query fresh each time)
+    getDropdownItems().forEach(item => {
       const isActive = item.dataset.lang === lang;
       item.classList.toggle('active', isActive);
       item.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
-  }
-  
-  // Close dropdown
-  if (langDropdown) langDropdown.classList.remove('show');
-  if (langToggle) langToggle.classList.remove('active');
+    
+    // Update all translated content on the page
+    updateDynamicI18n();
+    
+    // Close dropdown
+    if (langDropdown) langDropdown.classList.remove('show');
+    if (langToggle) langToggle.classList.remove('active');
+  });
 }
 
 export function initLanguage(selectorConfig = {}) {
+  // Prevent double initialization (HMR safety)
+  if (isLanguageInitialized) return;
+  
   const {
     toggleSelector = '.lang-btn.lang-toggle',
     dropdownSelector = '.lang-dropdown',
@@ -80,7 +89,6 @@ export function initLanguage(selectorConfig = {}) {
   
   langToggle = document.querySelector(toggleSelector);
   langDropdown = document.querySelector(dropdownSelector);
-  langDropdownItems = document.querySelectorAll(itemSelector);
   
   if (!langToggle || !langDropdown) {
     // Language selector not present on this page
@@ -97,14 +105,17 @@ export function initLanguage(selectorConfig = {}) {
     langToggle.classList.toggle('active', isOpen);
   });
   
-  // Dropdown item clicks
-  langDropdownItems.forEach(item => {
-    item.addEventListener('click', () => setLanguage(item.dataset.lang));
+  // Dropdown item clicks - use event delegation on dropdown container
+  langDropdown.addEventListener('click', (e) => {
+    const item = e.target.closest('.lang-dropdown-item');
+    if (item) {
+      setLanguage(item.dataset.lang);
+    }
   });
   
   // Close dropdown on outside click
   document.addEventListener('click', (e) => {
-    if (langDropdown && langToggle && !langToggle.contains(e.target)) {
+    if (langDropdown && langToggle && !langToggle.contains(e.target) && !langDropdown.contains(e.target)) {
       langDropdown.classList.remove('show');
       langToggle.classList.remove('active');
     }
@@ -113,6 +124,8 @@ export function initLanguage(selectorConfig = {}) {
   // Initialize language from localStorage
   const savedLang = localStorage.getItem('i18next') || 'id';
   setLanguage(savedLang);
+  
+  isLanguageInitialized = true;
 }
 
 // ============ Update i18n for Dynamic Content ============
