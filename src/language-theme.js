@@ -6,12 +6,17 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import { translations } from './i18n.js';
 
 // ============ i18n Init ============
-i18next.use(LanguageDetector).init({
+let i18nReady = i18next.use(LanguageDetector).init({
   resources: { id: { translation: translations.id }, en: { translation: translations.en } },
   fallbackLng: 'id',
   detection: { order: ['localStorage', 'navigator'], caches: ['localStorage'] },
   interpolation: { escapeValue: false }
 });
+
+// Ensure initLanguage waits for i18n to be ready
+async function ensureI18nReady() {
+  await i18nReady;
+}
 
 // ============ Theme Management ============
 let themeToggle = null;
@@ -77,7 +82,10 @@ export function setLanguage(lang) {
   });
 }
 
-export function initLanguage(selectorConfig = {}) {
+export async function initLanguage(selectorConfig = {}) {
+  // Wait for i18n to be ready
+  await ensureI18nReady();
+  
   // Prevent double initialization (HMR safety)
   if (isLanguageInitialized) return;
   
