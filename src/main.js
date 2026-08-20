@@ -933,13 +933,79 @@ initAuth()
       document.addEventListener('DOMContentLoaded', () => {
         initFAQ();
         initTestimonialsCarousel();
+        initStatCounters();
       });
     } else {
       initFAQ();
       initTestimonialsCarousel();
+      initStatCounters();
     }
   })
   .catch(err => {
     console.error('initAuth failed:', err);
     throw err; // Re-throw to see actual error in console
   });
+
+// ============ Stat Counter Animation ============
+function animateCounter(element) {
+  const target = parseFloat(element.dataset.count);
+  const isDecimal = target % 1 !== 0;
+  const duration = 2000; // 2 seconds
+  const startTime = performance.now();
+  const startValue = 0;
+  
+  function updateCounter(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Easing function (easeOutQuart)
+    const eased = 1 - Math.pow(1 - progress, 4);
+    const currentValue = startValue + (target - startValue) * eased;
+    
+    // Format the number
+    if (isDecimal) {
+      element.textContent = currentValue.toFixed(1);
+    } else {
+      element.textContent = Math.floor(currentValue).toLocaleString();
+    }
+    
+    if (progress < 1) {
+      requestAnimationFrame(updateCounter);
+    } else {
+      // Ensure final value is exact
+      if (isDecimal) {
+        element.textContent = target.toFixed(1);
+      } else {
+        element.textContent = target.toLocaleString();
+      }
+    }
+  }
+  
+  requestAnimationFrame(updateCounter);
+}
+
+function initStatCounters() {
+  const statNumbers = document.querySelectorAll('.stat-number[data-count]');
+  
+  if (statNumbers.length === 0) return;
+  
+  // Use IntersectionObserver to trigger animation when visible
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const element = entry.target;
+        // Only animate once
+        if (!element.dataset.animated) {
+          element.dataset.animated = 'true';
+          animateCounter(element);
+        }
+        observer.unobserve(element);
+      }
+    });
+  }, {
+    threshold: 0.5,
+    rootMargin: '0px 0px -50px 0px'
+  });
+  
+  statNumbers.forEach(el => observer.observe(el));
+}
