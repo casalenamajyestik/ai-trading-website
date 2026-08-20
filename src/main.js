@@ -16,7 +16,9 @@ initTheme('#themeToggle');
 initLanguage();
 
 // Define openLogin BEFORE initAuth so the navbar login button works immediately
-let loginModal, registerModal;
+let loginModal = document.getElementById('loginModal');
+let registerModal = document.getElementById('registerModal');
+let verificationModal = document.getElementById('verificationModal');
 
 function openLogin() {
   if (registerModal && registerModal.open) registerModal.close();
@@ -31,14 +33,12 @@ initAuth()
   .then(() => {
     console.log('initAuth completed, setting up modals');
     // ============ Modal Management ============
-    loginModal = document.getElementById('loginModal');
-    registerModal = document.getElementById('registerModal');
+    // Modals already initialized at module level
     const loginLink = document.querySelector('.btn-login');
     const modalClose = document.querySelector('.modal-close');
     const modalBackdrop = document.querySelector('.modal-backdrop');
     const openRegisterLink = document.getElementById('openRegisterLink');
     const openLoginLink = document.getElementById('openLoginLink');
-    const verificationModal = document.getElementById('verificationModal');
     const verificationForm = document.getElementById('verificationForm');
     const verifyCodeInput = document.getElementById('verifyCode');
     const verifyEmailDisplay = document.getElementById('verifyEmailDisplay');
