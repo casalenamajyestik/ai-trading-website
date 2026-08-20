@@ -138,6 +138,16 @@ export function updateNavbarForAuth(session) {
         e.preventDefault();
         openLogin();
       });
+    } else {
+      // Button already exists - ensure click handler is attached
+      const loginBtn = navActions.querySelector('.btn-login');
+      // Remove any existing handler to avoid duplicates
+      loginBtn.replaceWith(loginBtn.cloneNode(true));
+      const newBtn = navActions.querySelector('.btn-login');
+      newBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openLogin();
+      });
     }
     
     // Remove user dropdown if exists
@@ -176,7 +186,7 @@ const { data: { subscription } } = onAuthStateChange(async (event, session) => {
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=4f8eff&color=fff&size=128`,
         // Merge profile data from database
         whatsappCountry: profile?.whatsapp_country || 'ID',
-        whatsapp: profile?.whatsapp || '',
+        whatsapp: profile?.telegram || '',
         telegram: profile?.telegram || '',
         notification: profile?.notification || 'telegram'
       },
@@ -187,11 +197,19 @@ const { data: { subscription } } = onAuthStateChange(async (event, session) => {
     localStorage.setItem('auth_session', JSON.stringify(userSession));
     updateNavbarForAuth(userSession);
     
-    // Redirect to dashboard if on login/register page
-    if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
-      console.log('[AUTH] Redirecting to dashboard...');
+    // Only redirect to dashboard from home page if email is verified
+    // Don't redirect if user is trying to log in or email not verified
+    const isOnHomePage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+    const isEmailVerified = session.user.email_confirmed_at !== null;
+    
+    if (isOnHomePage && isEmailVerified) {
+      console.log('[AUTH] Redirecting to dashboard (verified email)');
       window.location.href = '/dashboard.html';
+    } else if (isOnHomePage && !isEmailVerified) {
+      // User is on home page but email not verified - show verification or keep login accessible
+      console.log('[AUTH] On home page, email not verified - keeping login accessible');
     }
+    // If not on home page, stay where user is (could be on dashboard already)
   } else if (event === 'SIGNED_OUT') {
     console.log('[AUTH] Signed out');
     localStorage.removeItem('auth_session');
@@ -252,10 +270,16 @@ export async function initAuth() {
     localStorage.setItem('auth_session', JSON.stringify(userSession));
     updateNavbarForAuth(userSession);
     
-    // If on home page, redirect to dashboard
-    if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+    // Only redirect to dashboard from home page if user is fully authenticated (verified email)
+    // Don't redirect if user is trying to log in - let them access login modal
+    const isOnHomePage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+    const isEmailVerified = session.user.email_confirmed_at !== null;
+    
+    if (isOnHomePage && isEmailVerified) {
       window.location.href = '/dashboard.html';
     }
+    // If on home page but email not verified, or user is in login flow, 
+    // keep the login modal accessible (don't redirect)
   } else {
     const localSession = getLocalSession();
     updateNavbarForAuth(localSession);
