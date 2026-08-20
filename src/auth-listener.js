@@ -159,7 +159,11 @@ export function updateNavbarForAuth(session) {
 // Need openLogin reference - will be set by main.js
 let openLoginRef = null;
 export function setOpenLoginRef(fn) { openLoginRef = fn; }
-function openLogin() { if (openLoginRef) openLoginRef(); }
+function openLogin() { 
+  // Try ref first, then global fallback
+  if (openLoginRef) openLoginRef(); 
+  else if (window.openLogin) window.openLogin(); 
+}
 
 // ============ Auth State Listener ============
 const { data: { subscription } } = onAuthStateChange(async (event, session) => {

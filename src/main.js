@@ -20,10 +20,12 @@ let loginModal = document.getElementById('loginModal');
 let registerModal = document.getElementById('registerModal');
 let verificationModal = document.getElementById('verificationModal');
 
+// Make openLogin globally available so auth-listener can use it reliably
 function openLogin() {
   if (registerModal && registerModal.open) registerModal.close();
   if (loginModal) loginModal.showModal();
 }
+window.openLogin = openLogin;
 
 // Register openLogin with auth-listener for navbar dropdown BEFORE initAuth
 setOpenLoginRef(openLogin);
