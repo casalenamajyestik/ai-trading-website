@@ -941,4 +941,5 @@ initAuth()
   })
   .catch(err => {
     console.error('initAuth failed:', err);
+    throw err; // Re-throw to see actual error in console
   });
