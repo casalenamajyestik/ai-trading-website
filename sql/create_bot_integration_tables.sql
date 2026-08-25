@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS public.bot_state (
     daily_pnl NUMERIC DEFAULT 0,
     total_pnl NUMERIC DEFAULT 0,
     balance NUMERIC DEFAULT 0,               -- Total account balance from exchange
+    yesterday_pnl NUMERIC DEFAULT 0,         -- PnL harian sebelumnya
+    biggest_win NUMERIC DEFAULT 0,           -- Biggest win ever (absolute PnL)
+    total_positions INTEGER DEFAULT 0,       -- Total positions ever opened
     error_message TEXT,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
