@@ -24,6 +24,50 @@ async function requireAuthWrapper() {
   return requireAuth();
 }
 
+// ============ Google Sheets Integration ============
+// Web App URL — deploy Google Apps Script (see templates/google-sheets-apps-script-template.js)
+// as a Web App with "Anyone" access. Set this to your deployed URL.
+// Google Sheets Web App URL — set via Vite env (VITE_GOOGLE_SHEETS_WEBAPP_URL)
+// Bisa juga hardcode di sini untuk testing
+const GOOGLE_SHEETS_WEBAPP_URL = import.meta.env.VITE_GOOGLE_SHEETS_WEBAPP_URL || 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+
+/**
+ * Fetch the latest row from Google Sheets.
+ * Returns an object with: balance, daily_pnl, total_pnl, biggest_win,
+ * total_positions, session_id, current_positions, status, total_unrealized_pnl
+ */
+async function fetchLatestSheetsData() {
+  try {
+    const url = GOOGLE_SHEETS_WEBAPP_URL + '?mode=read_last';
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const result = await response.json();
+    if (result.success && result.data) {
+      return result.data;
+    }
+    return null;
+  } catch (err) {
+    console.error('[Sheets] Failed to fetch data:', err);
+    return null;
+  }
+}
+
+// Cache Sheets data with a short TTL (30 seconds) so we don't hammer the endpoint
+let _sheetsCache = { data: null, timestamp: 0 };
+const SHEETS_CACHE_TTL = 30_000; // 30 seconds
+
+async function getSheetsData(forceRefresh = false) {
+  const now = Date.now();
+  if (!forceRefresh && _sheetsCache.data && (now - _sheetsCache.timestamp < SHEETS_CACHE_TTL)) {
+    return _sheetsCache.data;
+  }
+  const data = await fetchLatestSheetsData();
+  if (data) {
+    _sheetsCache = { data, timestamp: now };
+  }
+  return data;
+}
+
 // ============ Helpers ============
 function formatIDR(num) {
   return 'Rp ' + Math.floor(num).toLocaleString('id-ID');
@@ -110,18 +154,35 @@ function getCountryOptions(selectedCode = 'ID') {
 const pages = {
   overview: {
     title: 'Overview',
-    render: (session) => {
+    render: async (session) => {
       const botSession = session.botSession || {};
       const botState = session.botState || {};
       const isActive = botSession.is_active || false;
       const status = botState.status || 'stopped';
       const mode = botSession.mode || 'paper';
       const lastHeartbeat = botState.last_heartbeat;
-      const balance = botState.balance || 12345600; // Default from spreadsheet: $ 123.456,00
-      const yesterdayPnL = botState.yesterday_pnl || 123; // Default from spreadsheet: +123.00
-      const biggestWin = botState.biggest_win || 100; // Default from spreadsheet: x100
-      const totalPositions = botState.total_positions || 12; // Default from spreadsheet: 12
-      const positionCoin = botState.position_coin || 'ABUSDT'; // Default from spreadsheet
+
+      // --- Google Sheets data (primary source) ---
+      const sheetsData = await getSheetsData();
+
+      // Use real data from Sheets if available, fall back to botState, then dummy defaults
+      const balance           = sheetsData?.balance        || botState.balance || 12345600;
+      const yesterdayPnL      = sheetsData?.daily_pnl      || botState.yesterday_pnl || 123;
+      const totalPnL          = sheetsData?.total_pnl      || botState.total_pnl || 0;
+      const biggestWin        = sheetsData?.biggest_win    || botState.biggest_win || 100;
+      const totalPositions    = sheetsData?.total_positions || botState.total_positions || 12;
+      const positionCoin      = (() => {
+        // Try to extract a coin symbol from current_positions JSON
+        if (sheetsData?.current_positions) {
+          try {
+            const pos = JSON.parse(sheetsData.current_positions);
+            if (Array.isArray(pos) && pos.length > 0 && pos[0].symbol) {
+              return pos[0].symbol;
+            }
+          } catch (e) { /* ignore parse errors */ }
+        }
+        return botState.position_coin || 'ABUSDT';
+      })();
 
       const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
       const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
@@ -161,7 +222,7 @@ const pages = {
           <!-- Card 1: Total Balance -->
           <div class="stat-card">
             <div class="stat-card-label">Total Balance</div>
-            <div class="stat-card-value">$ ${(balance/1000000).toFixed(3).replace('.', ',')}M</div>
+            <div class="stat-card-value" id="statBalanceDisplay">$ ${(balance/1000000).toFixed(2).replace('.', ',')}M</div>
             <div class="stat-card-sub positive">+12.5% this week</div>
           </div>
 
@@ -212,7 +273,7 @@ const pages = {
           <div class="guide-separator"></div>
           <div class="execution-cycle-row">
             <span class="execution-cycle-label">Execution Cycle :</span>
-            <span class="execution-cycle-value">${(session.botState?.trade_history?.length || 12345).toLocaleString()} (jumlah total open & closed posisi)</span>
+            <span class="execution-cycle-value">${totalPositions.toLocaleString()} (jumlah total open & closed posisi)</span>
           </div>
           <div class="guide-step-boxes">
             <div class="step-box">
@@ -1310,13 +1371,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageName));
     const pg = pages[pageName];
     if (!pg) return;
-    
+
     if (pageTitle) pageTitle.textContent = pg.title;
 
     if (pageName === 'settings') {
       loadBotData(session).then(updatedSession => {
         session = updatedSession;
-        // Update sidebar status with fresh data from Supabase
         updateSidebarBotStatus(session.botSession?.is_active);
         if (pageContent) pageContent.innerHTML = pg.render(session);
         attachSettingsSaveHandler(session);
@@ -1324,19 +1384,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateDynamicI18n();
       });
     } else {
-      if (pageContent) pageContent.innerHTML = pg.render(session);
-      updateDynamicI18n();
+      // Support async render (e.g., overview fetches from Google Sheets)
+      Promise.resolve(pg.render(session)).then(html => {
+        if (pageContent) pageContent.innerHTML = html;
+        updateDynamicI18n();
 
-      // Update sidebar status when navigating to any page (in case of realtime updates)
-      updateSidebarBotStatus(session.botSession?.is_active);
+        // Update sidebar status when navigating to any page
+        updateSidebarBotStatus(session.botSession?.is_active);
 
-      // Initialize animations for specific pages
-      if (pageName === 'overview') {
-        // Initialize BTC Chart
-        setTimeout(() => {
-          const container = document.getElementById('btcChartContainer');
-          if (container && !container.dataset.initialized) {
-            container.dataset.initialized = 'true';
+        // Initialize charts/animations for specific pages
+        if (pageName === 'overview') {
+          setTimeout(() => {
+            const container = document.getElementById('btcChartContainer');
+            if (container && !container.dataset.initialized) {
+              container.dataset.initialized = 'true';
+              initBTCRealTimeChart('#btcChartContainer', {
+                interval: '5m',
+                symbol: 'BTCUSDT',
+                maxCandles: 200,
+                useFallback: true,
+                fallbackProvider: 'coingecko'
+              });
+            }
+          }, 0);
+
+          setTimeout(() => {
+            const animContainer = document.getElementById('animasiContainer');
+            if (animContainer && !animContainer.dataset.initialized) {
+              animContainer.dataset.initialized = 'true';
+              new CinematicParticleAnimation('#animasiContainer', {
+                particleCount: 400,
+                maxSparkleCount: 3,
+                sparkleInterval: 150
+              });
+            }
+          }, 100);
+        }
+        if (pageName === 'performance') {
+          setTimeout(() => {
             initBTCRealTimeChart('#btcChartContainer', {
               interval: '5m',
               symbol: 'BTCUSDT',
@@ -1344,35 +1429,13 @@ document.addEventListener('DOMContentLoaded', async () => {
               useFallback: true,
               fallbackProvider: 'coingecko'
             });
-          }
-        }, 0);
-
-        // Initialize Cinematic Particle Animation
-        setTimeout(() => {
-          const animContainer = document.getElementById('animasiContainer');
-          if (animContainer && !animContainer.dataset.initialized) {
-            animContainer.dataset.initialized = 'true';
-            new CinematicParticleAnimation('#animasiContainer', {
-              particleCount: 400,
-              maxSparkleCount: 3,
-              sparkleInterval: 150
-            });
-          }
-        }, 100);
-      }
-      if (pageName === 'performance') {
-        setTimeout(() => {
-          initBTCRealTimeChart('#btcChartContainer', {
-            interval: '5m',
-            symbol: 'BTCUSDT',
-            maxCandles: 200,
-            useFallback: true,
-            fallbackProvider: 'coingecko'
-          });
-        }, 0);
-      }
+          }, 0);
+        }
+      }).catch(err => {
+        console.error('[navigateTo] Render error:', err);
+      });
     }
-    
+
     if (sidebar) sidebar.classList.remove('open');
     if (overlay) overlay.classList.remove('active');
   }
@@ -1390,7 +1453,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Start realtime subscription for bot_state updates
     if (session.botSession?.id) {
       console.log('[Dashboard] Starting realtime subscription for bot_state:', session.botSession.id);
-      subscribeBotState(session.botSession.id, (payload) => {
+      subscribeBotState(session.botSession.id, async (payload) => {
         console.log('[Dashboard] Realtime bot_state update:', payload);
         if (payload.new) {
           session.botState = payload.new;
@@ -1409,5 +1472,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     navigateTo('overview');
+
+    // Auto-refresh Google Sheets data every 60 seconds for overview page
+    let sheetsRefreshInterval = setInterval(async () => {
+      const currentPage = document.querySelector('.nav-item.active')?.dataset.page;
+      if (currentPage === 'overview' && pageContent) {
+        // Force refresh cache
+        const data = await getSheetsData(true);
+        if (data) {
+          // Update stat cards in place without full re-render (avoids chart reset)
+          const balanceEl = document.getElementById('statBalanceDisplay');
+          // The stat cards don't have IDs for individual fields currently,
+          // so we rely on the 30-second cache refresh on next full render
+          // This interval ensures the cache stays fresh
+        }
+      }
+    }, 60000); // 60 seconds
+
+    // Store reference for cleanup
+    if (typeof window !== 'undefined') {
+      window.__sheetsRefreshInterval = sheetsRefreshInterval;
+    }
   });
 });
