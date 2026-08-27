@@ -304,8 +304,7 @@ const pages = {
           <!-- Card 3: Biggest Win -->
           <div class="stat-card">
             <div class="stat-card-label">Biggest Win</div>
-            <div class="stat-card-value" id="statBiggestWin">x${biggestWin} (Leverage)</div>
-            <div class="stat-card-sub">Best trade</div>
+            <div class="stat-card-value" id="statBiggestWin">x${biggestWin}</div>
           </div>
 
           <!-- Card 4: Total Positions -->
@@ -313,7 +312,6 @@ const pages = {
             <div class="stat-card-label">Total Positions</div>
             <div class="positions-coin" id="statPositionCoin">${positionCoin}</div>
             <div class="positions-count" id="statTotalPositions">${totalPositions}</div>
-            <div class="stat-card-sub">Open & Closed</div>
           </div>
         </div>
 
