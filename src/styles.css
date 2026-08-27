@@ -65,6 +65,14 @@
   --container-max: 1200px; --cache-bust: 1785689869290405742;
 }
 
+/* Positive/Negative colors for stat cards */
+.positive {
+  color: var(--accent-secondary);
+}
+.negative {
+  color: var(--accent-danger);
+}
+
 /* --- Dark theme (default) --- */
 [data-theme="dark"] {
   --bg-primary: #070b14;

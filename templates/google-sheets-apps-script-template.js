@@ -3,7 +3,7 @@
 // ============================================================================
 // Deploy: Extensions → Apps Script → Deploy → New Deployment
 //   - Execute as: Me
-//   - Who has access: Anyone (atau "Anyone within YOUR_DOMAIN" jika lebih aman)
+//   - Who has access: Anyone (WAJIB untuk CORS)
 //
 // Sheet header (baris 1):
 //   Timestamp, Balance (USD), Daily PnL (USD), Total PnL (USD),
@@ -30,19 +30,11 @@ const HEADERS = [
   'Total Unrealized PnL (USD)'
 ];
 
-// CORS headers untuk semua response
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type'
-};
-
 // ---- Helper: ensure headers ----
 function ensureHeaders(sheet) {
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(HEADERS);
   } else {
-    // Verify / overwrite headers on row 1
     const firstRow = sheet.getRange(1, 1, 1, HEADERS.length).getValues()[0];
     for (let i = 0; i < HEADERS.length; i++) {
       if (firstRow[i] !== HEADERS[i]) {
@@ -56,29 +48,19 @@ function ensureHeaders(sheet) {
 function doGet(e) {
   const params = e.parameter || {};
 
-  // Handle preflight OPTIONS
-  if (e && e.httpMethod === 'OPTIONS') {
-    return ContentService
-      .createTextOutput('')
-      .setMimeType(ContentService.MimeType.TEXT)
-      .setHeaders(CORS_HEADERS);
-  }
-
   // READ mode
   if (params.mode === 'read_last') {
     const data = getLastRowData();
     return ContentService
       .createTextOutput(JSON.stringify(data))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(CORS_HEADERS);
+      .setMimeType(ContentService.MimeType.JSON);
   }
 
   if (params.mode === 'read') {
     const data = getAllRowsData();
     return ContentService
       .createTextOutput(JSON.stringify(data))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders(CORS_HEADERS);
+      .setMimeType(ContentService.MimeType.JSON);
   }
 
   // WRITE mode (default)
@@ -121,15 +103,14 @@ function doGet(e) {
       row: lastRow,
       timestamp: timestamp
     }))
-    .setMimeType(ContentService.MimeType.JSON)
-    .setHeaders(CORS_HEADERS);
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 // ---- Helper: get last data row ----
 // Aturan:
 //   1. Ambil data pada baris terakhir
 //   2. Jika angka pada baris terakhir = 0, ambil angka terakhir yang bukan 0
-//      dari baris sebelumnya (fallback per-kolom)
+//      dari baris sebelumnya (fallback per-kolom, vertikal ke atas)
 //   3. Jika semua baris bernilai 0, tampilkan 0
 function getLastRowData() {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -162,19 +143,19 @@ function getLastRowData() {
   HEADERS.forEach((h, i) => { result[h] = lastValues[i]; });
 
   // Untuk setiap kolom numerik, jika bernilai 0 cari nilai non-zero
-  // dari baris terakhir ke atas (baris terakhir dulu, lalu mundur)
+  // dari baris sebelumnya ke atas (vertikal, kolom yang sama)
   NUMERIC_FIELDS.forEach(field => {
     const colIndex = HEADERS.indexOf(field) + 1; // 1-based untuk getRange
     let val = parseFloat(result[field]) || 0;
     if (val === 0) {
-      // Fallback: ambil nilai terakhir yang bukan 0 dari atas ke bawah
-      // Mulai dari baris terakhir, turun sampai ketemu non-zero
-      for (let r = lastRow; r >= 2; r--) {
+      // Cari ke atas (baris sebelumnya) di KOLOM YANG SAMA
+      // Mulai dari lastRow - 1 karena lastRow sudah kita baca & bernilai 0
+      for (let r = lastRow - 1; r >= 2; r--) {
         const cellVal = sheet.getRange(r, colIndex).getValue();
-        const parsed = typeof field === 'Total Positions'
+        const parsed = (field === 'Total Positions')
           ? parseInt(cellVal)
           : parseFloat(cellVal);
-        if (parsed && parsed !== 0) {
+        if (parsed !== 0 && !isNaN(parsed)) {
           val = parsed;
           break;
         }

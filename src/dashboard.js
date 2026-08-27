@@ -69,8 +69,8 @@ function updateStatCards(sheetsData) {
   const pnlEl = document.getElementById('statPnLYesterday');
   if (pnlEl) {
     const val = sheetsData.daily_pnl;
-    pnlEl.textContent = '$ ' + (val >= 0 ? '+' : '') + Math.abs(val).toFixed(2);
-    pnlEl.className = 'stat-card-value ' + (val >= 0 ? 'positive' : 'negative');
+    pnlEl.innerHTML = '$ <span class="' + (val >= 0 ? 'positive' : 'negative') + '">' + (val >= 0 ? '+' : '') + Math.abs(val).toFixed(2) + '</span>';
+    pnlEl.className = 'stat-card-value';
   }
 
   // Biggest Win
@@ -292,13 +292,12 @@ const pages = {
           <div class="stat-card">
             <div class="stat-card-label">Total Balance</div>
             <div class="stat-card-value" id="statBalanceDisplay">${formatCompactCurrency(balance)}</div>
-            <div class="stat-card-sub positive">+12.5% this week</div>
           </div>
 
           <!-- Card 2: PNL Yesterday -->
           <div class="stat-card">
             <div class="stat-card-label">PNL Yesterday</div>
-            <div class="stat-card-value ${yesterdayPnL >= 0 ? 'positive' : 'negative'}" id="statPnLYesterday">$ ${yesterdayPnL >= 0 ? '+' : ''}${Math.abs(yesterdayPnL).toFixed(2)}</div>
+            <div class="stat-card-value" id="statPnLYesterday">$ <span class="${yesterdayPnL >= 0 ? 'positive' : 'negative'}">${yesterdayPnL >= 0 ? '+' : ''}${Math.abs(yesterdayPnL).toFixed(2)}</span></div>
             <div class="stat-card-sub">Daily PnL</div>
           </div>
 
