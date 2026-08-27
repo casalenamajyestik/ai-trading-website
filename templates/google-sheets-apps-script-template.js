@@ -30,6 +30,13 @@ const HEADERS = [
   'Total Unrealized PnL (USD)'
 ];
 
+// CORS headers untuk semua response
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type'
+};
+
 // ---- Helper: ensure headers ----
 function ensureHeaders(sheet) {
   if (sheet.getLastRow() === 0) {
@@ -49,30 +56,40 @@ function ensureHeaders(sheet) {
 function doGet(e) {
   const params = e.parameter || {};
 
+  // Handle preflight OPTIONS
+  if (e && e.httpMethod === 'OPTIONS') {
+    return ContentService
+      .createTextOutput('')
+      .setMimeType(ContentService.MimeType.TEXT)
+      .setHeaders(CORS_HEADERS);
+  }
+
   // READ mode
   if (params.mode === 'read_last') {
     const data = getLastRowData();
     return ContentService
       .createTextOutput(JSON.stringify(data))
-      .setMimeType(ContentService.MimeType.JSON);
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeaders(CORS_HEADERS);
   }
 
   if (params.mode === 'read') {
     const data = getAllRowsData();
     return ContentService
       .createTextOutput(JSON.stringify(data))
-      .setMimeType(ContentService.MimeType.JSON);
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeaders(CORS_HEADERS);
   }
 
   // WRITE mode (default)
   const balance        = parseFloat(params.balance)         || 0;
-  const dailyPnl        = parseFloat(params.daily_pnl)       || 0;
-  const totalPnl        = parseFloat(params.total_pnl)      || 0;
-  const biggestWin      = parseFloat(params.biggest_win)    || 0;
-  const totalPositions  = parseInt(params.total_positions)  || 0;
-  const sessionId       = params.session_id || 'unknown';
+  const dailyPnl       = parseFloat(params.daily_pnl)       || 0;
+  const totalPnl       = parseFloat(params.total_pnl)       || 0;
+  const biggestWin     = parseFloat(params.biggest_win)     || 0;
+  const totalPositions = parseInt(params.total_positions)   || 0;
+  const sessionId      = params.session_id || 'unknown';
   const currentPositions = params.current_positions || '[]';
-  const status          = params.status || 'running';
+  const status         = params.status || 'running';
   const totalUnrealized = parseFloat(params.total_unrealized_pnl) || 0;
 
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -104,7 +121,8 @@ function doGet(e) {
       row: lastRow,
       timestamp: timestamp
     }))
-    .setMimeType(ContentService.MimeType.JSON);
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeaders(CORS_HEADERS);
 }
 
 // ---- Helper: get last data row ----
