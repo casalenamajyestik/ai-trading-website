@@ -108,6 +108,11 @@ function doGet(e) {
 }
 
 // ---- Helper: get last data row ----
+// Aturan:
+//   1. Ambil data pada baris terakhir
+//   2. Jika angka pada baris terakhir = 0, ambil angka terakhir yang bukan 0
+//      dari baris sebelumnya (fallback per-kolom)
+//   3. Jika semua baris bernilai 0, tampilkan 0
 function getLastRowData() {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
@@ -124,11 +129,40 @@ function getLastRowData() {
     };
   }
 
-  const values = sheet.getRange(lastRow, 1, 1, HEADERS.length).getValues()[0];
+  // Numeric fields yang berlaku aturan fallback (0 -> nilai non-zero terakhir)
+  const NUMERIC_FIELDS = [
+    'Balance (USD)',
+    'Daily PnL (USD)',
+    'Total PnL (USD)',
+    'Biggest Win (USD)',
+    'Total Positions',
+    'Total Unrealized PnL (USD)'
+  ];
 
+  const lastValues = sheet.getRange(lastRow, 1, 1, HEADERS.length).getValues()[0];
   let result = {};
-  HEADERS.forEach((h, i) => {
-    result[h] = values[i];
+  HEADERS.forEach((h, i) => { result[h] = lastValues[i]; });
+
+  // Untuk setiap kolom numerik, jika bernilai 0 cari nilai non-zero
+  // dari baris terakhir ke atas (baris terakhir dulu, lalu mundur)
+  NUMERIC_FIELDS.forEach(field => {
+    const colIndex = HEADERS.indexOf(field) + 1; // 1-based untuk getRange
+    let val = parseFloat(result[field]) || 0;
+    if (val === 0) {
+      // Fallback: ambil nilai terakhir yang bukan 0 dari atas ke bawah
+      // Mulai dari baris terakhir, turun sampai ketemu non-zero
+      for (let r = lastRow; r >= 2; r--) {
+        const cellVal = sheet.getRange(r, colIndex).getValue();
+        const parsed = typeof field === 'Total Positions'
+          ? parseInt(cellVal)
+          : parseFloat(cellVal);
+        if (parsed && parsed !== 0) {
+          val = parsed;
+          break;
+        }
+      }
+    }
+    result[field] = val;
   });
 
   return {

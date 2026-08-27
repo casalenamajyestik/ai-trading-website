@@ -52,6 +52,55 @@ async function fetchLatestSheetsData() {
   }
 }
 
+/**
+ * Update stat card DOM elements in-place from sheets data.
+ * Memperbarui: Total Balance, PNL Yesterday, Biggest Win, Total Positions
+ */
+function updateStatCards(sheetsData) {
+  if (!sheetsData) return;
+
+  // Total Balance
+  const balanceEl = document.getElementById('statBalanceDisplay');
+  if (balanceEl) {
+    balanceEl.textContent = '$ ' + (sheetsData.balance / 1000000).toFixed(2).replace('.', ',') + 'M';
+  }
+
+  // PNL Yesterday
+  const pnlEl = document.getElementById('statPnLYesterday');
+  if (pnlEl) {
+    const val = sheetsData.daily_pnl;
+    pnlEl.textContent = '$ ' + (val >= 0 ? '+' : '') + Math.abs(val).toFixed(2);
+    pnlEl.className = 'stat-card-value ' + (val >= 0 ? 'positive' : 'negative');
+  }
+
+  // Biggest Win
+  const winEl = document.getElementById('statBiggestWin');
+  if (winEl) {
+    winEl.textContent = 'x' + sheetsData.biggest_win + ' (Leverage)';
+  }
+
+  // Total Positions
+  const countEl = document.getElementById('statTotalPositions');
+  if (countEl) {
+    countEl.textContent = sheetsData.total_positions;
+  }
+
+  // Position coin (extract from current_positions JSON)
+  const coinEl = document.getElementById('statPositionCoin');
+  if (coinEl && sheetsData.current_positions) {
+    try {
+      const pos = JSON.parse(sheetsData.current_positions);
+      let coin = 'ABUSDT';
+      if (Array.isArray(pos) && pos.length > 0 && pos[0].symbol) {
+        coin = pos[0].symbol;
+      }
+      coinEl.textContent = coin;
+    } catch (e) {
+      // ignore parse errors, leave existing value
+    }
+  }
+}
+
 // Cache Sheets data with a short TTL (30 seconds) so we don't hammer the endpoint
 let _sheetsCache = { data: null, timestamp: 0 };
 const SHEETS_CACHE_TTL = 30_000; // 30 seconds
@@ -229,22 +278,22 @@ const pages = {
           <!-- Card 2: PNL Yesterday -->
           <div class="stat-card">
             <div class="stat-card-label">PNL Yesterday</div>
-            <div class="stat-card-value ${yesterdayPnL >= 0 ? 'positive' : 'negative'}">${yesterdayPnL >= 0 ? '+' : ''}${formatUSD(yesterdayPnL).replace('$ ', '')}</div>
+            <div class="stat-card-value ${yesterdayPnL >= 0 ? 'positive' : 'negative'}" id="statPnLYesterday">$ ${yesterdayPnL >= 0 ? '+' : ''}${Math.abs(yesterdayPnL).toFixed(2)}</div>
             <div class="stat-card-sub">Daily PnL</div>
           </div>
 
           <!-- Card 3: Biggest Win -->
           <div class="stat-card">
             <div class="stat-card-label">Biggest Win</div>
-            <div class="stat-card-value positive">x${biggestWin} (Leverage)</div>
+            <div class="stat-card-value positive" id="statBiggestWin">x${biggestWin} (Leverage)</div>
             <div class="stat-card-sub">Best trade</div>
           </div>
 
           <!-- Card 4: Total Positions -->
           <div class="stat-card positions">
             <div class="stat-card-label">Total Positions</div>
-            <div class="positions-coin">${positionCoin}</div>
-            <div class="positions-count">${totalPositions}</div>
+            <div class="positions-coin" id="statPositionCoin">${positionCoin}</div>
+            <div class="positions-count" id="statTotalPositions">${totalPositions}</div>
             <div class="stat-card-sub">Open & Closed</div>
           </div>
         </div>
@@ -1394,6 +1443,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Initialize charts/animations for specific pages
         if (pageName === 'overview') {
+          // Update stat cards with fresh sheets data immediately after render
+          setTimeout(async () => {
+            const data = await getSheetsData(true);
+            if (data) updateStatCards(data);
+          }, 0);
+
           setTimeout(() => {
             const container = document.getElementById('btcChartContainer');
             if (container && !container.dataset.initialized) {
@@ -1473,21 +1528,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     navigateTo('overview');
 
-    // Auto-refresh Google Sheets data every 60 seconds for overview page
+    // Auto-refresh Google Sheets data every 2 minutes for overview page
+    // Aturan: ambil data dari spreadsheet, jika angka baris terakhir = 0
+    // maka fallback ke angka terakhir non-zero di kolom yang sama
     let sheetsRefreshInterval = setInterval(async () => {
       const currentPage = document.querySelector('.nav-item.active')?.dataset.page;
       if (currentPage === 'overview' && pageContent) {
-        // Force refresh cache
         const data = await getSheetsData(true);
         if (data) {
-          // Update stat cards in place without full re-render (avoids chart reset)
-          const balanceEl = document.getElementById('statBalanceDisplay');
-          // The stat cards don't have IDs for individual fields currently,
-          // so we rely on the 30-second cache refresh on next full render
-          // This interval ensures the cache stays fresh
+          updateStatCards(data);
         }
       }
-    }, 60000); // 60 seconds
+    }, 120000); // 2 menit (120.000 ms)
 
     // Store reference for cleanup
     if (typeof window !== 'undefined') {
