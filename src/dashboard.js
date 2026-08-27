@@ -59,10 +59,10 @@ async function fetchLatestSheetsData() {
 function updateStatCards(sheetsData) {
   if (!sheetsData) return;
 
-  // Total Balance
+  // Total Balance - format compact (K, M, B, T)
   const balanceEl = document.getElementById('statBalanceDisplay');
   if (balanceEl) {
-    balanceEl.textContent = '$ ' + (sheetsData.balance / 1000000).toFixed(2).replace('.', ',') + 'M';
+    balanceEl.textContent = formatCompactCurrency(sheetsData.balance);
   }
 
   // PNL Yesterday
@@ -99,6 +99,26 @@ function updateStatCards(sheetsData) {
       // ignore parse errors, leave existing value
     }
   }
+}
+
+/**
+ * Format currency compact: $1,234 / $12.34K / $1.23M / $123.45M / $1.23B
+ */
+function formatCompactCurrency(num) {
+  const absNum = Math.abs(num);
+  if (absNum < 1000) {
+    return '$' + absNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  if (absNum < 1_000_000) {
+    return '$' + (absNum / 1_000).toFixed(2).replace('.', ',') + 'K';
+  }
+  if (absNum < 1_000_000_000) {
+    return '$' + (absNum / 1_000_000).toFixed(2).replace('.', ',') + 'M';
+  }
+  if (absNum < 1_000_000_000_000) {
+    return '$' + (absNum / 1_000_000_000).toFixed(2).replace('.', ',') + 'B';
+  }
+  return '$' + (absNum / 1_000_000_000_000).toFixed(2).replace('.', ',') + 'T';
 }
 
 // Cache Sheets data with a short TTL (30 seconds) so we don't hammer the endpoint
@@ -271,7 +291,7 @@ const pages = {
           <!-- Card 1: Total Balance -->
           <div class="stat-card">
             <div class="stat-card-label">Total Balance</div>
-            <div class="stat-card-value" id="statBalanceDisplay">$ ${(balance/1000000).toFixed(2).replace('.', ',')}M</div>
+            <div class="stat-card-value" id="statBalanceDisplay">${formatCompactCurrency(balance)}</div>
             <div class="stat-card-sub positive">+12.5% this week</div>
           </div>
 
