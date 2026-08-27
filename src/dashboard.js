@@ -304,7 +304,7 @@ const pages = {
           <!-- Card 3: Biggest Win -->
           <div class="stat-card">
             <div class="stat-card-label">Biggest Win</div>
-            <div class="stat-card-value positive" id="statBiggestWin">x${biggestWin} (Leverage)</div>
+            <div class="stat-card-value" id="statBiggestWin">x${biggestWin} (Leverage)</div>
             <div class="stat-card-sub">Best trade</div>
           </div>
 
