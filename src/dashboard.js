@@ -75,7 +75,18 @@ function updateStatCards(sheetsData) {
 
   // Biggest Win
   const winEl = document.getElementById('statBiggestWin');
-  if (winEl) {
+  if (winEl && sheetsData.current_positions) {
+    try {
+      const pos = JSON.parse(sheetsData.current_positions);
+      let coin = 'ABUSDT';
+      if (Array.isArray(pos) && pos.length > 0 && pos[0].symbol) {
+        coin = pos[0].symbol;
+      }
+      winEl.textContent = '$' + sheetsData.biggest_win + ' ' + coin;
+    } catch (e) {
+      winEl.textContent = '$' + sheetsData.biggest_win;
+    }
+  } else if (winEl) {
     winEl.textContent = '$' + sheetsData.biggest_win;
   }
 
@@ -83,21 +94,6 @@ function updateStatCards(sheetsData) {
   const countEl = document.getElementById('statTotalPositions');
   if (countEl) {
     countEl.textContent = sheetsData.total_positions;
-  }
-
-  // Position coin (extract from current_positions JSON)
-  const coinEl = document.getElementById('statPositionCoin');
-  if (coinEl && sheetsData.current_positions) {
-    try {
-      const pos = JSON.parse(sheetsData.current_positions);
-      let coin = 'ABUSDT';
-      if (Array.isArray(pos) && pos.length > 0 && pos[0].symbol) {
-        coin = pos[0].symbol;
-      }
-      coinEl.textContent = coin;
-    } catch (e) {
-      // ignore parse errors, leave existing value
-    }
   }
 }
 
@@ -240,18 +236,6 @@ const pages = {
       const totalPnL          = sheetsData?.total_pnl      || botState.total_pnl || 0;
       const biggestWin        = sheetsData?.biggest_win    || botState.biggest_win || 0;
       const totalPositions    = sheetsData?.total_positions || botState.total_positions || 0;
-      const positionCoin      = (() => {
-        // Try to extract a coin symbol from current_positions JSON
-        if (sheetsData?.current_positions) {
-          try {
-            const pos = JSON.parse(sheetsData.current_positions);
-            if (Array.isArray(pos) && pos.length > 0 && pos[0].symbol) {
-              return pos[0].symbol;
-            }
-          } catch (e) { /* ignore parse errors */ }
-        }
-        return botState.position_coin || 'ABUSDT';
-      })();
 
       const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
       const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
@@ -309,7 +293,6 @@ const pages = {
           <!-- Card 4: Total Positions -->
           <div class="stat-card positions">
             <div class="stat-card-label">Total Positions</div>
-            <div class="positions-coin" id="statPositionCoin">${positionCoin}</div>
             <div class="positions-count" id="statTotalPositions">${totalPositions}</div>
           </div>
         </div>
