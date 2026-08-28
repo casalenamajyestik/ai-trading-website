@@ -76,7 +76,7 @@ function updateStatCards(sheetsData) {
   // Biggest Win
   const winEl = document.getElementById('statBiggestWin');
   if (winEl) {
-    winEl.textContent = 'x' + sheetsData.biggest_win + ' (Leverage)';
+    winEl.textContent = '$' + sheetsData.biggest_win;
   }
 
   // Total Positions
@@ -234,12 +234,12 @@ const pages = {
       // --- Google Sheets data (primary source) ---
       const sheetsData = await getSheetsData();
 
-      // Use real data from Sheets if available, fall back to botState, then dummy defaults
-      const balance           = sheetsData?.balance        || botState.balance || 12345600;
-      const yesterdayPnL      = sheetsData?.daily_pnl      || botState.yesterday_pnl || 123;
+      // Use real data from Sheets if available, fall back to botState, then default to 0
+      const balance           = sheetsData?.balance        || botState.balance || 0;
+      const yesterdayPnL      = sheetsData?.daily_pnl      || botState.yesterday_pnl || 0;
       const totalPnL          = sheetsData?.total_pnl      || botState.total_pnl || 0;
-      const biggestWin        = sheetsData?.biggest_win    || botState.biggest_win || 100;
-      const totalPositions    = sheetsData?.total_positions || botState.total_positions || 12;
+      const biggestWin        = sheetsData?.biggest_win    || botState.biggest_win || 0;
+      const totalPositions    = sheetsData?.total_positions || botState.total_positions || 0;
       const positionCoin      = (() => {
         // Try to extract a coin symbol from current_positions JSON
         if (sheetsData?.current_positions) {
@@ -304,7 +304,7 @@ const pages = {
           <!-- Card 3: Biggest Win -->
           <div class="stat-card">
             <div class="stat-card-label">Biggest Win</div>
-            <div class="stat-card-value" id="statBiggestWin">x${biggestWin}</div>
+            <div class="stat-card-value" id="statBiggestWin">$${biggestWin}</div>
           </div>
 
           <!-- Card 4: Total Positions -->
