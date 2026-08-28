@@ -298,7 +298,6 @@ const pages = {
           <div class="stat-card">
             <div class="stat-card-label">PNL Yesterday</div>
             <div class="stat-card-value" id="statPnLYesterday">$ <span class="${yesterdayPnL >= 0 ? 'positive' : 'negative'}">${yesterdayPnL >= 0 ? '+' : ''}${Math.abs(yesterdayPnL).toFixed(2)}</span></div>
-            <div class="stat-card-sub">Daily PnL</div>
           </div>
 
           <!-- Card 3: Biggest Win -->
