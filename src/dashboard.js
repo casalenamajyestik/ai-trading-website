@@ -1,13 +1,14 @@
 import { i18next } from './language-theme.js';
-import { 
-  signOut, 
-  upsertProfile, 
-  getExchangeKey, 
+import {
+  signOut,
+  upsertProfile,
+  getExchangeKey,
   upsertExchangeKey,
   getBotSession,
   updateBotSession,
   toggleBotSession,
-  getBotState
+  getBotState,
+  getUser
 } from './supabase.js';
 import { supabase } from './supabase.js';
 import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
@@ -32,13 +33,12 @@ async function requireAuthWrapper() {
 const GOOGLE_SHEETS_WEBAPP_URL = import.meta.env.VITE_GOOGLE_SHEETS_WEBAPP_URL || 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
 
 /**
- * Fetch the latest row from Google Sheets.
- * Returns an object with: balance, daily_pnl, total_pnl, biggest_win,
- * total_positions, session_id, current_positions, status, total_unrealized_pnl
+ * Fetch the latest row from Google Sheets FOR CURRENT USER.
+ * user_id diambil dari Supabase auth session.
  */
-async function fetchLatestSheetsData() {
+async function fetchLatestSheetsData(userId) {
   try {
-    const url = GOOGLE_SHEETS_WEBAPP_URL + '?mode=read_last';
+    const url = GOOGLE_SHEETS_WEBAPP_URL + '?mode=read_last&user_id=' + encodeURIComponent(userId);
     const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const result = await response.json();
@@ -52,54 +52,6 @@ async function fetchLatestSheetsData() {
   }
 }
 
-/**
- * Update stat card DOM elements in-place from sheets data.
- * Memperbarui: Total Balance, PNL Yesterday, Biggest Win, Total Positions
- */
-function updateStatCards(sheetsData) {
-  if (!sheetsData) return;
-
-  // Total Balance - format compact (K, M, B, T)
-  const balanceEl = document.getElementById('statBalanceDisplay');
-  if (balanceEl) {
-    balanceEl.textContent = formatCompactCurrency(sheetsData.balance);
-  }
-
-  // PNL Yesterday
-  const pnlEl = document.getElementById('statPnLYesterday');
-  if (pnlEl) {
-    const val = sheetsData.daily_pnl;
-    pnlEl.innerHTML = '$ <span class="' + (val >= 0 ? 'positive' : 'negative') + '">' + (val >= 0 ? '+' : '') + Math.abs(val).toFixed(2) + '</span>';
-    pnlEl.className = 'stat-card-value';
-  }
-
-  // Biggest Win
-  const winEl = document.getElementById('statBiggestWin');
-  if (winEl && sheetsData.current_positions) {
-    try {
-      const pos = JSON.parse(sheetsData.current_positions);
-      let coin = 'ABUSDT';
-      if (Array.isArray(pos) && pos.length > 0 && pos[0].symbol) {
-        coin = pos[0].symbol;
-      }
-      winEl.textContent = '$' + sheetsData.biggest_win + ' ' + coin;
-    } catch (e) {
-      winEl.textContent = '$' + sheetsData.biggest_win;
-    }
-  } else if (winEl) {
-    winEl.textContent = '$' + sheetsData.biggest_win;
-  }
-
-  // Total Positions
-  const countEl = document.getElementById('statTotalPositions');
-  if (countEl) {
-    countEl.textContent = sheetsData.total_positions;
-  }
-}
-
-/**
- * Format currency compact: $1,234 / $12.34K / $1.23M / $123.45M / $1.23B
- */
 function formatCompactCurrency(num) {
   const absNum = Math.abs(num);
   if (absNum < 1000) {
@@ -118,17 +70,20 @@ function formatCompactCurrency(num) {
 }
 
 // Cache Sheets data with a short TTL (30 seconds) so we don't hammer the endpoint
-let _sheetsCache = { data: null, timestamp: 0 };
+let _sheetsCache = { data: null, timestamp: 0, userId: null };
 const SHEETS_CACHE_TTL = 30_000; // 30 seconds
 
 async function getSheetsData(forceRefresh = false) {
   const now = Date.now();
-  if (!forceRefresh && _sheetsCache.data && (now - _sheetsCache.timestamp < SHEETS_CACHE_TTL)) {
+  const { user } = await getUser();
+  const currentUserId = user?.id || 'anonymous';
+
+  if (!forceRefresh && _sheetsCache.data && _sheetsCache.userId === currentUserId && (now - _sheetsCache.timestamp < SHEETS_CACHE_TTL)) {
     return _sheetsCache.data;
   }
-  const data = await fetchLatestSheetsData();
+  const data = await fetchLatestSheetsData(currentUserId);
   if (data) {
-    _sheetsCache = { data, timestamp: now };
+    _sheetsCache = { data, timestamp: now, userId: currentUserId };
   }
   return data;
 }
@@ -220,6 +175,7 @@ const pages = {
   overview: {
     title: 'Overview',
     render: async (session) => {
+
       const botSession = session.botSession || {};
       const botState = session.botState || {};
       const isActive = botSession.is_active || false;
@@ -227,9 +183,8 @@ const pages = {
       const mode = botSession.mode || 'paper';
       const lastHeartbeat = botState.last_heartbeat;
 
-      // --- Google Sheets data (primary source) ---
+      // --- Google Sheets data (primary source, filtered by user_id) ---
       const sheetsData = await getSheetsData();
-
       // Use real data from Sheets if available, fall back to botState, then default to 0
       const balance           = sheetsData?.balance        || botState.balance || 0;
       const yesterdayPnL      = sheetsData?.daily_pnl      || botState.yesterday_pnl || 0;

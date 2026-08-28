@@ -27,7 +27,8 @@ const HEADERS = [
   'Session ID',
   'Current Positions (JSON)',
   'Status',
-  'Total Unrealized PnL (USD)'
+  'Total Unrealized PnL (USD)',
+  'User ID'
 ];
 
 // ---- Helper: ensure headers ----
@@ -49,15 +50,19 @@ function doGet(e) {
   const params = e.parameter || {};
 
   // READ mode
+  // Ambil user_id dari parameter (wajib untuk isolasi)
+  const userId = params.user_id || 'anonymous';
+
+  // READ mode
   if (params.mode === 'read_last') {
-    const data = getLastRowData();
+    const data = getLastRowData(userId);
     return ContentService
       .createTextOutput(JSON.stringify(data))
       .setMimeType(ContentService.MimeType.JSON);
   }
 
   if (params.mode === 'read') {
-    const data = getAllRowsData();
+    const data = getAllRowsData(userId);
     return ContentService
       .createTextOutput(JSON.stringify(data))
       .setMimeType(ContentService.MimeType.JSON);
@@ -73,6 +78,7 @@ function doGet(e) {
   const currentPositions = params.current_positions || '[]';
   const status         = params.status || 'running';
   const totalUnrealized = parseFloat(params.total_unrealized_pnl) || 0;
+  const userIdWrite    = params.user_id || 'anonymous';
 
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
@@ -91,7 +97,8 @@ function doGet(e) {
     sessionId,
     currentPositions,
     status,
-    totalUnrealized
+    totalUnrealized,
+    userIdWrite
   ]);
 
   const lastRow = sheet.getLastRow();
@@ -112,7 +119,7 @@ function doGet(e) {
 //   2. Jika angka pada baris terakhir = 0, ambil angka terakhir yang bukan 0
 //      dari baris sebelumnya (fallback per-kolom, vertikal ke atas)
 //   3. Jika semua baris bernilai 0, tampilkan 0
-function getLastRowData() {
+function getLastRowData(userId) {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
   if (!sheet) return { success: false, message: 'Sheet not found' };
@@ -138,7 +145,26 @@ function getLastRowData() {
     'Total Unrealized PnL (USD)'
   ];
 
-  const lastValues = sheet.getRange(lastRow, 1, 1, HEADERS.length).getValues()[0];
+  // Cari baris terakhir YANG MILIK USER INI (dari bawah ke atas)
+  const userIdCol = HEADERS.indexOf('User ID') + 1;
+  let targetRow = 0;
+  for (let r = lastRow; r >= 2; r--) {
+    const cellUserId = sheet.getRange(r, userIdCol).getValue();
+    if (cellUserId === userId) {
+      targetRow = r;
+      break;
+    }
+  }
+
+  if (targetRow === 0) {
+    return {
+      success: true,
+      data: null,
+      message: 'No data for this user'
+    };
+  }
+
+  const lastValues = sheet.getRange(targetRow, 1, 1, HEADERS.length).getValues()[0];
   let result = {};
   HEADERS.forEach((h, i) => { result[h] = lastValues[i]; });
 
@@ -148,9 +174,10 @@ function getLastRowData() {
     const colIndex = HEADERS.indexOf(field) + 1; // 1-based untuk getRange
     let val = parseFloat(result[field]) || 0;
     if (val === 0) {
-      // Cari ke atas (baris sebelumnya) di KOLOM YANG SAMA
-      // Mulai dari lastRow - 1 karena lastRow sudah kita baca & bernilai 0
-      for (let r = lastRow - 1; r >= 2; r--) {
+      // Cari ke atas (baris sebelumnya) di KOLOM YANG SAMA, FILTER USER ID
+      for (let r = targetRow - 1; r >= 2; r--) {
+        const cellUserId = sheet.getRange(r, userIdCol).getValue();
+        if (cellUserId !== userId) continue; // skip user lain
         const cellVal = sheet.getRange(r, colIndex).getValue();
         const parsed = (field === 'Total Positions')
           ? parseInt(cellVal)
@@ -183,7 +210,7 @@ function getLastRowData() {
 }
 
 // ---- Helper: get all data rows ----
-function getAllRowsData() {
+function getAllRowsData(userId) {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
   if (!sheet) return { success: false, message: 'Sheet not found' };
@@ -196,7 +223,10 @@ function getAllRowsData() {
   }
 
   const values = sheet.getRange(2, 1, lastRow - 1, HEADERS.length).getValues();
-  let rows = values.map(row => {
+  const userIdCol = HEADERS.indexOf('User ID') + 1;
+  let rows = values.map((row, idx) => {
+    const rowUserId = row[userIdCol - 1];
+    if (rowUserId !== userId) return null; // filter user lain
     let obj = {};
     HEADERS.forEach((h, i) => { obj[h] = row[i]; });
     return {
@@ -211,7 +241,7 @@ function getAllRowsData() {
       status: obj['Status'],
       total_unrealized_pnl: parseFloat(obj['Total Unrealized PnL (USD)']) || 0
     };
-  });
+  }).filter(r => r !== null);
 
   return { success: true, data: rows, count: rows.length };
 }
