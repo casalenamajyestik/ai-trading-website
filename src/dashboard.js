@@ -114,7 +114,7 @@ function updateStatCards(sheetsData) {
 
   // Map Google Sheets field names to card elements
   const balance = sheetsData.saldo || sheetsData.balance || 0;
-  const yesterdayPnL = sheetsData.pnl_unrealized || sheetsData.daily_pnl || 0;
+  const yesterdayPnL = sheetsData.pnl_yesterday || sheetsData.yesterday_pnl || sheetsData.daily_pnl || 0;
   const totalPnL = sheetsData.pnl_exit || sheetsData.total_pnl || 0;
   const biggestWin = sheetsData.biggest_win || 0;
   const totalPositions = sheetsData.total_position || sheetsData.total_positions || 0;
@@ -222,9 +222,9 @@ const pages = {
       // --- Google Sheets data (primary source, filtered by user_id) ---
       const sheetsData = await getSheetsData();
       // Use real data from Sheets if available, fall back to botState, then default to 0
-      // NOTE: Google Sheets returns different field names: saldo, pnl_unrealized, total_position
+      // NOTE: Google Sheets returns field names: saldo, pnl_yesterday, pnl_exit, total_position
       const balance           = sheetsData?.saldo              || sheetsData?.balance        || botState.balance || 0;
-      const yesterdayPnL      = sheetsData?.pnl_unrealized     || sheetsData?.daily_pnl      || botState.yesterday_pnl || 0;
+      const yesterdayPnL      = sheetsData?.pnl_yesterday      || sheetsData?.yesterday_pnl  || botState.yesterday_pnl || 0;
       const totalPnL          = sheetsData?.pnl_exit           || sheetsData?.total_pnl      || botState.total_pnl || 0;
       const biggestWin        = sheetsData?.biggest_win        || botState.biggest_win || 0;
       const totalPositions    = sheetsData?.total_position     || sheetsData?.total_positions || botState.total_positions || 0;
