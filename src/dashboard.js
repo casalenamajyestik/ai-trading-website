@@ -108,6 +108,42 @@ function timeAgo(date) {
   return `${days}d ago`;
 }
 
+// ============ Update Stat Cards from Google Sheets Data ============
+function updateStatCards(sheetsData) {
+  if (!sheetsData) return;
+
+  // Map Google Sheets field names to card elements
+  const balance = sheetsData.saldo || sheetsData.balance || 0;
+  const yesterdayPnL = sheetsData.pnl_unrealized || sheetsData.daily_pnl || 0;
+  const totalPnL = sheetsData.pnl_exit || sheetsData.total_pnl || 0;
+  const biggestWin = sheetsData.biggest_win || 0;
+  const totalPositions = sheetsData.total_position || sheetsData.total_positions || 0;
+
+  // Update each stat card
+  const balanceEl = document.getElementById('statBalanceDisplay');
+  if (balanceEl) balanceEl.textContent = formatCompactCurrency(balance);
+
+  const pnlYesterdayEl = document.getElementById('statPnLYesterday');
+  if (pnlYesterdayEl) {
+    const pnlValue = yesterdayPnL;
+    pnlYesterdayEl.innerHTML = `$ <span class="${pnlValue >= 0 ? 'positive' : 'negative'}">${pnlValue >= 0 ? '+' : ''}${Math.abs(pnlValue).toFixed(2)}</span>`;
+  }
+
+  const biggestWinEl = document.getElementById('statBiggestWin');
+  if (biggestWinEl) biggestWinEl.textContent = `$${formatCompactCurrency(biggestWin)}`;
+
+  const totalPositionsEl = document.getElementById('statTotalPositions');
+  if (totalPositionsEl) totalPositionsEl.textContent = totalPositions.toLocaleString();
+
+  // Also update Execution Cycle tab label if present
+  const executionTab = document.querySelector('.settings-tab[data-tab="execution"]');
+  if (executionTab) {
+    executionTab.textContent = `Execution Cycle : ${totalPositions.toLocaleString()}`;
+  }
+
+  console.log('[Dashboard] Stat cards updated from Sheets:', { balance, yesterdayPnL, totalPnL, biggestWin, totalPositions });
+}
+
 function getCountryOptions(selectedCode = 'ID') {
   const countries = [
     { code: 'ID', name: 'Indonesia (+62)', dialCode: '+62', flag: '🇮🇩' },
@@ -186,11 +222,12 @@ const pages = {
       // --- Google Sheets data (primary source, filtered by user_id) ---
       const sheetsData = await getSheetsData();
       // Use real data from Sheets if available, fall back to botState, then default to 0
-      const balance           = sheetsData?.balance        || botState.balance || 0;
-      const yesterdayPnL      = sheetsData?.daily_pnl      || botState.yesterday_pnl || 0;
-      const totalPnL          = sheetsData?.total_pnl      || botState.total_pnl || 0;
-      const biggestWin        = sheetsData?.biggest_win    || botState.biggest_win || 0;
-      const totalPositions    = sheetsData?.total_positions || botState.total_positions || 0;
+      // NOTE: Google Sheets returns different field names: saldo, pnl_unrealized, total_position
+      const balance           = sheetsData?.saldo              || sheetsData?.balance        || botState.balance || 0;
+      const yesterdayPnL      = sheetsData?.pnl_unrealized     || sheetsData?.daily_pnl      || botState.yesterday_pnl || 0;
+      const totalPnL          = sheetsData?.pnl_exit           || sheetsData?.total_pnl      || botState.total_pnl || 0;
+      const biggestWin        = sheetsData?.biggest_win        || botState.biggest_win || 0;
+      const totalPositions    = sheetsData?.total_position     || sheetsData?.total_positions || botState.total_positions || 0;
 
       const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
       const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
