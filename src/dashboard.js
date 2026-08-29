@@ -354,27 +354,22 @@ const pages = {
   },
   positions: {
     title: 'Position',
-    render: (session) => {
-      const botState = session.botState || {};
-      const positions = botState.positions || [
-        { coin: 'BTCUSDT', side: 'Long', size: '0.05', entry: 67420, mark: 68100, pnl: 34, leverage: 10 },
-        { coin: 'ETHUSDT', side: 'Long', size: '2.5', entry: 3520, mark: 3580, pnl: 150, leverage: 20 },
-        { coin: 'SOLUSDT', side: 'Short', size: '150', entry: 142.5, mark: 140.2, pnl: 345, leverage: 10 },
-        { coin: 'ADAUSDT', side: 'Long', size: '5000', entry: 0.45, mark: 0.462, pnl: 60, leverage: 5 },
-        { coin: 'MATICUSDT', side: 'Long', size: '2000', entry: 0.72, mark: 0.735, pnl: 30, leverage: 10 },
-      ];
+    render: async (session) => {
+      // Fetch real data from Google Sheets
+      const sheetsData = await getSheetsData();
       
-      const totalPositions = positions.length;
-      const longCount = positions.filter(p => p.side === 'Long').length;
-      const shortCount = positions.filter(p => p.side === 'Short').length;
-      const totalUnrealizedPnL = positions.reduce((sum, p) => sum + p.pnl, 0);
+      // Use real data from Sheets if available, fall back to defaults
+      const totalPositions = sheetsData?.total_position || sheetsData?.total_positions || 0;
+      const longCount = sheetsData?.long_position || 0;
+      const shortCount = sheetsData?.short_position || 0;
+      const totalUnrealizedPnL = sheetsData?.pnl_unrealized || 0;
 
       return `
         <div class="stats-grid">
           <div class="stat-card"><div class="stat-card-label">Total Positions</div><div class="stat-card-value">${totalPositions}</div></div>
           <div class="stat-card"><div class="stat-card-label">Long</div><div class="stat-card-value" style="color:var(--accent-secondary)">${longCount}</div></div>
           <div class="stat-card"><div class="stat-card-label">Short</div><div class="stat-card-value" style="color:var(--accent-danger)">${shortCount}</div></div>
-          <div class="stat-card"><div class="stat-card-label">Total Unrealized PnL</div><div class="stat-card-value positive">$${totalUnrealizedPnL.toFixed(2)}</div></div>
+          <div class="stat-card"><div class="stat-card-label">Total Unrealized PnL</div><div class="stat-card-value ${totalUnrealizedPnL >= 0 ? 'positive' : 'negative'}">$${totalUnrealizedPnL.toFixed(2)}</div></div>
         </div>
         <div class="content-section">
           <div class="section-header">
@@ -395,17 +390,12 @@ const pages = {
                 </tr>
               </thead>
               <tbody>
-                ${positions.map(p => `
-                  <tr>
-                    <td class="coin-name">${p.coin}</td>
-                    <td>${p.side}</td>
-                    <td>${p.size}</td>
-                    <td>$${Number(p.entry).toLocaleString()}</td>
-                    <td>$${Number(p.mark).toLocaleString()}</td>
-                    <td class="pnl ${p.pnl >= 0 ? 'positive' : 'negative'}">$${p.pnl >= 0 ? '+' : ''}${p.pnl.toFixed(2)}</td>
-                    <td class="leverage">x${p.leverage}</td>
-                  </tr>
-                `).join('')}
+                <tr>
+                  <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
+                    Data detail posisi tersedia di trading bot utama. 
+                    Ringkasan statistik di atas diambil dari Google Sheets (diupdate setiap 10 menit oleh bot).
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
