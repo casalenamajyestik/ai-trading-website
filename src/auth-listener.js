@@ -202,18 +202,22 @@ const { data: { subscription } } = onAuthStateChange(async (event, session) => {
     updateNavbarForAuth(userSession);
     
     // Only redirect to dashboard from home page if email is verified
-    // Don't redirect if user is trying to log in or email not verified
-    const isOnHomePage = window.location.pathname === '/' || window.location.pathname === '/index.html';
-    const isEmailVerified = session.user.email_confirmed_at !== null;
-    
-    if (isOnHomePage && isEmailVerified) {
-      console.log('[AUTH] Redirecting to dashboard (verified email)');
-      window.location.href = '/dashboard.html';
-    } else if (isOnHomePage && !isEmailVerified) {
-      // User is on home page but email not verified - show verification or keep login accessible
-      console.log('[AUTH] On home page, email not verified - keeping login accessible');
-    }
-    // If not on home page, stay where user is (could be on dashboard already)
+        // Don't redirect if user is trying to log in or email not verified
+        const isOnHomePage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+        const isOnResetPasswordPage = window.location.pathname === '/reset-password.html';
+        const isEmailVerified = session.user.email_confirmed_at !== null;
+
+        if (isOnHomePage && isEmailVerified && !isOnResetPasswordPage) {
+          console.log('[AUTH] Redirecting to dashboard (verified email)');
+          window.location.href = '/dashboard.html';
+        } else if (isOnHomePage && !isEmailVerified) {
+          // User is on home page but email not verified - show verification or keep login accessible
+          console.log('[AUTH] On home page, email not verified - keeping login accessible');
+        } else if (isOnResetPasswordPage) {
+          // Stay on reset password page - user needs to set new password
+          console.log('[AUTH] On reset password page - staying for password update');
+        }
+        // If not on home page, stay where user is (could be on dashboard already)
   } else if (event === 'SIGNED_OUT') {
     console.log('[AUTH] Signed out');
     localStorage.removeItem('auth_session');
@@ -275,15 +279,17 @@ export async function initAuth() {
     updateNavbarForAuth(userSession);
     
     // Only redirect to dashboard from home page if user is fully authenticated (verified email)
-    // Don't redirect if user is trying to log in - let them access login modal
-    const isOnHomePage = window.location.pathname === '/' || window.location.pathname === '/index.html';
-    const isEmailVerified = session.user.email_confirmed_at !== null;
-    
-    if (isOnHomePage && isEmailVerified) {
-      window.location.href = '/dashboard.html';
-    }
-    // If on home page but email not verified, or user is in login flow, 
-    // keep the login modal accessible (don't redirect)
+        // Don't redirect if user is trying to log in - let them access login modal
+        const isOnHomePage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+        const isOnResetPasswordPage = window.location.pathname === '/reset-password.html';
+        const isEmailVerified = session.user.email_confirmed_at !== null;
+
+        if (isOnHomePage && isEmailVerified && !isOnResetPasswordPage) {
+          window.location.href = '/dashboard.html';
+        }
+        // If on home page but email not verified, or user is in login flow, 
+        // keep the login modal accessible (don't redirect)
+        // Also stay on reset-password page for password update
   } else {
     const localSession = getLocalSession();
     updateNavbarForAuth(localSession);
