@@ -269,54 +269,64 @@ initAuth()
   }
 
     // ============ Forgot Password Form ============
-    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
-    if (forgotPasswordForm) {
-      forgotPasswordForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('forgotEmail').value.trim();
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        if (forgotPasswordForm) {
+          forgotPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log('[ForgotPassword] Form submitted');
+            const email = document.getElementById('forgotEmail').value.trim();
+            console.log('[ForgotPassword] Email:', email);
 
-        if (!email) {
-          showToast('Mohon masukkan email Anda', 'error');
-          return;
+            if (!email) {
+              console.log('[ForgotPassword] No email provided');
+              showToast('Mohon masukkan email Anda', 'error');
+              return;
+            }
+
+            // Basic email format validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            console.log('[ForgotPassword] Email regex test:', emailRegex.test(email));
+            if (!emailRegex.test(email)) {
+              console.log('[ForgotPassword] Invalid email format');
+              showToast('Format email tidak valid', 'error');
+              const emailInput = document.getElementById('forgotEmail');
+              emailInput.style.animation = 'shake 0.4s ease-in-out';
+              setTimeout(() => { emailInput.style.animation = ''; }, 400);
+              return;
+            }
+
+            const btn = forgotPasswordForm.querySelector('button[type="submit"]');
+            const originalText = btn ? btn.textContent : '';
+            if (btn) {
+              btn.textContent = 'Mengirim...';
+              btn.disabled = true;
+            }
+
+            console.log('[ForgotPassword] Calling resetPassword...');
+            // Real Supabase reset password
+            const { data, error } = await resetPassword(email);
+            console.log('[ForgotPassword] Result:', { data, error });
+
+            if (error) {
+              console.error('[ForgotPassword] Error:', error);
+              showToast(error.message || 'Gagal mengirim tautan reset', 'error');
+              if (btn) {
+                btn.textContent = originalText;
+                btn.disabled = false;
+              }
+            } else {
+              console.log('[ForgotPassword] Success');
+              showToast('Tautan reset kata sandi telah dikirim ke email Anda!', 'success');
+              if (btn) {
+                btn.textContent = originalText;
+                btn.disabled = false;
+              }
+              // Close modal and go back to login
+              if (forgotPasswordModal && forgotPasswordModal.open) forgotPasswordModal.close();
+              if (loginModal) loginModal.showModal();
+            }
+          });
         }
-
-        // Basic email format validation
-        if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
-          showToast('Format email tidak valid', 'error');
-          const emailInput = document.getElementById('forgotEmail');
-          emailInput.style.animation = 'shake 0.4s ease-in-out';
-          setTimeout(() => { emailInput.style.animation = ''; }, 400);
-          return;
-        }
-
-        const btn = forgotPasswordForm.querySelector('button[type="submit"]');
-        const originalText = btn ? btn.textContent : '';
-        if (btn) {
-          btn.textContent = 'Mengirim...';
-          btn.disabled = true;
-        }
-
-        // Real Supabase reset password
-        const { data, error } = await resetPassword(email);
-
-        if (error) {
-          showToast(error.message || 'Gagal mengirim tautan reset', 'error');
-          if (btn) {
-            btn.textContent = originalText;
-            btn.disabled = false;
-          }
-        } else {
-          showToast('Tautan reset kata sandi telah dikirim ke email Anda!', 'success');
-          if (btn) {
-            btn.textContent = originalText;
-            btn.disabled = false;
-          }
-          // Close modal and go back to login
-          if (forgotPasswordModal && forgotPasswordModal.open) forgotPasswordModal.close();
-          if (loginModal) loginModal.showModal();
-        }
-      });
-    }
 
     // ============ Reset Password Form (reset-password.html) ============
     const resetPasswordForm = document.getElementById('resetPasswordForm');
