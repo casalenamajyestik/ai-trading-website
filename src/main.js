@@ -329,104 +329,144 @@ initAuth()
         }
 
     // ============ Reset Password Form (reset-password.html) ============
-    const resetPasswordForm = document.getElementById('resetPasswordForm');
-    if (resetPasswordForm) {
-      const newPasswordInput = document.getElementById('newPassword');
-      const confirmPasswordInput = document.getElementById('confirmPassword');
-      const backToLoginFromReset = document.getElementById('backToLoginFromReset');
-      const resetToastContainer = document.getElementById('resetToastContainer');
+        const resetPasswordForm = document.getElementById('resetPasswordForm');
+        if (resetPasswordForm) {
+          // Handle hash from Supabase reset password email link
+          // URL format: /reset-password.html#access_token=xxx&refresh_token=yyy&type=recovery
+          async function handleAuthHash() {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+              const params = new URLSearchParams(hash);
+              const accessToken = params.get('access_token');
+              const refreshToken = params.get('refresh_token');
+              const type = params.get('type');
 
-      function showResetToast(message, type = 'info') {
-        if (!resetToastContainer) return;
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.style.cssText = 'background: var(--bg-card); border: 1px solid var(--border); padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 0.75rem; min-width: 280px; max-width: 400px; animation: slideIn 0.3s ease-out;';
-        toast.innerHTML = `<span>${message}</span><button class="toast-close" aria-label="Tutup" style="background: none; border: none; cursor: pointer; font-size: 1.25rem; line-height: 1;">&times;</button>`;
-        resetToastContainer.appendChild(toast);
-
-        toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
-
-        setTimeout(() => { if (toast.parentNode) toast.remove(); }, 5000);
-      }
-
-      // Password match validation
-      function validatePasswordMatch() {
-        const password = newPasswordInput?.value || '';
-        const confirm = confirmPasswordInput?.value || '';
-        const feedback = confirmPasswordInput?.parentElement?.querySelector('.invalid-feedback');
-        const isMatch = password === confirm && password.length >= 6;
-        
-        if (confirmPasswordInput) {
-          confirmPasswordInput.classList.toggle('invalid', !isMatch && confirm.length > 0);
-          confirmPasswordInput.classList.toggle('valid', isMatch && confirm.length > 0);
-        }
-        if (feedback) {
-          feedback.classList.toggle('show', !isMatch && confirm.length > 0);
-        }
-        return isMatch;
-      }
-
-      if (newPasswordInput) newPasswordInput.addEventListener('input', validatePasswordMatch);
-      if (confirmPasswordInput) confirmPasswordInput.addEventListener('input', validatePasswordMatch);
-
-      resetPasswordForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const password = newPasswordInput?.value || '';
-        const confirm = confirmPasswordInput?.value || '';
-
-        if (password.length < 6) {
-          showResetToast('Kata sandi minimal 6 karakter', 'error');
-          if (newPasswordInput) {
-            newPasswordInput.style.animation = 'shake 0.4s ease-in-out';
-            setTimeout(() => { newPasswordInput.style.animation = ''; }, 400);
+              if (accessToken && refreshToken && type === 'recovery') {
+                console.log('[ResetPassword] Found recovery tokens in hash, setting session...');
+                const { data, error } = await supabase.auth.setSession({
+                  access_token: accessToken,
+                  refresh_token: refreshToken
+                });
+                if (error) {
+                  console.error('[ResetPassword] Failed to set session:', error);
+                  showResetToast('Link reset tidak valid atau sudah kadaluarsa', 'error');
+                  return false;
+                }
+                console.log('[ResetPassword] Session established for password reset');
+                // Clean up URL hash
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return true;
+              }
+            }
+            return false;
           }
-          return;
-        }
 
-        if (password !== confirm) {
-          showResetToast('Kata sandi tidak cocok', 'error');
-          if (confirmPasswordInput) {
-            confirmPasswordInput.style.animation = 'shake 0.4s ease-in-out';
-            setTimeout(() => { confirmPasswordInput.style.animation = ''; }, 400);
+          // Try to establish session from hash
+          handleAuthHash().then(sessionReady => {
+            if (!sessionReady) {
+              console.log('[ResetPassword] No valid recovery session found');
+            }
+            initResetPasswordForm();
+          });
+
+          function initResetPasswordForm() {
+            const newPasswordInput = document.getElementById('newPassword');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const backToLoginFromReset = document.getElementById('backToLoginFromReset');
+            const resetToastContainer = document.getElementById('resetToastContainer');
+
+            function showResetToast(message, type = 'info') {
+              if (!resetToastContainer) return;
+              const toast = document.createElement('div');
+              toast.className = `toast toast-${type}`;
+              toast.style.cssText = 'background: var(--bg-card); border: 1px solid var(--border); padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 0.75rem; min-width: 280px; max-width: 400px; animation: slideIn 0.3s ease-out;';
+              toast.innerHTML = `<span>${message}</span><button class="toast-close" aria-label="Tutup" style="background: none; border: none; cursor: pointer; font-size: 1.25rem; line-height: 1;">&times;</button>`;
+              resetToastContainer.appendChild(toast);
+
+              toast.querySelector('.toast-close').addEventListener('click', () => toast.remove());
+
+              setTimeout(() => { if (toast.parentNode) toast.remove(); }, 5000);
+            }
+
+            // Password match validation
+            function validatePasswordMatch() {
+              const password = newPasswordInput?.value || '';
+              const confirm = confirmPasswordInput?.value || '';
+              const feedback = confirmPasswordInput?.parentElement?.querySelector('.invalid-feedback');
+              const isMatch = password === confirm && password.length >= 6;
+
+              if (confirmPasswordInput) {
+                confirmPasswordInput.classList.toggle('invalid', !isMatch && confirm.length > 0);
+                confirmPasswordInput.classList.toggle('valid', isMatch && confirm.length > 0);
+              }
+              if (feedback) {
+                feedback.classList.toggle('show', !isMatch && confirm.length > 0);
+              }
+              return isMatch;
+            }
+
+            if (newPasswordInput) newPasswordInput.addEventListener('input', validatePasswordMatch);
+            if (confirmPasswordInput) confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+
+            resetPasswordForm.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              const password = newPasswordInput?.value || '';
+              const confirm = confirmPasswordInput?.value || '';
+
+              if (password.length < 6) {
+                showResetToast('Kata sandi minimal 6 karakter', 'error');
+                if (newPasswordInput) {
+                  newPasswordInput.style.animation = 'shake 0.4s ease-in-out';
+                  setTimeout(() => { newPasswordInput.style.animation = ''; }, 400);
+                }
+                return;
+              }
+
+              if (password !== confirm) {
+                showResetToast('Kata sandi tidak cocok', 'error');
+                if (confirmPasswordInput) {
+                  confirmPasswordInput.style.animation = 'shake 0.4s ease-in-out';
+                  setTimeout(() => { confirmPasswordInput.style.animation = ''; }, 400);
+                }
+                return;
+              }
+
+              const btn = resetPasswordForm.querySelector('button[type="submit"]');
+              const originalText = btn?.textContent || '';
+              if (btn) {
+                btn.textContent = 'Memperbarui...';
+                btn.disabled = true;
+              }
+
+              // Supabase update password (uses the session from the reset link)
+              const { error } = await supabase.auth.updateUser({ password });
+
+              if (error) {
+                showResetToast(error.message || 'Gagal memperbarui kata sandi', 'error');
+                if (btn) {
+                  btn.textContent = originalText;
+                  btn.disabled = false;
+                }
+              } else {
+                showResetToast('Kata sandi berhasil diperbarui! Mengarahkan ke login...', 'success');
+                if (btn) {
+                  btn.textContent = originalText;
+                  btn.disabled = false;
+                }
+                setTimeout(() => {
+                  window.location.href = '/';
+                }, 2000);
+              }
+            });
+
+            if (backToLoginFromReset) {
+              backToLoginFromReset.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = '/';
+              });
+            }
           }
-          return;
         }
-
-        const btn = resetPasswordForm.querySelector('button[type="submit"]');
-        const originalText = btn?.textContent || '';
-        if (btn) {
-          btn.textContent = 'Memperbarui...';
-          btn.disabled = true;
-        }
-
-        // Supabase update password (uses the session from the reset link)
-        const { error } = await supabase.auth.updateUser({ password });
-
-        if (error) {
-          showResetToast(error.message || 'Gagal memperbarui kata sandi', 'error');
-          if (btn) {
-            btn.textContent = originalText;
-            btn.disabled = false;
-          }
-        } else {
-          showResetToast('Kata sandi berhasil diperbarui! Mengarahkan ke login...', 'success');
-          if (btn) {
-            btn.textContent = originalText;
-            btn.disabled = false;
-          }
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 2000);
-        }
-      });
-
-      if (backToLoginFromReset) {
-        backToLoginFromReset.addEventListener('click', (e) => {
-          e.preventDefault();
-          window.location.href = '/';
-        });
-      }
-    }
 
     // ============ Register Form (CTA inline) ============
     const registerForm = document.getElementById('registerForm');
