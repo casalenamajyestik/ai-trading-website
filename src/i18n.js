@@ -146,6 +146,18 @@ export const translations = {
       success: 'Tautan reset kata sandi telah dikirim ke email Anda!',
       back_to_login: 'Kembali ke Masuk'
     },
+    reset_password: {
+      page_title: 'Reset Kata Sandi',
+      page_subtitle: 'Masukkan kata sandi baru Anda di bawah ini',
+      new_password_label: 'Kata Sandi Baru',
+      confirm_password_label: 'Konfirmasi Kata Sandi Baru',
+      min_length: 'Minimal 6 karakter',
+      passwords_match: 'Kata sandi harus sama',
+      submit: 'Perbarui Kata Sandi',
+      success: 'Kata sandi berhasil diperbarui! Mengarahkan ke login...',
+      error: 'Gagal memperbarui kata sandi',
+      back_to_login: 'Kembali ke Masuk'
+    },
     verification: {
       title: 'Verifikasi Email',
       subtitle: 'Kami telah mengirimkan kode verifikasi ke',
@@ -342,6 +354,18 @@ export const translations = {
       subtitle: 'Enter your email, we will send you a link to reset your password',
       submit: 'Send Reset Link',
       success: 'Password reset link has been sent to your email!',
+      back_to_login: 'Back to Sign In'
+    },
+    reset_password: {
+      page_title: 'Reset Password',
+      page_subtitle: 'Enter your new password below',
+      new_password_label: 'New Password',
+      confirm_password_label: 'Confirm New Password',
+      min_length: 'Minimum 6 characters',
+      passwords_match: 'Passwords must match',
+      submit: 'Update Password',
+      success: 'Password updated successfully! Redirecting to login...',
+      error: 'Failed to update password',
       back_to_login: 'Back to Sign In'
     },
     verification: {
