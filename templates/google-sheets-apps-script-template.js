@@ -9,10 +9,10 @@
 //   A=Timestamp(WIB), B=Nama Koin, C=Side, D=Harga Exit, E=PNL Exit,
 //   F=Saldo, G=PNL Unrealized, H=Total Position, I=Data Type,
 //   J=Session ID, K=User ID, L=PNL Yesterday,
-//   M=Long Position, N=Short Position
+//   M=Long Position, N=Short Position, O=Size
 // 
 // Endpoints:
-//   WRITE (default):  https://script.google.com/macros/s/.../exec?saldo=...&pnl=...&total_position=...&nama_koin=...&harga_exit=...&side=...&user_id=...&timestamp=...&data_type=...&long_count=...&short_count=...
+//   WRITE (default):  https://script.google.com/macros/s/.../exec?saldo=...&pnl=...&total_position=...&nama_koin=...&harga_exit=...&side=...&user_id=...&timestamp=...&data_type=...&long_count=...&short_count=...&size=...
 //   READ:             https://script.google.com/macros/s/.../exec?mode=read&user_id=...
 //   READ LAST:        https://script.google.com/macros/s/.../exec?mode=read_last&user_id=...
 // ============================================================================
@@ -33,7 +33,8 @@ const HEADERS = [
   'User ID',                // K
   'PNL Yesterday',          // L - Daily net PnL (hasil bersih harian) untuk Overview stat card
   'Long Position',          // M - Jumlah posisi Long aktif
-  'Short Position'          // N - Jumlah posisi Short aktif
+  'Short Position',         // N - Jumlah posisi Short aktif
+  'Size'                    // O - Ukuran posisi yang ditutup (|positionAmt|)
 ];
 
 // ---- Helper: ensure headers ----
@@ -87,8 +88,10 @@ function doGet(e) {
         const sideStr      = params.side || '';
         const userIdWrite  = params.user_id || 'anonymous';
         // New columns for long/short
-        const longCount    = parseInt(params.long_count)     || 0;
-        const shortCount   = parseInt(params.short_count)    || 0;
+        const longCount    = parseInt(params.long_count)    || 0;
+        const shortCount   = parseInt(params.short_count)   || 0;
+        // Size: ukuran posisi yang ditutup (|positionAmt|)
+        const size         = parseFloat(params.size)         || 0;
         // Gunakan timestamp dari bot (sudah WIB) atau generate WIB
         const timestamp    = params.timestamp || Utilities.formatDate(new Date(), 'Asia/Jakarta', 'yyyy-MM-dd HH:mm:ss');
    
@@ -98,11 +101,11 @@ function doGet(e) {
    
         ensureHeaders(sheet);
    
-        // Write ke kolom baru sesuai urutan: A-N
+        // Write ke kolom baru sesuai urutan: A-O
     // A=Timestamp, B=Nama Koin, C=Side, D=Harga Exit, E=PNL Exit,
     // F=Saldo, G=PNL Unrealized, H=Total Position, I=Data Type,
     // J=Session ID, K=User ID, L=PNL Yesterday,
-    // M=Long Position, N=Short Position
+    // M=Long Position, N=Short Position, O=Size
         if (dataType === 'closed_position') {
           // Closed position: E=PNL Exit (pnl), G=PNL Unrealized (0), L=PNL Yesterday (0)
           sheet.appendRow([
@@ -119,7 +122,8 @@ function doGet(e) {
             userIdWrite,    // K - User ID
             0,              // L - PNL Yesterday (0 untuk closed position)
             longCount,      // M - Long Position
-            shortCount      // N - Short Position
+            shortCount,     // N - Short Position
+            size            // O - Size (ukuran posisi yang ditutup)
           ]);
         } else if (dataType === 'daily_pnl_yesterday') {
           // Daily PnL yesterday: E=PNL Exit (0), G=PNL Unrealized (0), L=PNL Yesterday (pnl)
@@ -137,7 +141,8 @@ function doGet(e) {
             userIdWrite,    // K - User ID
             pnl,            // L - PNL Yesterday (daily net PnL)
             longCount,      // M - Long Position
-            shortCount      // N - Short Position
+            shortCount,     // N - Short Position
+            size            // O - Size (0 untuk daily pnl)
           ]);
         } else {
           // unrealized_snapshot: E=PNL Exit (0), G=PNL Unrealized (pnl), L=PNL Yesterday (0)
@@ -155,7 +160,8 @@ function doGet(e) {
             userIdWrite,    // K - User ID
             0,              // L - PNL Yesterday (0 untuk unrealized snapshot)
             longCount,      // M - Long Position
-            shortCount      // N - Short Position
+            shortCount,     // N - Short Position
+            size            // O - Size (0 untuk unrealized snapshot)
           ]);
         }
    
@@ -184,7 +190,8 @@ function doGet(e) {
     // New columns for heartbeat - default to 0
     const longCount      = parseInt(params.long_count)        || 0;
     const shortCount     = parseInt(params.short_count)       || 0;
- 
+    const size           = parseFloat(params.size)            || 0;
+
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     let sheet = spreadsheet.getSheetByName(SHEET_NAME);
     if (!sheet) sheet = spreadsheet.insertSheet(SHEET_NAME);
@@ -207,7 +214,8 @@ const timestamp = Utilities.formatDate(new Date(), 'Asia/Jakarta', 'yyyy-MM-dd H
       userIdWrite,    // K - User ID
       dailyPnl,       // L - PNL Yesterday (dari heartbeat)
       longCount,      // M - Long Position
-      shortCount      // N - Short Position
+      shortCount,     // N - Short Position
+      size            // O - Size (0 untuk heartbeat, karena ini snapshot bukan close)
     ]);
  
     const lastRow = sheet.getLastRow();
@@ -231,9 +239,9 @@ function getLastErrorRowData(userId) {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
   if (!sheet) return { success: false, message: 'Sheet not found' };
-
+ 
   ensureHeaders(sheet);
-
+ 
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) {
     return {
@@ -242,7 +250,7 @@ function getLastErrorRowData(userId) {
       message: 'No data rows yet'
     };
   }
-
+ 
   // Numeric fields yang berlaku aturan fallback (0 -> nilai non-zero terakhir)
   const NUMERIC_FIELDS = [
     'Saldo',
@@ -251,14 +259,15 @@ function getLastErrorRowData(userId) {
     'Total Position',
     'PNL Yesterday',
     'Long Position',
-    'Short Position'
+    'Short Position',
+    'Size'
   ];
-
+ 
   // Cari baris terakhir YANG MILIK USER INI (dari bawah ke atas)
   const userIdCol = HEADERS.indexOf('User ID') + 1;
   const dataTypeCol = HEADERS.indexOf('Data Type') + 1;
   const pnlYesterdayCol = HEADERS.indexOf('PNL Yesterday') + 1;
-
+ 
   let targetRow = 0;
   for (let r = lastRow; r >= 2; r--) {
     const cellUserId = sheet.getRange(r, userIdCol).getValue();
@@ -267,7 +276,7 @@ function getLastErrorRowData(userId) {
       break;
     }
   }
-
+ 
   if (targetRow === 0) {
     return {
       success: true,
@@ -275,11 +284,11 @@ function getLastErrorRowData(userId) {
       message: 'No data for this user'
     };
   }
-
+ 
   const lastValues = sheet.getRange(targetRow, 1, 1, HEADERS.length).getValues()[0];
   let result = {};
   HEADERS.forEach((h, i) => { result[h] = lastValues[i]; });
-
+ 
   // Untuk setiap kolom numerik, jika bernilai 0 cari nilai non-zero
   // dari baris sebelumnya ke atas (vertikal, kolom yang sama, filter user)
   NUMERIC_FIELDS.forEach(field => {
@@ -291,9 +300,12 @@ function getLastErrorRowData(userId) {
         const cellUserId = sheet.getRange(r, userIdCol).getValue();
         if (cellUserId !== userId) continue; // skip user lain
         const cellVal = sheet.getRange(r, colIndex).getValue();
-        const parsed = (field === 'Total Position' || field === 'Long Position' || field === 'Short Position')
-          ? parseInt(cellVal)
-          : parseFloat(cellVal);
+        let parsed;
+        if (field === 'Total Position' || field === 'Long Position' || field === 'Short Position') {
+          parsed = parseInt(cellVal);
+        } else {
+          parsed = parseFloat(cellVal);
+        }
         if (parsed !== 0 && !isNaN(parsed)) {
           val = parsed;
           break;
@@ -302,7 +314,7 @@ function getLastErrorRowData(userId) {
     }
     result[field] = val;
   });
-
+ 
   // Khusus PNL Yesterday: cari baris terdekat dengan data_type=daily_pnl_yesterday
   // (jika belum ada, cari ke atas dari target row)
   let pnlYesterdayVal = parseFloat(result['PNL Yesterday']) || 0;
@@ -312,7 +324,7 @@ function getLastErrorRowData(userId) {
       if (cellUserId !== userId) continue;
       const dt = sheet.getRange(r, dataTypeCol).getValue();
       if (dt === 'daily_pnl_yesterday') {
-const cellVal = sheet.getRange(r, pnlYesterdayCol).getValue();
+        const cellVal = sheet.getRange(r, pnlYesterdayCol).getValue();
         const parsed = parseFloat(cellVal);
         if (!isNaN(parsed) && parsed !== 0) {
           pnlYesterdayVal = parsed;
@@ -321,7 +333,7 @@ const cellVal = sheet.getRange(r, pnlYesterdayCol).getValue();
       }
     }
   }
-
+ 
   return {
     success: true,
     data: {
@@ -338,25 +350,26 @@ const cellVal = sheet.getRange(r, pnlYesterdayCol).getValue();
       user_id: result['User ID'],
       pnl_yesterday: pnlYesterdayVal,   // ← kolom baru untuk Overview stat card
       long_position: parseInt(result['Long Position']) || 0,    // ← kolom baru Long
-      short_position: parseInt(result['Short Position']) || 0   // ← kolom baru Short
+      short_position: parseInt(result['Short Position']) || 0,  // ← kolom baru Short
+      size: parseFloat(result['Size']) || 0                       // ← kolom baru Size
     },
     row: lastRow
   };
 }
-
+ 
 // ---- Helper: get all data rows ----
 function getAllRowsData(userId) {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
   if (!sheet) return { success: false, message: 'Sheet not found' };
-
+ 
   ensureHeaders(sheet);
-
+ 
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) {
     return { success: true, data: [], message: 'No data rows yet' };
   }
-
+ 
   const values = sheet.getRange(2, 1, lastRow - 1, HEADERS.length).getValues();
   const userIdCol = HEADERS.indexOf('User ID') + 1;
   let rows = values.map((row, idx) => {
@@ -378,9 +391,10 @@ function getAllRowsData(userId) {
       user_id: obj['User ID'],
       pnl_yesterday: parseFloat(obj['PNL Yesterday']) || 0,
       long_position: parseInt(obj['Long Position']) || 0,
-      short_position: parseInt(obj['Short Position']) || 0
+      short_position: parseInt(obj['Short Position']) || 0,
+      size: parseFloat(obj['Size']) || 0
     };
   }).filter(r => r !== null);
-
+ 
   return { success: true, data: rows, count: rows.length };
 }

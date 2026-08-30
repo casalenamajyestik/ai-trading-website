@@ -125,6 +125,7 @@ export const translations = {
       or: 'atau',
       password: 'Kata Sandi',
       submit: 'Masuk',
+      forgot_password: 'Lupa kata sandi?',
       noaccount: 'Belum punya akun? <a href="#" id="openRegisterLink">Daftar gratis</a>'
     },
     register: {
@@ -137,6 +138,13 @@ export const translations = {
       password: 'Kata Sandi',
       submit: 'Daftar Gratis Sekarang',
       hasaccount: 'Sudah punya akun? <a href="#" id="openLoginLink">Masuk di sini</a>'
+    },
+    forgot_password: {
+      title: 'Lupa Kata Sandi',
+      subtitle: 'Masukkan email Anda, kami akan mengirimkan tautan untuk mereset kata sandi',
+      submit: 'Kirim Tautan Reset',
+      success: 'Tautan reset kata sandi telah dikirim ke email Anda!',
+      back_to_login: 'Kembali ke Masuk'
     },
     verification: {
       title: 'Verifikasi Email',
@@ -315,6 +323,7 @@ export const translations = {
       or: 'or',
       password: 'Password',
       submit: 'Sign In',
+      forgot_password: 'Forgot password?',
       noaccount: 'No account? <a href="#" id="openRegisterLink">Sign up free</a>'
     },
     register: {
@@ -327,6 +336,13 @@ export const translations = {
       password: 'Password',
       submit: 'Sign Up Free Now',
       hasaccount: 'Already have an account? <a href="#" id="openLoginLink">Sign in here</a>'
+    },
+    forgot_password: {
+      title: 'Forgot Password',
+      subtitle: 'Enter your email, we will send you a link to reset your password',
+      submit: 'Send Reset Link',
+      success: 'Password reset link has been sent to your email!',
+      back_to_login: 'Back to Sign In'
     },
     verification: {
       title: 'Verify Email',

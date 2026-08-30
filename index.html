@@ -460,8 +460,10 @@
             </button>
           </div>
         </div>
+        <div class="modal-actions-between">
+        <a href="#forgot-password" class="link-forgot" id="openForgotPasswordLink" data-i18n="login.forgot_password">Lupa kata sandi?</a>
         <button type="submit" class="btn btn-primary btn-full" data-i18n="login.submit">Masuk</button>
-      </form>
+      </div></form>
       <p class="modal-footer">Belum punya akun? <a href="#" id="openRegisterLink">Daftar gratis</a></p>
     </div>
   </dialog>
@@ -534,6 +536,25 @@
         <button type="submit" class="btn btn-primary btn-full" data-i18n="form.submit">Daftar Gratis Sekarang</button>
       </form>
       <p class="modal-footer">Sudah punya akun? <a href="#" id="openLoginLink">Masuk di sini</a></p>
+    </div>
+  </dialog>
+
+  <!-- Forgot Password Modal -->
+  <dialog id="forgotPasswordModal" class="modal" aria-modal="true" aria-labelledby="forgotPasswordTitle">
+    <div class="modal-content">
+      <button class="modal-close" aria-label="Tutup dialog lupa kata sandi">&times;</button>
+      <h2 id="forgotPasswordTitle" data-i18n="forgot_password.title">Lupa Kata Sandi</h2>
+      <p class="modal-subtitle" data-i18n="forgot_password.subtitle">Masukkan email Anda, kami akan mengirimkan tautan untuk mereset kata sandi</p>
+      <form class="forgot-password-form" id="forgotPasswordForm" novalidate>
+        <div class="form-group">
+          <label for="forgotEmail" data-i18n="form.email">Email</label>
+          <input type="email" id="forgotEmail" name="email" required autocomplete="username" placeholder="email@anda.com">
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" data-i18n="forgot_password.submit">Kirim Tautan Reset</button>
+      </form>
+      <p class="modal-footer">
+        <a href="#" id="backToLoginLink" data-i18n="forgot_password.back_to_login">Kembali ke Masuk</a>
+      </p>
     </div>
   </dialog>
 

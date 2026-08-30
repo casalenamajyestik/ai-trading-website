@@ -8,7 +8,7 @@ import { translations } from './i18n.js';
 import { initAuth, updateNavbarForAuth, setOpenLoginRef } from './auth-listener.js';
 
 // Supabase Auth
-import { signUp, signIn, signInWithOAuth, signOut, getSession as getSupabaseSession, getUser, onAuthStateChange, resendVerification } from './supabase.js';
+import { signUp, signIn, signInWithOAuth, signOut, getSession as getSupabaseSession, getUser, onAuthStateChange, resendVerification, resetPassword } from './supabase.js';
 
 // Initialize theme, language, and auth
 console.log('main.js: Module started');
@@ -19,10 +19,12 @@ initLanguage();
 let loginModal = document.getElementById('loginModal');
 let registerModal = document.getElementById('registerModal');
 let verificationModal = document.getElementById('verificationModal');
+let forgotPasswordModal = document.getElementById('forgotPasswordModal');
 
 // Make openLogin globally available so auth-listener can use it reliably
 function openLogin() {
   if (registerModal && registerModal.open) registerModal.close();
+  if (forgotPasswordModal && forgotPasswordModal.open) forgotPasswordModal.close();
   if (loginModal) loginModal.showModal();
 }
 window.openLogin = openLogin;
@@ -57,6 +59,7 @@ initAuth()
       if (loginModal && loginModal.open) loginModal.close();
       if (registerModal && registerModal.open) registerModal.close();
       if (verificationModal && verificationModal.open) verificationModal.close();
+      if (forgotPasswordModal && forgotPasswordModal.open) forgotPasswordModal.close();
     }
 
     // Login modal triggers
@@ -83,6 +86,31 @@ initAuth()
       });
     }
 
+    // Forgot password link inside login modal
+    const openForgotPasswordLink = document.getElementById('openForgotPasswordLink');
+    if (openForgotPasswordLink) {
+      openForgotPasswordLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (loginModal && loginModal.open) loginModal.close();
+        if (forgotPasswordModal) {
+          // Reset form state
+          const forgotForm = document.getElementById('forgotPasswordForm');
+          if (forgotForm) forgotForm.reset();
+          forgotPasswordModal.showModal();
+        }
+      });
+    }
+
+    // Back to login link inside forgot password modal
+    const backToLoginLink = document.getElementById('backToLoginLink');
+    if (backToLoginLink) {
+      backToLoginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (forgotPasswordModal && forgotPasswordModal.open) forgotPasswordModal.close();
+        if (loginModal) loginModal.showModal();
+      });
+    }
+
     // Close buttons (both modals)
     document.querySelectorAll('.modal-close').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -104,6 +132,7 @@ initAuth()
         if (loginModal && loginModal.open) loginModal.close();
         if (registerModal && registerModal.open) registerModal.close();
         if (verificationModal && verificationModal.open) closeVerification();
+        if (forgotPasswordModal && forgotPasswordModal.open) forgotPasswordModal.close();
       }
     });
 
@@ -239,6 +268,55 @@ initAuth()
     });
   }
 
+    // ============ Forgot Password Form ============";
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    if (forgotPasswordForm) {
+      forgotPasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('forgotEmail').value.trim();
+
+        if (!email) {
+          showToast('Mohon masukkan email Anda', 'error');
+          return;
+        }
+
+        // Basic email format validation
+        if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+          showToast('Format email tidak valid', 'error');
+          const emailInput = document.getElementById('forgotEmail');
+          emailInput.style.animation = 'shake 0.4s ease-in-out';
+          setTimeout(() => { emailInput.style.animation = ''; }, 400);
+          return;
+        }
+
+        const btn = forgotPasswordForm.querySelector('button[type="submit"]');
+        const originalText = btn ? btn.textContent : '';
+        if (btn) {
+          btn.textContent = 'Mengirim...';
+          btn.disabled = true;
+        }
+
+        // Real Supabase reset password
+        const { data, error } = await resetPassword(email);
+
+        if (error) {
+          showToast(error.message || 'Gagal mengirim tautan reset', 'error');
+          if (btn) {
+            btn.textContent = originalText;
+            btn.disabled = false;
+          }
+        } else {
+          showToast('Tautan reset kata sandi telah dikirim ke email Anda!', 'success');
+          if (btn) {
+            btn.textContent = originalText;
+            btn.disabled = false;
+          }
+          // Close modal and go back to login
+          if (forgotPasswordModal && forgotPasswordModal.open) forgotPasswordModal.close();
+          if (loginModal) loginModal.showModal();
+        }
+      });
+    }
     // ============ Register Form (CTA inline) ============
     const registerForm = document.getElementById('registerForm');
 
