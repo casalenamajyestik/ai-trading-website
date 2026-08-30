@@ -2,13 +2,17 @@
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://zpwpqkkgdaixukishihv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwd3Bxa2tnZGFpeHVraXNoaWh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3MzUxMjUsImV4cCI6MjEwMTMxMTEyNX0.3rLRi9Lij0NAYKtmQm9xpqoX7djQmb3xTELuKW6m8v0';
+const SUPABASE_ANON_KEY = 'eyJhbG...m8v0';
+
+// Disable detectSessionInUrl to prevent auto-redirect on reset-password page
+// We handle the hash manually in reset-password.js
+const IS_RESET_PASSWORD_PAGE = window.location.pathname === '/reset-password.html';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: !IS_RESET_PASSWORD_PAGE
   }
 });
 
