@@ -1,11 +1,10 @@
 // Supabase Client
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = 'https://zpwpqkkgdaixukishihv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbG...m8v0';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Disable detectSessionInUrl to prevent auto-redirect on reset-password page
-// We handle the hash manually in reset-password.js
 const IS_RESET_PASSWORD_PAGE = window.location.pathname === '/reset-password.html';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
