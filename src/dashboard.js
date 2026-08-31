@@ -1501,6 +1501,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }, 0);
       }
+      if (pageName === 'positions') {
+        // Load Sheets data async (non-blocking, updates stat cards when ready)
+        setTimeout(() => {
+          loadPositionsData(session);
+        }, 0);
+      }
     }
 
     if (sidebar) sidebar.classList.remove('open');
@@ -1578,7 +1584,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     navigateTo('overview');
 
-    // Auto-refresh Google Sheets data every 2 minutes for overview page
+    // Auto-refresh Google Sheets data every 2 minutes for dashboard pages
     // Aturan: ambil data dari spreadsheet, jika angka baris terakhir = 0
     // maka fallback ke angka terakhir non-zero di kolom yang sama
     let sheetsRefreshInterval = setInterval(async () => {
@@ -1587,6 +1593,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await getSheetsData(true);
         if (data) {
           updateStatCards(data);
+        }
+      }
+      if (currentPage === 'positions' && pageContent) {
+        const data = await getSheetsData(true);
+        if (data) {
+          loadPositionsData(session);
         }
       }
     }, 120000); // 2 menit (120.000 ms)
