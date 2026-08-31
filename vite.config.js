@@ -15,7 +15,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        dashboard: 'dashboard.html'
+        dashboard: 'dashboard.html',
+        'reset-password': 'reset-password.html'
       },
       output: {
         manualChunks: undefined
