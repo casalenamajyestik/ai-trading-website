@@ -275,28 +275,28 @@ const pages = {
           <div class="stat-card">
             <div class="stat-card-label">Total Balance</div>
             <div class="stat-card-value" id="statBalanceDisplay">${formatCompactCurrency(balance)}</div>
-            <div class="stat-card-sub loading-skeleton" id="statBalanceLoading" aria-hidden="true"></div>
+            <div class="stat-card-sub loading-skeleton" id="statBalanceLoading">Memuat data...</div>
           </div>
 
           <!-- Card 2: PNL Yesterday -->
           <div class="stat-card">
             <div class="stat-card-label">PNL Yesterday</div>
             <div class="stat-card-value" id="statPnLYesterday">$ <span class="${yesterdayPnL >= 0 ? 'positive' : 'negative'}">${yesterdayPnL >= 0 ? '+' : ''}${Math.abs(yesterdayPnL).toFixed(2)}</span></div>
-            <div class="stat-card-sub loading-skeleton" id="statPnLLoading" aria-hidden="true"></div>
+            <div class="stat-card-sub loading-skeleton" id="statPnLLoading">Memuat data...</div>
           </div>
 
           <!-- Card 3: Biggest Win -->
           <div class="stat-card">
             <div class="stat-card-label">Biggest Win</div>
             <div class="stat-card-value" id="statBiggestWin">$${biggestWin}</div>
-            <div class="stat-card-sub loading-skeleton" id="statBiggestWinLoading" aria-hidden="true"></div>
+            <div class="stat-card-sub loading-skeleton" id="statBiggestWinLoading">Memuat data...</div>
           </div>
 
           <!-- Card 4: Total Positions -->
           <div class="stat-card positions">
             <div class="stat-card-label">Total Positions</div>
             <div class="positions-count" id="statTotalPositions">${totalPositions}</div>
-            <div class="stat-card-sub loading-skeleton" id="statPositionsLoading" aria-hidden="true"></div>
+            <div class="stat-card-sub loading-skeleton" id="statPositionsLoading">Memuat data...</div>
           </div>
         </div>
 
