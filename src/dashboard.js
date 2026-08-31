@@ -88,6 +88,47 @@ async function getSheetsData(forceRefresh = false) {
   return data;
 }
 
+/**
+ * Fetch active position detail rows from Google Sheets (data_type = active_position_detail).
+ * Returns array of position objects with full detail (size_usdt, entry_price, mark_price, unrealized_pnl, leverage, position_amt).
+ */
+async function fetchActivePositionsDetail(userId) {
+  try {
+    // Use mode=read to get ALL rows, then filter for active_position_detail
+    const url = GOOGLE_SHEETS_WEBAPP_URL + '?mode=read&user_id=' + encodeURIComponent(userId);
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const result = await response.json();
+    if (!result.success || !result.data) return [];
+    
+    // Filter hanya data_type = active_position_detail
+    const activePositions = result.data.filter(row => row.data_type === 'active_position_detail');
+    return activePositions;
+  } catch (err) {
+    console.error('[Sheets] Failed to fetch active positions detail:', err);
+    return [];
+  }
+}
+
+// Cache untuk active positions detail
+let _activePositionsCache = { data: [], timestamp: 0, userId: null };
+const ACTIVE_POSITIONS_CACHE_TTL = 60_000; // 60 seconds cache
+
+async function getActivePositionsDetail(forceRefresh = false) {
+  const now = Date.now();
+  const { user } = await getUser();
+  const currentUserId = user?.id || 'anonymous';
+
+  if (!forceRefresh && _activePositionsCache.data.length > 0 && _activePositionsCache.userId === currentUserId && (now - _activePositionsCache.timestamp < ACTIVE_POSITIONS_CACHE_TTL)) {
+    return _activePositionsCache.data;
+  }
+  const data = await fetchActivePositionsDetail(currentUserId);
+  if (data.length > 0) {
+    _activePositionsCache = { data, timestamp: now, userId: currentUserId };
+  }
+  return data;
+}
+
 // ============ Helpers ============
 function formatIDR(num) {
   return 'Rp ' + Math.floor(num).toLocaleString('id-ID');
@@ -215,6 +256,10 @@ async function loadPositionsData(session) {
       });
       
       console.log('[Positions] Data loaded and UI updated');
+      
+      // Fetch and render active positions detail
+      const activePositions = await getActivePositionsDetail(true);
+      renderActivePositionsTable(activePositions);
     }
   } catch (err) {
     console.error('[Positions] Failed to load Sheets data:', err);
@@ -224,6 +269,55 @@ async function loadPositionsData(session) {
       if (el) el.style.display = 'none';
     });
   }
+}
+
+/**
+ * Render active positions table with detail data from Google Sheets
+ */
+function renderActivePositionsTable(positions) {
+  const tbody = document.querySelector('.positions-table tbody');
+  if (!tbody) return;
+  
+  if (!positions || positions.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
+          Belum ada data detail posisi aktif. Bot akan mengirim data setiap 5 menit.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  // Sort: Long positions first, then Short, both by size_usdt descending
+  const sortedPositions = [...positions].sort((a, b) => {
+    const aSide = a.side || '';
+    const bSide = b.side || '';
+    if (aSide === 'long' && bSide !== 'long') return -1;
+    if (bSide === 'long' && aSide !== 'long') return 1;
+    return (b.size_usdt || 0) - (a.size_usdt || 0);
+  });
+  
+  tbody.innerHTML = sortedPositions.map(pos => {
+    const side = pos.side || '';
+    const sideClass = side === 'long' ? 'buy' : side === 'short' ? 'sell' : '';
+    const sideLabel = side === 'long' ? 'Long' : side === 'short' ? 'Short' : 'N/A';
+    const unrealizedPnL = pos.unrealized_pnl || 0;
+    const pnlClass = unrealizedPnL >= 0 ? 'positive' : 'negative';
+    const pnlSign = unrealizedPnL >= 0 ? '+' : '';
+    
+    return `
+      <tr>
+        <td class="coin-name">${pos.nama_koin || 'N/A'}</td>
+        <td class="type ${sideClass}">${sideLabel}</td>
+        <td>${pos.size_usdt ? '$' + pos.size_usdt.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00'}</td>
+        <td>${pos.entry_price ? pos.entry_price.toLocaleString('en-US', {minimumFractionDigits: 4, maximumFractionDigits: 4}) : '0'}</td>
+        <td>${pos.mark_price ? pos.mark_price.toLocaleString('en-US', {minimumFractionDigits: 4, maximumFractionDigits: 4}) : '0'}</td>
+        <td class="pnl ${pnlClass}">${pnlSign}${unrealizedPnL.toFixed(2)}</td>
+        <td>${pos.leverage ? pos.leverage + 'x' : 'N/A'}</td>
+      </tr>
+    `;
+  }).join('');
 }
 
 function getCountryOptions(selectedCode = 'ID') {
@@ -473,7 +567,7 @@ const pages = {
                 <tr>
                   <th>Coin</th>
                   <th>Side</th>
-                  <th>Size</th>
+                  <th>Size (USDT)</th>
                   <th>Entry Price</th>
                   <th>Mark Price</th>
                   <th>Unrealized PnL</th>
@@ -483,8 +577,8 @@ const pages = {
               <tbody>
                 <tr>
                   <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
-                    Data detail posisi tersedia di trading bot utama. 
-                    Ringkasan statistik di atas diambil dari Google Sheets (diupdate setiap 10 menit oleh bot).
+                    <div class="loading-skeleton" style="display:inline-block; width:200px; height:20px; background:linear-gradient(90deg,var(--bg-tertiary),var(--bg-secondary),var(--bg-tertiary)); background-size:200% 100%; animation:shimmer 1.5s infinite;"></div>
+                    <br><small>Memuat detail posisi aktif dari Google Sheets...</small>
                   </td>
                 </tr>
               </tbody>
