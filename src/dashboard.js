@@ -144,6 +144,41 @@ function updateStatCards(sheetsData) {
   console.log('[Dashboard] Stat cards updated from Sheets:', { balance, yesterdayPnL, totalPnL, biggestWin, totalPositions });
 }
 
+// ============ Load Overview Data Async (Progressive Loading) ============
+async function loadOverviewData(session) {
+  try {
+    console.log('[Overview] Loading Google Sheets data...');
+    const sheetsData = await getSheetsData(true); // force refresh
+    
+    if (sheetsData) {
+      // Update stat cards with real data
+      updateStatCards(sheetsData);
+      
+      // Also update execution cycle value
+      const totalPositions = sheetsData.total_position || sheetsData.total_positions || 0;
+      const execCycleEl = document.getElementById('executionCycleValue');
+      if (execCycleEl) {
+        execCycleEl.textContent = `${totalPositions.toLocaleString()} (jumlah total open & closed posisi)`;
+      }
+      
+      // Hide loading skeletons
+      ['statBalanceLoading', 'statPnLLoading', 'statBiggestWinLoading', 'statPositionsLoading'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      
+      console.log('[Overview] Data loaded and UI updated');
+    }
+  } catch (err) {
+    console.error('[Overview] Failed to load Sheets data:', err);
+    // Hide loading skeletons even on error
+    ['statBalanceLoading', 'statPnLLoading', 'statBiggestWinLoading', 'statPositionsLoading'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
+}
+
 function getCountryOptions(selectedCode = 'ID') {
   const countries = [
     { code: 'ID', name: 'Indonesia (+62)', dialCode: '+62', flag: '🇮🇩' },
@@ -210,7 +245,7 @@ function getCountryOptions(selectedCode = 'ID') {
 const pages = {
   overview: {
     title: 'Overview',
-    render: async (session) => {
+    render: (session) => {
 
       const botSession = session.botSession || {};
       const botState = session.botState || {};
@@ -219,48 +254,20 @@ const pages = {
       const mode = botSession.mode || 'paper';
       const lastHeartbeat = botState.last_heartbeat;
 
-      // --- Google Sheets data (primary source, filtered by user_id) ---
-      const sheetsData = await getSheetsData();
-      // Use real data from Sheets if available, fall back to botState, then default to 0
+      // --- INITIAL VALUES (from botState cache, will be updated async from Sheets) ---
       // NOTE: Google Sheets returns field names: saldo, pnl_yesterday, pnl_exit, total_position
-      const balance           = sheetsData?.saldo              || sheetsData?.balance        || botState.balance || 0;
-      const yesterdayPnL      = sheetsData?.pnl_yesterday      || sheetsData?.yesterday_pnl  || botState.yesterday_pnl || 0;
-      const totalPnL          = sheetsData?.pnl_exit           || sheetsData?.total_pnl      || botState.total_pnl || 0;
-      const biggestWin        = sheetsData?.biggest_win        || botState.biggest_win || 0;
-      const totalPositions    = sheetsData?.total_position     || sheetsData?.total_positions || botState.total_positions || 0;
+      const balance           = botState.balance || 0;
+      const yesterdayPnL      = botState.yesterday_pnl || 0;
+      const totalPnL          = botState.total_pnl || 0;
+      const biggestWin        = botState.biggest_win || 0;
+      const totalPositions    = botState.total_positions || 0;
 
       const statusClass = status === 'running' ? 'running' : status === 'error' ? 'error' : 'stopped';
       const statusLabel = status === 'running' ? 'Running' : status === 'error' ? 'Error' : status === 'starting' ? 'Starting...' : 'Stopped';
       const botStatusText = isActive ? '🟢 Running' : '🔴 Stop';
 
-      // Initialize BTC real-time chart after render
-      setTimeout(() => {
-        const container = document.getElementById('btcChartContainer');
-        if (container && !container.dataset.initialized) {
-          container.dataset.initialized = 'true';
-          initBTCRealTimeChart('#btcChartContainer', {
-            interval: '5m',
-            symbol: 'BTCUSDT',
-            maxCandles: 200,
-            useFallback: true,
-            fallbackProvider: 'coingecko'
-          });
-        }
-      }, 0);
-
-      // Initialize Cinematic Particle Animation
-      setTimeout(() => {
-        const animContainer = document.getElementById('animasiContainer');
-        if (animContainer && !animContainer.dataset.initialized) {
-          animContainer.dataset.initialized = 'true';
-          new CinematicParticleAnimation('#animasiContainer', {
-            particleCount: 400,
-            maxSparkleCount: 3,
-            sparkleInterval: 150
-          });
-        }
-      }, 100);
-
+      // Return HTML IMMEDIATELY with placeholder/skeleton values
+      // Data will be updated async via loadOverviewData() after render
       return `
         <!-- 4 Stat Cards matching spreadsheet design (removed AI Auto Trade status card) -->
         <div class="stats-grid">
@@ -268,24 +275,28 @@ const pages = {
           <div class="stat-card">
             <div class="stat-card-label">Total Balance</div>
             <div class="stat-card-value" id="statBalanceDisplay">${formatCompactCurrency(balance)}</div>
+            <div class="stat-card-sub loading-skeleton" id="statBalanceLoading" aria-hidden="true"></div>
           </div>
 
           <!-- Card 2: PNL Yesterday -->
           <div class="stat-card">
             <div class="stat-card-label">PNL Yesterday</div>
             <div class="stat-card-value" id="statPnLYesterday">$ <span class="${yesterdayPnL >= 0 ? 'positive' : 'negative'}">${yesterdayPnL >= 0 ? '+' : ''}${Math.abs(yesterdayPnL).toFixed(2)}</span></div>
+            <div class="stat-card-sub loading-skeleton" id="statPnLLoading" aria-hidden="true"></div>
           </div>
 
           <!-- Card 3: Biggest Win -->
           <div class="stat-card">
             <div class="stat-card-label">Biggest Win</div>
             <div class="stat-card-value" id="statBiggestWin">$${biggestWin}</div>
+            <div class="stat-card-sub loading-skeleton" id="statBiggestWinLoading" aria-hidden="true"></div>
           </div>
 
           <!-- Card 4: Total Positions -->
           <div class="stat-card positions">
             <div class="stat-card-label">Total Positions</div>
             <div class="positions-count" id="statTotalPositions">${totalPositions}</div>
+            <div class="stat-card-sub loading-skeleton" id="statPositionsLoading" aria-hidden="true"></div>
           </div>
         </div>
 
@@ -295,14 +306,24 @@ const pages = {
             <!-- Left: BTC Chart (1/3) -->
             <div class="column-card">
               <div class="card" style="padding: 0;">
-                <div class="btc-chart-container" id="btcChartContainer"></div>
+                <div class="btc-chart-container" id="btcChartContainer">
+                  <div class="chart-loading-overlay">
+                    <div class="chart-spinner"></div>
+                    <span>Memuat chart BTC...</span>
+                  </div>
+                </div>
               </div>
             </div>
 
             <!-- Right: Animasi Merged (2/3) - CINEMATIC ANIMATION -->
             <div class="column-card animasi-merged">
               <div class="card" style="padding: 0; height: 100%;">
-                <div class="animasi-container" id="animasiContainer" style="width: 100%; height: 100%;"></div>
+                <div class="animasi-container" id="animasiContainer" style="width: 100%; height: 100%;">
+                  <div class="animasi-loading-overlay">
+                    <div class="animasi-spinner"></div>
+                    <span>Memuat animasi...</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -313,7 +334,7 @@ const pages = {
           <div class="guide-separator"></div>
           <div class="execution-cycle-row">
             <span class="execution-cycle-label">Execution Cycle :</span>
-            <span class="execution-cycle-value">${totalPositions.toLocaleString()} (jumlah total open & closed posisi)</span>
+            <span class="execution-cycle-value" id="executionCycleValue">${totalPositions.toLocaleString()} (jumlah total open & closed posisi)</span>
           </div>
           <div class="guide-step-boxes">
             <div class="step-box">
@@ -1414,50 +1435,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateDynamicI18n();
       });
     } else {
-      // Support async render (e.g., overview fetches from Google Sheets)
-      Promise.resolve(pg.render(session)).then(html => {
-        if (pageContent) pageContent.innerHTML = html;
-        updateDynamicI18n();
+      // Render immediately - overview.render() is now synchronous (non-blocking)
+      // Sheets data and charts load async after HTML is painted
+      const html = pg.render(session);
+      if (pageContent) pageContent.innerHTML = html;
+      updateDynamicI18n();
 
-        // Update sidebar status when navigating to any page
-        updateSidebarBotStatus(session.botSession?.is_active);
+      // Update sidebar status when navigating to any page
+      updateSidebarBotStatus(session.botSession?.is_active);
 
-        // Initialize charts/animations for specific pages
-        if (pageName === 'overview') {
-          // Update stat cards with fresh sheets data immediately after render
-          setTimeout(async () => {
-            const data = await getSheetsData(true);
-            if (data) updateStatCards(data);
-          }, 0);
+      // Initialize charts/animations for specific pages
+      if (pageName === 'overview') {
+        // Load Sheets data async (non-blocking, updates stat cards when ready)
+        setTimeout(() => {
+          loadOverviewData(session);
+        }, 0);
 
-          setTimeout(() => {
-            const container = document.getElementById('btcChartContainer');
-            if (container && !container.dataset.initialized) {
-              container.dataset.initialized = 'true';
-              initBTCRealTimeChart('#btcChartContainer', {
-                interval: '5m',
-                symbol: 'BTCUSDT',
-                maxCandles: 200,
-                useFallback: true,
-                fallbackProvider: 'coingecko'
-              });
-            }
-          }, 0);
-
-          setTimeout(() => {
-            const animContainer = document.getElementById('animasiContainer');
-            if (animContainer && !animContainer.dataset.initialized) {
-              animContainer.dataset.initialized = 'true';
-              new CinematicParticleAnimation('#animasiContainer', {
-                particleCount: 400,
-                maxSparkleCount: 3,
-                sparkleInterval: 150
-              });
-            }
-          }, 100);
-        }
-        if (pageName === 'performance') {
-          setTimeout(() => {
+        // Init BTC chart (removes overlay when ready)
+        setTimeout(() => {
+          const container = document.getElementById('btcChartContainer');
+          if (container && !container.dataset.initialized) {
+            container.dataset.initialized = 'true';
             initBTCRealTimeChart('#btcChartContainer', {
               interval: '5m',
               symbol: 'BTCUSDT',
@@ -1465,11 +1463,44 @@ document.addEventListener('DOMContentLoaded', async () => {
               useFallback: true,
               fallbackProvider: 'coingecko'
             });
-          }, 0);
-        }
-      }).catch(err => {
-        console.error('[navigateTo] Render error:', err);
-      });
+            // Remove loading overlay after chart init
+            const overlay = container.querySelector('.chart-loading-overlay');
+            if (overlay) overlay.remove();
+          }
+        }, 0);
+
+        // Init Cinematic Particle Animation (removes overlay when ready)
+        setTimeout(() => {
+          const animContainer = document.getElementById('animasiContainer');
+          if (animContainer && !animContainer.dataset.initialized) {
+            animContainer.dataset.initialized = 'true';
+            new CinematicParticleAnimation('#animasiContainer', {
+              particleCount: 400,
+              maxSparkleCount: 3,
+              sparkleInterval: 150
+            });
+            // Remove loading overlay after animation init
+            const overlay = animContainer.querySelector('.animasi-loading-overlay');
+            if (overlay) overlay.remove();
+          }
+        }, 100);
+      }
+      if (pageName === 'performance') {
+        setTimeout(() => {
+          initBTCRealTimeChart('#btcChartContainer', {
+            interval: '5m',
+            symbol: 'BTCUSDT',
+            maxCandles: 200,
+            useFallback: true,
+            fallbackProvider: 'coingecko'
+          });
+          const container = document.getElementById('btcChartContainer');
+          if (container) {
+            const overlay = container.querySelector('.chart-loading-overlay');
+            if (overlay) overlay.remove();
+          }
+        }, 0);
+      }
     }
 
     if (sidebar) sidebar.classList.remove('open');
@@ -1496,10 +1527,48 @@ document.addEventListener('DOMContentLoaded', async () => {
           // Re-render current page if it's overview
           const currentPage = document.querySelector('.nav-item.active')?.dataset.page;
           if (currentPage === 'overview' && pageContent) {
-            // Reset initialized flag so animation restarts
-            const robotContainer = document.getElementById('dataRobotContainer');
-            if (robotContainer) robotContainer.dataset.initialized = 'false';
+            // Reset initialized flags so chart/animation restart
+            const chartContainer = document.getElementById('btcChartContainer');
+            if (chartContainer) chartContainer.dataset.initialized = 'false';
+            const animContainer = document.getElementById('animasiContainer');
+            if (animContainer) animContainer.dataset.initialized = 'false';
+            
             pageContent.innerHTML = pages.overview.render(session);
+            
+            // Re-initialize charts/animations and load fresh data
+            setTimeout(() => {
+              loadOverviewData(session);
+            }, 0);
+            
+            setTimeout(() => {
+              const container = document.getElementById('btcChartContainer');
+              if (container && !container.dataset.initialized) {
+                container.dataset.initialized = 'true';
+                initBTCRealTimeChart('#btcChartContainer', {
+                  interval: '5m',
+                  symbol: 'BTCUSDT',
+                  maxCandles: 200,
+                  useFallback: true,
+                  fallbackProvider: 'coingecko'
+                });
+                const overlay = container.querySelector('.chart-loading-overlay');
+                if (overlay) overlay.remove();
+              }
+            }, 0);
+            
+            setTimeout(() => {
+              const animContainer = document.getElementById('animasiContainer');
+              if (animContainer && !animContainer.dataset.initialized) {
+                animContainer.dataset.initialized = 'true';
+                new CinematicParticleAnimation('#animasiContainer', {
+                  particleCount: 400,
+                  maxSparkleCount: 3,
+                  sparkleInterval: 150
+                });
+                const overlay = animContainer.querySelector('.animasi-loading-overlay');
+                if (overlay) overlay.remove();
+              }
+            }, 100);
           }
           // Update sidebar status badge from realtime update
           updateSidebarBotStatus(session.botSession?.is_active);
