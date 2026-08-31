@@ -375,22 +375,45 @@ const pages = {
   },
   positions: {
     title: 'Position',
-    render: async (session) => {
-      // Fetch real data from Google Sheets
-      const sheetsData = await getSheetsData();
+    render: (session) => {
+      const botState = session.botState || {};
       
-      // Use real data from Sheets if available, fall back to defaults
-      const totalPositions = sheetsData?.total_position || sheetsData?.total_positions || 0;
-      const longCount = sheetsData?.long_position || 0;
-      const shortCount = sheetsData?.short_position || 0;
-      const totalUnrealizedPnL = sheetsData?.pnl_unrealized || 0;
+      // --- INITIAL VALUES (from botState cache, will be updated async from Sheets) ---
+      const totalPositions    = botState.total_positions || 0;
+      const longCount         = botState.long_position || 0;
+      const shortCount        = botState.short_position || 0;
+      const totalUnrealizedPnL = botState.pnl_unrealized || 0;
 
       return `
+        <!-- 4 Stat Cards -->
         <div class="stats-grid">
-          <div class="stat-card"><div class="stat-card-label">Total Positions</div><div class="stat-card-value">${totalPositions}</div></div>
-          <div class="stat-card"><div class="stat-card-label">Long</div><div class="stat-card-value" style="color:var(--accent-secondary)">${longCount}</div></div>
-          <div class="stat-card"><div class="stat-card-label">Short</div><div class="stat-card-value" style="color:var(--accent-danger)">${shortCount}</div></div>
-          <div class="stat-card"><div class="stat-card-label">Total Unrealized PnL</div><div class="stat-card-value ${totalUnrealizedPnL >= 0 ? 'positive' : 'negative'}">$${totalUnrealizedPnL.toFixed(2)}</div></div>
+          <!-- Card 1: Total Positions -->
+          <div class="stat-card">
+            <div class="stat-card-label">Total Positions</div>
+            <div class="stat-card-value" id="posTotalPositions">${totalPositions}</div>
+            <div class="stat-card-sub loading-skeleton" id="posTotalPositionsLoading">Memuat data...</div>
+          </div>
+
+          <!-- Card 2: Long -->
+          <div class="stat-card">
+            <div class="stat-card-label">Long</div>
+            <div class="stat-card-value" style="color:var(--accent-secondary)" id="posLongCount">${longCount}</div>
+            <div class="stat-card-sub loading-skeleton" id="posLongCountLoading">Memuat data...</div>
+          </div>
+
+          <!-- Card 3: Short -->
+          <div class="stat-card">
+            <div class="stat-card-label">Short</div>
+            <div class="stat-card-value" style="color:var(--accent-danger)" id="posShortCount">${shortCount}</div>
+            <div class="stat-card-sub loading-skeleton" id="posShortCountLoading">Memuat data...</div>
+          </div>
+
+          <!-- Card 4: Total Unrealized PnL -->
+          <div class="stat-card">
+            <div class="stat-card-label">Total Unrealized PnL</div>
+            <div class="stat-card-value ${totalUnrealizedPnL >= 0 ? 'positive' : 'negative'}" id="posTotalUnrealizedPnL">$${totalUnrealizedPnL.toFixed(2)}</div>
+            <div class="stat-card-sub loading-skeleton" id="posTotalUnrealizedPnLLoading">Memuat data...</div>
+          </div>
         </div>
         <div class="content-section">
           <div class="section-header">
