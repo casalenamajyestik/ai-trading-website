@@ -179,6 +179,53 @@ async function loadOverviewData(session) {
   }
 }
 
+// ============ Load Positions Data Async (Progressive Loading) ============
+async function loadPositionsData(session) {
+  try {
+    console.log('[Positions] Loading Google Sheets data...');
+    const sheetsData = await getSheetsData(true); // force refresh
+    
+    if (sheetsData) {
+      // Update stat cards with real data
+      const totalPositions = sheetsData.total_position || sheetsData.total_positions || 0;
+      const longCount = sheetsData.long_position || 0;
+      const shortCount = sheetsData.short_position || 0;
+      const totalUnrealizedPnL = sheetsData.pnl_unrealized || 0;
+      
+      // Update elements
+      const posTotalPositionsEl = document.getElementById('posTotalPositions');
+      if (posTotalPositionsEl) posTotalPositionsEl.textContent = totalPositions.toLocaleString();
+      
+      const posLongCountEl = document.getElementById('posLongCount');
+      if (posLongCountEl) posLongCountEl.textContent = longCount.toLocaleString();
+      
+      const posShortCountEl = document.getElementById('posShortCount');
+      if (posShortCountEl) posShortCountEl.textContent = shortCount.toLocaleString();
+      
+      const posTotalUnrealizedPnLEl = document.getElementById('posTotalUnrealizedPnL');
+      if (posTotalUnrealizedPnLEl) {
+        posTotalUnrealizedPnLEl.textContent = `$${totalUnrealizedPnL.toFixed(2)}`;
+        posTotalUnrealizedPnLEl.className = `stat-card-value ${totalUnrealizedPnL >= 0 ? 'positive' : 'negative'}`;
+      }
+      
+      // Hide loading skeletons
+      ['posTotalPositionsLoading', 'posLongCountLoading', 'posShortCountLoading', 'posTotalUnrealizedPnLLoading'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      
+      console.log('[Positions] Data loaded and UI updated');
+    }
+  } catch (err) {
+    console.error('[Positions] Failed to load Sheets data:', err);
+    // Hide loading skeletons even on error
+    ['posTotalPositionsLoading', 'posLongCountLoading', 'posShortCountLoading', 'posTotalUnrealizedPnLLoading'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
+}
+
 function getCountryOptions(selectedCode = 'ID') {
   const countries = [
     { code: 'ID', name: 'Indonesia (+62)', dialCode: '+62', flag: '🇮🇩' },
