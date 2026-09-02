@@ -422,12 +422,14 @@ function handleSortColumn(column) {
  */
 function initPositionSortHandlers() {
   const headers = document.querySelectorAll('.positions-table th[data-sort]');
+  console.log('[Positions] Found sort headers:', headers.length);
   headers.forEach(th => {
     if (!th.dataset.listener) {
       th.dataset.listener = 'true';
       th.style.cursor = 'pointer';
       th.style.userSelect = 'none';
       th.addEventListener('click', () => {
+        console.log('[Positions] Header clicked:', th.dataset.sort);
         handleSortColumn(th.dataset.sort);
       });
     }
