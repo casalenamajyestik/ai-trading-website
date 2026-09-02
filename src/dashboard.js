@@ -298,26 +298,29 @@ function renderActivePositionsTable(positions) {
     return (b.size_usdt || 0) - (a.size_usdt || 0);
   });
   
-  tbody.innerHTML = sortedPositions.map(pos => {
-    const side = pos.side || '';
-    const sideClass = side === 'long' ? 'buy' : side === 'short' ? 'sell' : '';
-    const sideLabel = side === 'long' ? 'Long' : side === 'short' ? 'Short' : 'N/A';
-    const unrealizedPnL = pos.unrealized_pnl || 0;
-    const pnlClass = unrealizedPnL >= 0 ? 'positive' : 'negative';
-    const pnlSign = unrealizedPnL >= 0 ? '+' : '';
+  tbody.innerHTML = sortedPositions.map((pos, index) => {
+      const side = pos.side || '';
+      const sideClass = side === 'long' ? 'buy' : side === 'short' ? 'sell' : '';
+      const sideLabel = side === 'long' ? 'Long' : side === 'short' ? 'Short' : 'N/A';
+      const unrealizedPnL = pos.unrealized_pnl || 0;
+      const pnlClass = unrealizedPnL >= 0 ? 'positive' : 'negative';
+      const pnlSign = unrealizedPnL >= 0 ? '+' : '';
     
-    return `
-      <tr>
-        <td class="coin-name">${pos.nama_koin || 'N/A'}</td>
-        <td class="type ${sideClass}">${sideLabel}</td>
-        <td>${pos.size_usdt ? '$' + pos.size_usdt.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00'}</td>
-        <td>${pos.entry_price ? pos.entry_price.toLocaleString('en-US', {minimumFractionDigits: 4, maximumFractionDigits: 4}) : '0'}</td>
-        <td>${pos.mark_price ? pos.mark_price.toLocaleString('en-US', {minimumFractionDigits: 4, maximumFractionDigits: 4}) : '0'}</td>
-        <td class="pnl ${pnlClass}">${pnlSign}${unrealizedPnL.toFixed(2)}</td>
-        <td>${pos.leverage ? pos.leverage + 'x' : 'N/A'}</td>
-      </tr>
-    `;
-  }).join('');
+      const rowNumber = index + 1;
+
+      return `
+        <tr>
+          <td class="position-number">${rowNumber}</td>
+          <td class="coin-name">${pos.nama_koin || 'N/A'}</td>
+          <td class="type ${sideClass}">${sideLabel}</td>
+          <td>${pos.size_usdt ? '$' + pos.size_usdt.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00'}</td>
+          <td>${pos.entry_price ? pos.entry_price.toLocaleString('en-US', {minimumFractionDigits: 4, maximumFractionDigits: 4}) : '0'}</td>
+          <td>${pos.mark_price ? pos.mark_price.toLocaleString('en-US', {minimumFractionDigits: 4, maximumFractionDigits: 4}) : '0'}</td>
+          <td class="pnl ${pnlClass}">${pnlSign}${unrealizedPnL.toFixed(2)}</td>
+          <td>${pos.leverage ? pos.leverage + 'x' : 'N/A'}</td>
+        </tr>
+      `;
+    }).join('');
 }
 
 function getCountryOptions(selectedCode = 'ID') {
@@ -565,6 +568,7 @@ const pages = {
             <table>
               <thead>
                 <tr>
+                  <th>#</th>
                   <th>Coin</th>
                   <th>Side</th>
                   <th>Size (USDT)</th>

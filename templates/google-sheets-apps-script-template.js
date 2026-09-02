@@ -281,6 +281,25 @@ function doGet(e) {
     // 3. Append baris BARU untuk setiap posisi aktif
     // Ini mencegah spreadsheet penuh karena data lama dihapus setiap 5 menit
     
+    // Initialize sheet first (FIX: was missing before using sheet.getLastRow())
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = spreadsheet.getSheetByName(SHEET_NAME);
+    if (!sheet) sheet = spreadsheet.insertSheet(SHEET_NAME);
+    
+    // Initialize timestamp for this block (FIX: was only declared in other branches)
+    const timestamp = params.timestamp || Utilities.formatDate(new Date(), 'Asia/Jakarta', 'yyyy-MM-dd HH:mm:ss');
+    
+    // Declare variables needed in this block (FIX: were only in closed_position branch)
+    const saldo        = parseFloat(params.saldo)        || 0;
+    const pnl          = parseFloat(params.pnl)          || 0;
+    const totalPosition = parseInt(params.total_position) || 0;
+    const namaKoin     = params.nama_koin || 'unknown';
+    const sideStr      = params.side || '';
+    const userIdWrite  = params.user_id || 'anonymous';
+    const longCount    = parseInt(params.long_count)    || 0;
+    const shortCount   = parseInt(params.short_count)   || 0;
+    const size         = parseFloat(params.size)         || 0;
+    
     const dataTypeCol = HEADERS.indexOf('Data Type') + 1;  // kolom I (9)
     const userIdCol = HEADERS.indexOf('User ID') + 1;      // kolom K (11)
     const lastRow = sheet.getLastRow();
@@ -727,4 +746,28 @@ function cleanupOldUnrealizedSnapshots(dryRun = false) {
     skipped: { invalidUserId: skippedInvalidUserId, nonSnapshot: skippedNonSnapshot },
     dryRun: false
   };
+}
+
+// ---- doPost: handle large payloads (POST requests) ----
+function doPost(e) {
+  // Parse JSON body
+  let params = {};
+  try {
+    const body = e.postData.getDataAsString();
+    params = JSON.parse(body);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, message: 'Invalid JSON body' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // Convert active_positions array to JSON string (doGet expect string)
+  if (Array.isArray(params.active_positions)) {
+    params.active_positions = JSON.stringify(params.active_positions);
+  }
+
+  // Delegate to doGet logic (reuse same routing)
+  // Create a mock parameter object
+  const mockE = { parameter: params };
+  return doGet(mockE);
 }
