@@ -260,6 +260,8 @@ async function loadPositionsData(session) {
       // Fetch and render active positions detail
       const activePositions = await getActivePositionsDetail(true);
       renderActivePositionsTable(activePositions);
+      // Initialize sort handlers after table is rendered
+      initPositionSortHandlers();
     }
   } catch (err) {
     console.error('[Positions] Failed to load Sheets data:', err);
@@ -271,17 +273,31 @@ async function loadPositionsData(session) {
   }
 }
 
+// ============ Positions Filter/Sort State ============
+let positionsSortState = {
+  column: 'side_size', // default: side (long first) then size desc
+  direction: 'desc'
+};
+
 /**
  * Render active positions table with detail data from Google Sheets
+ * @param {Array} positions - Array of position objects from Google Sheets
+ * @param {Object} sortOptions - Optional sort options { column, direction }
  */
-function renderActivePositionsTable(positions) {
+function renderActivePositionsTable(positions, sortOptions = {}) {
   const tbody = document.querySelector('.positions-table tbody');
   if (!tbody) return;
+  
+  // Update sort state if provided
+  if (sortOptions.column) {
+    positionsSortState.column = sortOptions.column;
+    positionsSortState.direction = sortOptions.direction || 'desc';
+  }
   
   if (!positions || positions.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
+        <td colspan="8" style="text-align:center; color:var(--text-muted); padding: 20px;">
           Belum ada data detail posisi aktif. Bot akan mengirim data setiap 5 menit.
         </td>
       </tr>
@@ -289,13 +305,44 @@ function renderActivePositionsTable(positions) {
     return;
   }
   
-  // Sort: Long positions first, then Short, both by size_usdt descending
+  // Apply sorting based on current sort state
   const sortedPositions = [...positions].sort((a, b) => {
-    const aSide = a.side || '';
-    const bSide = b.side || '';
-    if (aSide === 'long' && bSide !== 'long') return -1;
-    if (bSide === 'long' && aSide !== 'long') return 1;
-    return (b.size_usdt || 0) - (a.size_usdt || 0);
+    let comparison = 0;
+    const direction = positionsSortState.direction === 'asc' ? 1 : -1;
+    
+    switch (positionsSortState.column) {
+      case 'coin_name':
+        comparison = (a.nama_koin || '').localeCompare(b.nama_koin || '');
+        break;
+      case 'unrealized_pnl':
+        comparison = (a.unrealized_pnl || 0) - (b.unrealized_pnl || 0);
+        break;
+      case 'size_usdt':
+        comparison = (a.size_usdt || 0) - (b.size_usdt || 0);
+        break;
+      case 'leverage':
+        comparison = (a.leverage || 0) - (b.leverage || 0);
+        break;
+      case 'side':
+        // Long first, then Short
+        const aSide = a.side || '';
+        const bSide = b.side || '';
+        if (aSide === 'long' && bSide !== 'long') comparison = -1;
+        else if (bSide === 'long' && aSide !== 'long') comparison = 1;
+        else comparison = 0;
+        break;
+      case 'side_size':
+      default:
+        // Default: Long first, then Short, both by size_usdt descending
+        const aSideDef = a.side || '';
+        const bSideDef = b.side || '';
+        if (aSideDef === 'long' && bSideDef !== 'long') comparison = -1;
+        else if (bSideDef === 'long' && aSideDef !== 'long') comparison = 1;
+        else comparison = (b.size_usdt || 0) - (a.size_usdt || 0);
+        break;
+    }
+    
+    return comparison * direction;
   });
   
   tbody.innerHTML = sortedPositions.map((pos, index) => {
@@ -305,7 +352,7 @@ function renderActivePositionsTable(positions) {
       const unrealizedPnL = pos.unrealized_pnl || 0;
       const pnlClass = unrealizedPnL >= 0 ? 'positive' : 'negative';
       const pnlSign = unrealizedPnL >= 0 ? '+' : '';
-    
+   
       const rowNumber = index + 1;
 
       return `
@@ -321,6 +368,70 @@ function renderActivePositionsTable(positions) {
         </tr>
       `;
     }).join('');
+  
+  // Update sort indicators in header
+  updateSortIndicators();
+}
+
+/**
+ * Update sort indicator arrows in table header
+ */
+function updateSortIndicators() {
+  const headers = document.querySelectorAll('.positions-table th[data-sort]');
+  headers.forEach(th => {
+    const column = th.dataset.sort;
+    const indicator = th.querySelector('.sort-indicator');
+    if (indicator) indicator.remove();
+    
+    if (column === positionsSortState.column) {
+      const arrow = positionsSortState.direction === 'asc' ? '↑' : '↓';
+      const span = document.createElement('span');
+      span.className = 'sort-indicator';
+      span.style.marginLeft = '0.375rem';
+      span.style.fontSize = '0.7rem';
+      span.textContent = arrow;
+      th.appendChild(span);
+      th.style.color = 'var(--accent-primary)';
+    } else {
+      th.style.color = '';
+    }
+  });
+}
+
+/**
+ * Handle sort column click
+ */
+function handleSortColumn(column) {
+  if (positionsSortState.column === column) {
+    // Toggle direction
+    positionsSortState.direction = positionsSortState.direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    // New column, default to desc (except coin_name which defaults to asc)
+    positionsSortState.column = column;
+    positionsSortState.direction = column === 'coin_name' ? 'asc' : 'desc';
+  }
+  
+  // Re-render with new sort
+  getActivePositionsDetail(true).then(positions => {
+    renderActivePositionsTable(positions);
+  });
+}
+
+/**
+ * Initialize sort click handlers on table headers
+ */
+function initPositionSortHandlers() {
+  const headers = document.querySelectorAll('.positions-table th[data-sort]');
+  headers.forEach(th => {
+    if (!th.dataset.listener) {
+      th.dataset.listener = 'true';
+      th.style.cursor = 'pointer';
+      th.style.userSelect = 'none';
+      th.addEventListener('click', () => {
+        handleSortColumn(th.dataset.sort);
+      });
+    }
+  });
 }
 
 function getCountryOptions(selectedCode = 'ID') {
@@ -569,18 +680,18 @@ const pages = {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>Coin</th>
-                  <th>Side</th>
-                  <th>Size (USDT)</th>
+                  <th data-sort="coin_name">Coin</th>
+                  <th data-sort="side">Side</th>
+                  <th data-sort="size_usdt">Size (USDT)</th>
                   <th>Entry Price</th>
                   <th>Mark Price</th>
-                  <th>Unrealized PnL</th>
-                  <th>Leverage</th>
+                  <th data-sort="unrealized_pnl">Unrealized PnL</th>
+                  <th data-sort="leverage">Leverage</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
+                  <td colspan="8" style="text-align:center; color:var(--text-muted); padding: 20px;">
                     <div class="loading-skeleton" style="display:inline-block; width:200px; height:20px; background:linear-gradient(90deg,var(--bg-tertiary),var(--bg-secondary),var(--bg-tertiary)); background-size:200% 100%; animation:shimmer 1.5s infinite;"></div>
                     <br><small>Memuat detail posisi aktif dari Google Sheets...</small>
                   </td>
