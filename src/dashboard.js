@@ -127,6 +127,10 @@ async function fetchActivePositionsDetail(userId) {
 let _activePositionsCache = { data: [], timestamp: 0, userId: null };
 const ACTIVE_POSITIONS_CACHE_TTL = 60_000; // 60 seconds cache
 
+// Cache untuk trade history (closed_position)
+let _tradeHistoryCache = { data: [], timestamp: 0, userId: null };
+const TRADE_HISTORY_CACHE_TTL = 60_000; // 60 seconds cache
+
 async function getActivePositionsDetail(forceRefresh = false) {
   const now = Date.now();
   const { user } = await getUser();
@@ -138,6 +142,55 @@ async function getActivePositionsDetail(forceRefresh = false) {
   const data = await fetchActivePositionsDetail(currentUserId);
   if (data.length > 0) {
     _activePositionsCache = { data, timestamp: now, userId: currentUserId };
+  }
+  return data;
+}
+
+/**
+ * Fetch trade history (closed_position) from Google Sheets
+ * Returns array of closed trade objects with time, coin, type, size, price, pnl
+ */
+async function fetchTradeHistory(userId) {
+  try {
+    const cacheBuster = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const url = GOOGLE_SHEETS_WEBAPP_URL
+      + '?mode=read&user_id=' + encodeURIComponent(userId)
+      + '&_=' + cacheBuster;
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const result = await response.json();
+    if (!result.success || !result.data) return [];
+    
+    // Filter hanya data_type = closed_position
+    const closedPositions = result.data.filter(row => row.data_type === 'closed_position');
+    
+    // Transform to trade history format
+    return closedPositions.map(row => ({
+      time: row.timestamp,
+      coin: row.nama_koin,
+      type: row.side === 'long' ? 'Buy' : row.side === 'short' ? 'Sell' : row.side,
+      size: row.size || 0,
+      price: row.harga_exit || 0,
+      pnl: row.pnl_exit || 0,
+      bot: row.session_id || 'Bot'
+    })).sort((a, b) => new Date(b.time) - new Date(a.time)); // newest first
+  } catch (err) {
+    console.error('[Sheets] Failed to fetch trade history:', err);
+    return [];
+  }
+}
+
+async function getTradeHistory(forceRefresh = false) {
+  const now = Date.now();
+  const { user } = await getUser();
+  const currentUserId = user?.id || 'anonymous';
+
+  if (!forceRefresh && _tradeHistoryCache.data.length > 0 && _tradeHistoryCache.userId === currentUserId && (now - _tradeHistoryCache.timestamp < TRADE_HISTORY_CACHE_TTL)) {
+    return _tradeHistoryCache.data;
+  }
+  const data = await fetchTradeHistory(currentUserId);
+  if (data.length > 0) {
+    _tradeHistoryCache = { data, timestamp: now, userId: currentUserId };
   }
   return data;
 }
@@ -284,6 +337,116 @@ async function loadPositionsData(session) {
       if (el) el.style.display = 'none';
     });
   }
+}
+
+// ============ Load History Data Async (Progressive Loading) ============
+async function loadHistoryData(session) {
+  try {
+    console.log('[History] Loading Google Sheets trade history...');
+    const trades = await getTradeHistory(true); // force refresh
+    
+    if (trades && trades.length > 0) {
+      // Calculate stats
+      const totalTrades = trades.length;
+      const wins = trades.filter(t => t.pnl > 0).length;
+      const losses = trades.filter(t => t.pnl < 0).length;
+      const avgTrade = trades.length > 0 ? (trades.reduce((sum, t) => sum + t.pnl, 0) / trades.length).toFixed(2) : '0.00';
+      
+      // Update stat cards
+      const totalTradesEl = document.getElementById('histTotalTrades');
+      if (totalTradesEl) totalTradesEl.textContent = totalTrades.toLocaleString();
+      
+      const winsEl = document.getElementById('histWins');
+      if (winsEl) winsEl.textContent = wins.toLocaleString();
+      
+      const lossesEl = document.getElementById('histLosses');
+      if (lossesEl) lossesEl.textContent = losses.toLocaleString();
+      
+      const avgTradeEl = document.getElementById('histAvgTrade');
+      if (avgTradeEl) {
+        avgTradeEl.textContent = `$${avgTrade >= 0 ? '+' : ''}${avgTrade}`;
+        avgTradeEl.className = `stat-card-value ${avgTrade >= 0 ? 'positive' : 'negative'}`;
+      }
+      
+      // Hide loading skeletons on stat cards
+      ['histTotalTradesLoading', 'histWinsLoading', 'histLossesLoading', 'histAvgTradeLoading'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      
+      // Render trade history table
+      renderTradeHistoryTable(trades);
+      
+      console.log('[History] Data loaded and UI updated:', { totalTrades, wins, losses, avgTrade });
+    } else {
+      // No data - show empty state
+      const tbody = document.getElementById('histTradesBody');
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
+              Belum ada trade history. Data akan muncul saat bot menutup posisi.
+            </td>
+          </tr>
+        `;
+      }
+      // Hide loading skeletons
+      ['histTotalTradesLoading', 'histWinsLoading', 'histLossesLoading', 'histAvgTradeLoading'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+    }
+  } catch (err) {
+    console.error('[History] Failed to load Sheets data:', err);
+    // Show error state
+    const tbody = document.getElementById('histTradesBody');
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center; color:var(--accent-danger); padding: 20px;">
+            Gagal memuat data. Silakan coba refresh halaman.
+          </td>
+        </tr>
+      `;
+    }
+    // Hide loading skeletons even on error
+    ['histTotalTradesLoading', 'histWinsLoading', 'histLossesLoading', 'histAvgTradeLoading'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
+}
+
+/**
+ * Render trade history table from Google Sheets data
+ * @param {Array} trades - Array of trade objects
+ */
+function renderTradeHistoryTable(trades) {
+  const tbody = document.getElementById('histTradesBody');
+  if (!tbody) return;
+  
+  if (!trades || trades.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
+          Belum ada trade history. Data akan muncul saat bot menutup posisi.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  tbody.innerHTML = trades.map(t => `
+    <tr>
+      <td>${t.time}</td>
+      <td class="coin-name">${t.coin}</td>
+      <td class="type ${t.type.toLowerCase()}">${t.type}</td>
+      <td>${Number(t.size).toLocaleString()}</td>
+      <td>$${Number(t.price).toLocaleString()}</td>
+      <td class="pnl ${t.pnl >= 0 ? 'positive' : 'negative'}">$${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}</td>
+      <td>${t.bot}</td>
+    </tr>
+  `).join('');
 }
 
 // ============ Positions Filter/Sort State ============
@@ -720,29 +883,13 @@ const pages = {
   history: {
     title: 'History Trade',
     render: (session) => {
-      const botState = session.botState || {};
-      const trades = botState.trade_history || [
-        { time: '2024-01-15 14:32', coin: 'BTCUSDT', type: 'Buy', size: '0.05', price: 67420, pnl: 34, bot: 'Grid Bot' },
-        { time: '2024-01-15 13:15', coin: 'ETHUSDT', type: 'Sell', size: '2.5', price: 3520, pnl: 150, bot: 'DCA Bot' },
-        { time: '2024-01-15 11:42', coin: 'SOLUSDT', type: 'Sell', size: '150', price: 142.5, pnl: 345, bot: 'AI Adaptive' },
-        { time: '2024-01-15 09:20', coin: 'ADAUSDT', type: 'Buy', size: '5000', price: 0.45, pnl: -12, bot: 'Scalper' },
-        { time: '2024-01-15 07:05', coin: 'MATICUSDT', type: 'Buy', size: '2000', price: 0.72, pnl: 30, bot: 'Grid Bot' },
-        { time: '2024-01-14 22:10', coin: 'BTCUSDT', type: 'Sell', size: '0.1', price: 67800, pnl: 240, bot: 'Grid Bot (TP)' },
-        { time: '2024-01-14 18:30', coin: 'ETHUSDT', type: 'Buy', size: '1.2', price: 3480, pnl: 80, bot: 'DCA Bot' },
-        { time: '2024-01-14 15:45', coin: 'SOLUSDT', type: 'Buy', size: '200', price: 140.2, pnl: 45, bot: 'AI Adaptive' },
-      ];
-      
-      const totalTrades = trades.length;
-      const wins = trades.filter(t => t.pnl > 0).length;
-      const losses = trades.filter(t => t.pnl < 0).length;
-      const avgTrade = (trades.reduce((sum, t) => sum + t.pnl, 0) / trades.length).toFixed(2);
-      
+      // Return skeleton UI immediately — real data loaded async via loadHistoryData()
       return `
         <div class="stats-grid">
-          <div class="stat-card"><div class="stat-card-label">Total Trades (30d)</div><div class="stat-card-value">${totalTrades}</div></div>
-          <div class="stat-card"><div class="stat-card-label">Wins</div><div class="stat-card-value positive">${wins}</div></div>
-          <div class="stat-card"><div class="stat-card-label">Losses</div><div class="stat-card-value negative">${losses}</div></div>
-          <div class="stat-card"><div class="stat-card-label">Avg Trade PnL</div><div class="stat-card-value ${avgTrade >= 0 ? 'positive' : 'negative'}">$${avgTrade >= 0 ? '+' : ''}${avgTrade}</div></div>
+          <div class="stat-card"><div class="stat-card-label">Total Trades (30d)</div><div class="stat-card-value" id="histTotalTrades">0</div><div class="stat-card-sub loading-skeleton" id="histTotalTradesLoading">Memuat data...</div></div>
+          <div class="stat-card"><div class="stat-card-label">Wins</div><div class="stat-card-value positive" id="histWins">0</div><div class="stat-card-sub loading-skeleton" id="histWinsLoading">Memuat data...</div></div>
+          <div class="stat-card"><div class="stat-card-label">Losses</div><div class="stat-card-value negative" id="histLosses">0</div><div class="stat-card-sub loading-skeleton" id="histLossesLoading">Memuat data...</div></div>
+          <div class="stat-card"><div class="stat-card-label">Avg Trade PnL</div><div class="stat-card-value" id="histAvgTrade">$0.00</div><div class="stat-card-sub loading-skeleton" id="histAvgTradeLoading">Memuat data...</div></div>
         </div>
         <div class="content-section">
           <div class="section-header">
@@ -762,18 +909,13 @@ const pages = {
                   <th>Bot</th>
                 </tr>
               </thead>
-              <tbody>
-                ${trades.map(t => `
-                  <tr>
-                    <td>${t.time}</td>
-                    <td class="coin-name">${t.coin}</td>
-                    <td class="type ${t.type.toLowerCase()}">${t.type}</td>
-                    <td>${t.size}</td>
-                    <td>$${Number(t.price).toLocaleString()}</td>
-                    <td class="pnl ${t.pnl >= 0 ? 'positive' : 'negative'}">$${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}</td>
-                    <td>${t.bot}</td>
-                  </tr>
-                `).join('')}
+              <tbody id="histTradesBody">
+                <tr>
+                  <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
+                    <div class="loading-skeleton" style="display:inline-block; width:200px; height:20px; background:linear-gradient(90deg,var(--bg-tertiary),var(--bg-secondary),var(--bg-tertiary)); background-size:200% 100%; animation:shimmer 1.5s infinite;"></div>
+                    <br><small>Memuat trade history dari Google Sheets...</small>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -1799,6 +1941,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Load Sheets data async (non-blocking, updates stat cards when ready)
         setTimeout(() => {
           loadPositionsData(session);
+        }, 0);
+      }
+      if (pageName === 'history') {
+        // Load Sheets trade history async (non-blocking, updates stat cards when ready)
+        setTimeout(() => {
+          loadHistoryData(session);
         }, 0);
       }
     }
