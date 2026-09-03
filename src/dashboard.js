@@ -244,7 +244,7 @@ function timeAgo(date) {
 }
 
 // ============ Update Stat Cards from Google Sheets Data ============
-function updateStatCards(sheetsData) {
+function updateStatCards(sheetsData, closedPositions = 0) {
   if (!sheetsData) return;
 
   // Map Google Sheets field names to card elements
@@ -252,7 +252,8 @@ function updateStatCards(sheetsData) {
   const yesterdayPnL = sheetsData.pnl_yesterday || sheetsData.yesterday_pnl || sheetsData.daily_pnl || 0;
   const totalPnL = sheetsData.pnl_exit || sheetsData.total_pnl || 0;
   const biggestWin = sheetsData.biggest_win || 0;
-  const totalPositions = sheetsData.total_position || sheetsData.total_positions || 0;
+  const openPositions = sheetsData.total_position || sheetsData.total_positions || 0;
+  const totalPositions = openPositions + closedPositions;
 
   // Update each stat card
   const balanceEl = document.getElementById('statBalanceDisplay');
@@ -279,7 +280,7 @@ function updateStatCards(sheetsData) {
     executionTab.textContent = `Execution Cycle : ${totalPositions.toLocaleString()}`;
   }
 
-  console.log('[Dashboard] Stat cards updated from Sheets:', { balance, yesterdayPnL, totalPnL, biggestWin, totalPositions });
+  console.log('[Dashboard] Stat cards updated from Sheets:', { balance, yesterdayPnL, totalPnL, biggestWin, openPositions, closedPositions, totalPositions });
 }
 
 // ============ Load Overview Data Async (Progressive Loading) ============
@@ -289,11 +290,15 @@ async function loadOverviewData(session) {
     const sheetsData = await getSheetsData(true); // force refresh
     
     if (sheetsData) {
-      // Update stat cards with real data
-      updateStatCards(sheetsData);
+      // Update stat cards with real data - fetch trade history to get correct total (open + closed)
+      const openPositions = sheetsData.total_position || sheetsData.total_positions || 0;
+      const tradeHistory = await getTradeHistory(true); // force refresh to get closed positions count
+      const closedPositions = tradeHistory ? tradeHistory.length : 0;
+      const totalPositions = openPositions + closedPositions;
+      
+      updateStatCards(sheetsData, closedPositions);
       
       // Also update execution cycle value
-      const totalPositions = sheetsData.total_position || sheetsData.total_positions || 0;
       const execCycleEl = document.getElementById('executionCycleValue');
       if (execCycleEl) {
         execCycleEl.textContent = `${totalPositions.toLocaleString()} (jumlah total open & closed posisi)`;
@@ -305,7 +310,7 @@ async function loadOverviewData(session) {
         if (el) el.style.display = 'none';
       });
       
-      console.log('[Overview] Data loaded and UI updated');
+      console.log('[Overview] Data loaded and UI updated', { openPositions, closedPositions, totalPositions });
     }
   } catch (err) {
     console.error('[Overview] Failed to load Sheets data:', err);
@@ -2070,14 +2075,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!data) return;
 
         if (currentPage === 'overview' && pageContent) {
-          updateStatCards(data);
+          // Fetch trade history for closed positions count
+          const tradeHistory = await getTradeHistory(true);
+          const closedPositions = tradeHistory ? tradeHistory.length : 0;
+          updateStatCards(data, closedPositions);
           // Hide skeletons kalau ada (misalnya setelah realtime re-render)
           ['statBalanceLoading', 'statPnLLoading', 'statBiggestWinLoading', 'statPositionsLoading'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
           });
           // Update execution cycle value kalau ada
-          const totalPositions = data.total_position || data.total_positions || 0;
+          const openPositions = data.total_position || data.total_positions || 0;
+          const totalPositions = openPositions + closedPositions;
           const execCycleEl = document.getElementById('executionCycleValue');
           if (execCycleEl) {
             execCycleEl.textContent = `${totalPositions.toLocaleString()} (jumlah total open & closed posisi)`;
