@@ -384,7 +384,7 @@ async function loadHistoryData(session) {
       if (tbody) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
+            <td colspan="6" style="text-align:center; color:var(--text-muted); padding: 20px;">
               Belum ada trade history. Data akan muncul saat bot menutup posisi.
             </td>
           </tr>
@@ -403,7 +403,7 @@ async function loadHistoryData(session) {
     if (tbody) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" style="text-align:center; color:var(--accent-danger); padding: 20px;">
+          <td colspan="6" style="text-align:center; color:var(--accent-danger); padding: 20px;">
             Gagal memuat data. Silakan coba refresh halaman.
           </td>
         </tr>
@@ -428,7 +428,7 @@ function renderTradeHistoryTable(trades) {
   if (!trades || trades.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
+        <td colspan="6" style="text-align:center; color:var(--text-muted); padding: 20px;">
           Belum ada trade history. Data akan muncul saat bot menutup posisi.
         </td>
       </tr>
@@ -444,7 +444,6 @@ function renderTradeHistoryTable(trades) {
       <td>${Number(t.size).toLocaleString()}</td>
       <td>$${Number(t.price).toLocaleString()}</td>
       <td class="pnl ${t.pnl >= 0 ? 'positive' : 'negative'}">$${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}</td>
-      <td>${t.bot}</td>
     </tr>
   `).join('');
 }
@@ -906,12 +905,11 @@ const pages = {
                   <th>Size</th>
                   <th>Price</th>
                   <th>PnL</th>
-                  <th>Bot</th>
                 </tr>
               </thead>
               <tbody id="histTradesBody">
                 <tr>
-                  <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
+                  <td colspan="6" style="text-align:center; color:var(--text-muted); padding: 20px;">
                     <div class="loading-skeleton" style="display:inline-block; width:200px; height:20px; background:linear-gradient(90deg,var(--bg-tertiary),var(--bg-secondary),var(--bg-tertiary)); background-size:200% 100%; animation:shimmer 1.5s infinite;"></div>
                     <br><small>Memuat trade history dari Google Sheets...</small>
                   </td>
