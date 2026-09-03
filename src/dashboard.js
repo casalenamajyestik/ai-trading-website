@@ -38,8 +38,20 @@ const GOOGLE_SHEETS_WEBAPP_URL = import.meta.env.VITE_GOOGLE_SHEETS_WEBAPP_URL |
  */
 async function fetchLatestSheetsData(userId) {
   try {
-    const url = GOOGLE_SHEETS_WEBAPP_URL + '?mode=read_last&user_id=' + encodeURIComponent(userId);
-    const response = await fetch(url, { cache: 'no-store' });
+    // Cache-busting: pakai timestamp + random nonce supaya Google Apps Script
+    // selalu return data fresh (bukan 304 Not Modified dari cache browser/CDN).
+    const cacheBuster = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const url = GOOGLE_SHEETS_WEBAPP_URL
+      + '?mode=read_last&user_id=' + encodeURIComponent(userId)
+      + '&_=' + cacheBuster;
+    const response = await fetch(url, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const result = await response.json();
     if (result.success && result.data) {
@@ -94,9 +106,20 @@ async function getSheetsData(forceRefresh = false) {
  */
 async function fetchActivePositionsDetail(userId) {
   try {
-    // Use mode=read to get ALL rows, then filter for active_position_detail
-    const url = GOOGLE_SHEETS_WEBAPP_URL + '?mode=read&user_id=' + encodeURIComponent(userId);
-    const response = await fetch(url, { cache: 'no-store' });
+    // Use mode=read to get ALL rows, then filter for active_position_detail.
+    // Cache-busting supaya data selalu fresh dari spreadsheet.
+    const cacheBuster = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const url = GOOGLE_SHEETS_WEBAPP_URL
+      + '?mode=read&user_id=' + encodeURIComponent(userId)
+      + '&_=' + cacheBuster;
+    const response = await fetch(url, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const result = await response.json();
     if (!result.success || !result.data) return [];
@@ -1865,27 +1888,62 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     navigateTo('overview');
 
-    // Auto-refresh Google Sheets data every 2 minutes for dashboard pages
+    // Auto-refresh Google Sheets data setiap 30 detik (bukan 2 menit).
+    // Trading dashboard butuh data fresh — bot update spreadsheet berkala.
     // Aturan: ambil data dari spreadsheet, jika angka baris terakhir = 0
-    // maka fallback ke angka terakhir non-zero di kolom yang sama
-    let sheetsRefreshInterval = setInterval(async () => {
-      const currentPage = document.querySelector('.nav-item.active')?.dataset.page;
-      if (currentPage === 'overview' && pageContent) {
-        const data = await getSheetsData(true);
-        if (data) {
-          updateStatCards(data);
-        }
-      }
-      if (currentPage === 'positions' && pageContent) {
-        const data = await getSheetsData(true);
-        if (data) {
-          loadPositionsData(session);
-        }
-      }
-    }, 120000); // 2 menit (120.000 ms)
+    // maka fallback ke angka terakhir non-zero di kolom yang sama.
+    let isRefreshing = false; // guard supaya tidak overlap kalau fetch lambat
 
-    // Store reference for cleanup
+    async function refreshSheetsInBackground() {
+      if (isRefreshing) return;
+      isRefreshing = true;
+      try {
+        const currentPage = document.querySelector('.nav-item.active')?.dataset.page;
+        const data = await getSheetsData(true); // force refresh + bypass cache lokal
+        if (!data) return;
+
+        if (currentPage === 'overview' && pageContent) {
+          updateStatCards(data);
+          // Hide skeletons kalau ada (misalnya setelah realtime re-render)
+          ['statBalanceLoading', 'statPnLLoading', 'statBiggestWinLoading', 'statPositionsLoading'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+          });
+          // Update execution cycle value kalau ada
+          const totalPositions = data.total_position || data.total_positions || 0;
+          const execCycleEl = document.getElementById('executionCycleValue');
+          if (execCycleEl) {
+            execCycleEl.textContent = `${totalPositions.toLocaleString()} (jumlah total open & closed posisi)`;
+          }
+        }
+        if (currentPage === 'positions' && pageContent) {
+          await loadPositionsData(session);
+        }
+      } catch (err) {
+        console.warn('[Auto-refresh] Sheets refresh failed:', err);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    let sheetsRefreshInterval = setInterval(refreshSheetsInBackground, 30_000); // 30 detik
+
+    // Saat user balik ke tab (dari HP sleep, atau pindah tab browser),
+    // langsung refresh supaya tidak nunggu 30 detik.
+    const visibilityHandler = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[Dashboard] Tab visible — refreshing Sheets data');
+        refreshSheetsInBackground();
+      }
+    };
+    document.addEventListener('visibilitychange', visibilityHandler);
+
+    // Cleanup helper supaya tidak duplicate listener kalau ada re-init
     if (typeof window !== 'undefined') {
+      window.__sheetsRefreshCleanup = () => {
+        clearInterval(sheetsRefreshInterval);
+        document.removeEventListener('visibilitychange', visibilityHandler);
+      };
       window.__sheetsRefreshInterval = sheetsRefreshInterval;
     }
   });
