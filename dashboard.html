@@ -472,7 +472,11 @@
         }
 
         /* ============ Tables ============ */
-        .table-container { overflow-x: auto; }
+        .table-container { 
+          overflow-x: auto; 
+          overflow-y: auto;
+          max-height: 60vh; /* adjust as needed */
+        }
         .table-container table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
         .table-container th, .table-container td { 
           padding: 0.875rem 1rem; text-align: left; border-bottom: 1px solid var(--border-subtle);
