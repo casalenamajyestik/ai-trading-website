@@ -40,18 +40,13 @@ async function fetchLatestSheetsData(userId) {
   try {
     // Cache-busting: pakai timestamp + random nonce supaya Google Apps Script
     // selalu return data fresh (bukan 304 Not Modified dari cache browser/CDN).
+    // TIDAK pakai custom headers (Cache-Control, Pragma, Expires) karena
+    // Google Apps Script tidak support CORS preflight untuk custom headers.
     const cacheBuster = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const url = GOOGLE_SHEETS_WEBAPP_URL
       + '?mode=read_last&user_id=' + encodeURIComponent(userId)
       + '&_=' + cacheBuster;
-    const response = await fetch(url, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
+    const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const result = await response.json();
     if (result.success && result.data) {
@@ -108,18 +103,13 @@ async function fetchActivePositionsDetail(userId) {
   try {
     // Use mode=read to get ALL rows, then filter for active_position_detail.
     // Cache-busting supaya data selalu fresh dari spreadsheet.
+    // TIDAK pakai custom headers (Cache-Control, Pragma, Expires) karena
+    // Google Apps Script tidak support CORS preflight untuk custom headers.
     const cacheBuster = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     const url = GOOGLE_SHEETS_WEBAPP_URL
       + '?mode=read&user_id=' + encodeURIComponent(userId)
       + '&_=' + cacheBuster;
-    const response = await fetch(url, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
+    const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const result = await response.json();
     if (!result.success || !result.data) return [];
