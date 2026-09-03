@@ -477,7 +477,11 @@
         .table-container th, .table-container td { 
           padding: 0.875rem 1rem; text-align: left; border-bottom: 1px solid var(--border-subtle);
         }
-        .table-container th { color: var(--text-muted); font-weight: 500; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .table-container th { 
+          color: var(--text-muted); font-weight: 500; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+          position: sticky; top: 0; background: var(--bg-card); z-index: 10;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
         .table-container th[data-sort] { cursor: pointer; user-select: none; transition: color var(--transition-fast); }
         .table-container th[data-sort]:hover { color: var(--accent-primary); }
         .table-container th[data-sort] .sort-indicator { display: inline-block; margin-left: 0.375rem; font-size: 0.7rem; vertical-align: middle; }
