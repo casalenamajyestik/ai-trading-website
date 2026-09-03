@@ -265,7 +265,10 @@ function updateStatCards(sheetsData) {
   }
 
   const biggestWinEl = document.getElementById('statBiggestWin');
-  if (biggestWinEl) biggestWinEl.textContent = formatCompactCurrency(biggestWin);
+  if (biggestWinEl) {
+    biggestWinEl.textContent = formatCompactCurrency(biggestWin);
+    biggestWinEl.className = 'stat-card-value positive';
+  }
 
   const totalPositionsEl = document.getElementById('statTotalPositions');
   if (totalPositionsEl) totalPositionsEl.textContent = totalPositions.toLocaleString();
