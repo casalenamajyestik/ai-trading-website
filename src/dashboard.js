@@ -204,6 +204,34 @@ function formatUSD(num) {
   return '$ ' + Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+/**
+ * Format timestamp to local time (WIB/UTC+7) for display
+ * Handles both ISO strings and formatted date strings from Google Sheets
+ * @param {string|Date} timestamp - Timestamp from Google Sheets
+ * @returns {string} Formatted local time string (e.g., "2024-01-15 10:30:05 WIB")
+ */
+function formatLocalTime(timestamp) {
+  if (!timestamp) return '-';
+  const date = new Date(timestamp);
+  if (isNaN(date.getTime())) return String(timestamp);
+  
+  // Format as WIB (UTC+7)
+  const options = {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  };
+  const formatter = new Intl.DateTimeFormat('id-ID', options);
+  const parts = formatter.formatToParts(date);
+  const get = (type) => parts.find(p => p.type === type)?.value || '';
+  return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')} WIB`;
+}
+
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
   if (seconds < 60) return `${seconds}s ago`;
@@ -438,7 +466,7 @@ function renderTradeHistoryTable(trades) {
   
   tbody.innerHTML = trades.map(t => `
     <tr>
-      <td>${t.time}</td>
+      <td>${formatLocalTime(t.time)}</td>
       <td class="coin-name">${t.coin}</td>
       <td class="type ${t.type.toLowerCase()}">${t.type}</td>
       <td>${Number(t.size).toLocaleString()}</td>
