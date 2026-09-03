@@ -253,7 +253,7 @@ function updateStatCards(sheetsData, closedPositions = 0) {
   const totalPnL = sheetsData.pnl_exit || sheetsData.total_pnl || 0;
   const biggestWin = sheetsData.biggest_win || 0;
   const openPositions = sheetsData.total_position || sheetsData.total_positions || 0;
-  const totalPositions = openPositions + closedPositions;
+  const totalPositions = openPositions + closedPositions; // for Execution Cycle label
 
   // Update each stat card
   const balanceEl = document.getElementById('statBalanceDisplay');
@@ -272,9 +272,9 @@ function updateStatCards(sheetsData, closedPositions = 0) {
   }
 
   const totalPositionsEl = document.getElementById('statTotalPositions');
-  if (totalPositionsEl) totalPositionsEl.textContent = totalPositions.toLocaleString();
+  if (totalPositionsEl) totalPositionsEl.textContent = openPositions.toLocaleString(); // only open positions
 
-  // Also update Execution Cycle tab label if present
+  // Also update Execution Cycle tab label if present (shows total: open + closed)
   const executionTab = document.querySelector('.settings-tab[data-tab="execution"]');
   if (executionTab) {
     executionTab.textContent = `Execution Cycle : ${totalPositions.toLocaleString()}`;
