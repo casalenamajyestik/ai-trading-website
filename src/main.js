@@ -240,15 +240,20 @@ initAuth()
       btn.textContent = 'Masuk...';
       btn.disabled = true;
       
+      // Clear any previous inline error
+      const existingBanner = loginForm.querySelector('.login-error-banner');
+      if (existingBanner) existingBanner.remove();
+      
       // Real Supabase sign in
       const { data, error } = await signIn(email, password);
       
       console.log('SignIn result:', { data, error });
       
       if (error) {
-        showToast(error.message || 'Login gagal', 'error');
-        btn.textContent = originalText;
-        btn.disabled = false;
+        // Translate Supabase auth error to friendly Indonesian message
+        const friendly = translateAuthError(error);
+        showLoginError(loginForm, btn, originalText, friendly);
+        showToast(friendly, 'error');
         return;
       }
       
@@ -888,6 +893,91 @@ initAuth()
           startResendTimer();
         }
       });
+    }
+
+    // ============ Auth Error Translation ============
+    // Translate Supabase auth error into friendly Indonesian message.
+    // Supabase v2 returns AuthError with .code (e.g. 'invalid_credentials')
+    // and .message (English). We map known codes to user-friendly text.
+    function translateAuthError(error) {
+      // Prefer the stable error code, fall back to message substring match
+      const code = (error && error.code) ? String(error.code).toLowerCase() : '';
+      const msg = (error && error.message) ? String(error.message).toLowerCase() : '';
+      const status = error && error.status;
+
+      // Most common: wrong email or wrong password
+      if (status === 400 || code === 'invalid_credentials' ||
+          msg.includes('invalid login') || msg.includes('invalid credentials')) {
+        return 'Email atau kata sandi salah. Silakan periksa kembali dan coba lagi.';
+      }
+      if (code === 'email_not_confirmed' || msg.includes('email not confirmed')) {
+        return 'Email Anda belum diverifikasi. Silakan cek inbox untuk link verifikasi.';
+      }
+      if (code === 'user_not_found' || msg.includes('user not found')) {
+        return 'Email tidak terdaftar. Silakan daftar terlebih dahulu atau gunakan email lain.';
+      }
+      if (code === 'user_banned' || msg.includes('banned')) {
+        return 'Akun Anda dinonaktifkan. Hubungi admin untuk bantuan.';
+      }
+      if (status === 429 || code === 'over_request_rate_limit' || msg.includes('rate limit')) {
+        return 'Terlalu banyak percobaan login. Silakan tunggu beberapa menit lalu coba lagi.';
+      }
+      if (status === 422 || msg.includes('email') && msg.includes('invalid')) {
+        return 'Format email tidak valid. Periksa kembali penulisan email Anda.';
+      }
+      if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch')) {
+        return 'Gagal terhubung ke server. Periksa koneksi internet Anda lalu coba lagi.';
+      }
+      if (code === 'weak_password' || msg.includes('password')) {
+        return 'Kata sandi tidak memenuhi syarat keamanan. Gunakan minimal 8 karakter.';
+      }
+      // Fallback: still give the user something, not a blank screen
+      return error?.message || 'Login gagal. Silakan coba lagi.';
+    }
+
+    // Show inline error banner inside the login form (above submit button)
+    // so the user always sees the error even if they miss the toast.
+    function showLoginError(form, btn, originalText, message) {
+      // Remove any prior banner
+      const prior = form.querySelector('.login-error-banner');
+      if (prior) prior.remove();
+
+      const banner = document.createElement('div');
+      banner.className = 'login-error-banner';
+      banner.setAttribute('role', 'alert');
+      banner.setAttribute('aria-live', 'assertive');
+      banner.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>${message}</span>
+      `;
+      // Insert right before the submit button
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        form.insertBefore(banner, submitBtn);
+      } else {
+        form.appendChild(banner);
+      }
+
+      // Restore button state
+      if (btn) {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+
+      // Light shake on the modal content for emphasis
+      const modalContent = form.closest('.modal-content') || form;
+      if (modalContent) {
+        modalContent.style.animation = 'shake 0.4s ease-in-out';
+        setTimeout(() => { modalContent.style.animation = ''; }, 400);
+      }
+
+      // Focus the password field so user can retype immediately
+      const pwd = form.querySelector('input[type="password"]');
+      if (pwd) pwd.focus();
     }
 
     // ============ Toast Notifications ============

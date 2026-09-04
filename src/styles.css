@@ -2456,6 +2456,29 @@ dialog.modal {
   opacity: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(12px);
+  animation: toastSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 280px;
+  max-width: 420px;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0 0 0 0.5rem;
+  opacity: 0.8;
+}
+.toast-close:hover { opacity: 1; }
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateY(100px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .toast-success {
@@ -2468,6 +2491,35 @@ dialog.modal {
 
 .toast-info {
   background: rgba(79, 142, 255, 0.92);
+}
+
+/* --- Inline Login Error Banner (inside login form) --- */
+.login-error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0 0 1rem 0;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  background: rgba(240, 78, 78, 0.12);
+  border: 1px solid rgba(240, 78, 78, 0.45);
+  color: #f87171;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  animation: errorBannerIn 0.25s ease-out;
+}
+.login-error-banner svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  color: #f87171;
+}
+.login-error-banner span {
+  flex: 1;
+}
+
+@keyframes errorBannerIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* --- Scroll Reveal --- */
