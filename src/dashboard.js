@@ -906,7 +906,7 @@ const pages = {
                 <tr>
                   <td colspan="8" style="text-align:center; color:var(--text-muted); padding: 20px;">
                     <div class="loading-skeleton" style="display:inline-block; width:200px; height:20px; background:linear-gradient(90deg,var(--bg-tertiary),var(--bg-secondary),var(--bg-tertiary)); background-size:200% 100%; animation:shimmer 1.5s infinite;"></div>
-                    <br><small>Memuat detail posisi aktif dari Google Sheets...</small>
+                    <br><small>Memuat data</small>
                   </td>
                 </tr>
               </tbody>
