@@ -84,6 +84,14 @@ export async function resetPassword(email) {
   return { data, error };
 }
 
+// Update password (user must be authenticated; for signed-in user changing own password)
+export async function updatePassword(newPassword) {
+  const { data, error } = await supabase.auth.updateUser({
+    password: newPassword
+  });
+  return { data, error };
+}
+
 // ============ Profile Helpers ============
 export async function getProfile(userId) {
   const { data, error } = await supabase

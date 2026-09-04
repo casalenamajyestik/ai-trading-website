@@ -8,7 +8,8 @@ import {
   updateBotSession,
   toggleBotSession,
   getBotState,
-  getUser
+  getUser,
+  updatePassword
 } from './supabase.js';
 import { supabase } from './supabase.js';
 import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
@@ -1132,6 +1133,40 @@ const pages = {
             <div><label>Notifikasi</label><select id="settingsNotification" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"><option value="">Pilih notifikasi</option><option value="telegram" ${session.user?.notification === 'telegram' ? 'selected' : ''}>Telegram</option></select></div>
             <button class="btn btn-primary" id="settingsSaveBtn" style="margin-top:0.5rem;padding:0.75rem 1.5rem;">Simpan Perubahan</button>
           </div>
+
+          <!-- ============ Change Password Section ============ -->
+          <div class="password-section" style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border-subtle);">
+            <div class="password-section-header" style="margin-bottom:1rem;">
+              <div class="password-section-title" style="font-size:1rem;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:0.5rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="color:var(--accent-primary);"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Ubah Password
+              </div>
+              <div class="password-section-desc" style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">
+                Ganti password akun Anda secara berkala untuk menjaga keamanan.
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.875rem;">
+              <div>
+                <label style="display:block;font-size:0.8rem;font-weight:500;color:var(--text-secondary);margin-bottom:0.375rem;">Password Baru</label>
+                <div class="input-row" style="display:flex;gap:0.5rem;align-items:stretch;">
+                  <input type="password" id="newPasswordInput" placeholder="Minimal 6 karakter" style="flex:1;padding:0.75rem 1rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;font-size:0.875rem;min-height:2.75rem;">
+                  <button type="button" class="btn btn-secondary" id="toggleNewPasswordBtn" style="padding:0.75rem 1rem;display:flex;align-items:center;gap:0.375rem;">👁</button>
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:0.8rem;font-weight:500;color:var(--text-secondary);margin-bottom:0.375rem;">Konfirmasi Password Baru</label>
+                <div class="input-row" style="display:flex;gap:0.5rem;align-items:stretch;">
+                  <input type="password" id="confirmPasswordInput" placeholder="Ketik ulang password baru" style="flex:1;padding:0.75rem 1rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;font-size:0.875rem;min-height:2.75rem;">
+                  <button type="button" class="btn btn-secondary" id="toggleConfirmPasswordBtn" style="padding:0.75rem 1rem;display:flex;align-items:center;gap:0.375rem;">👁</button>
+                </div>
+              </div>
+              <div id="passwordMessage" class="password-message" style="display:none;font-size:0.8rem;padding:0.625rem 0.875rem;border-radius:var(--radius-md);"></div>
+              <div class="action-row" style="display:flex;gap:0.75rem;margin-top:0.25rem;">
+                <button class="btn btn-primary" id="changePasswordBtn" style="padding:0.75rem 1.5rem;">Ubah Password</button>
+                <button class="btn btn-secondary" id="cancelPasswordBtn" style="padding:0.75rem 1.5rem;">Batal</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="settings-panel" role="tabpanel" data-tab="exchange" hidden>
@@ -1308,6 +1343,147 @@ function attachSettingsSaveHandler(session) {
       }
     });
   }
+}
+
+// ============ Change Password Handler ============
+function attachChangePasswordHandler() {
+  const newPwdInput = document.getElementById('newPasswordInput');
+  const confirmPwdInput = document.getElementById('confirmPasswordInput');
+  const changeBtn = document.getElementById('changePasswordBtn');
+  const cancelBtn = document.getElementById('cancelPasswordBtn');
+  const toggleNewBtn = document.getElementById('toggleNewPasswordBtn');
+  const toggleConfirmBtn = document.getElementById('toggleConfirmPasswordBtn');
+  const msgEl = document.getElementById('passwordMessage');
+
+  if (!newPwdInput || !changeBtn) return;
+
+  function showPasswordMessage(text, type) {
+    if (!msgEl) return;
+    msgEl.textContent = text;
+    msgEl.style.display = 'block';
+    if (type === 'error') {
+      msgEl.style.background = 'rgba(240, 78, 78, 0.15)';
+      msgEl.style.color = 'var(--accent-danger)';
+      msgEl.style.border = '1px solid rgba(240, 78, 78, 0.3)';
+    } else if (type === 'success') {
+      msgEl.style.background = 'var(--accent-secondary-glow)';
+      msgEl.style.color = 'var(--accent-secondary)';
+      msgEl.style.border = '1px solid rgba(34, 211, 167, 0.3)';
+    } else {
+      msgEl.style.background = 'var(--bg-tertiary)';
+      msgEl.style.color = 'var(--text-secondary)';
+      msgEl.style.border = '1px solid var(--border-subtle)';
+    }
+  }
+
+  function clearPasswordForm() {
+    if (newPwdInput) newPwdInput.value = '';
+    if (confirmPwdInput) confirmPwdInput.value = '';
+    if (msgEl) msgEl.style.display = 'none';
+    if (newPwdInput) newPwdInput.type = 'password';
+    if (confirmPwdInput) confirmPwdInput.type = 'password';
+    if (toggleNewBtn) toggleNewBtn.textContent = '👁';
+    if (toggleConfirmBtn) toggleConfirmBtn.textContent = '👁';
+  }
+
+  // Toggle visibility for new password
+  if (toggleNewBtn) {
+    toggleNewBtn.addEventListener('click', () => {
+      const isHidden = newPwdInput.type === 'password';
+      newPwdInput.type = isHidden ? 'text' : 'password';
+      toggleNewBtn.textContent = isHidden ? '🙈' : '👁';
+    });
+  }
+
+  // Toggle visibility for confirm password
+  if (toggleConfirmBtn) {
+    toggleConfirmBtn.addEventListener('click', () => {
+      const isHidden = confirmPwdInput.type === 'password';
+      confirmPwdInput.type = isHidden ? 'text' : 'password';
+      toggleConfirmBtn.textContent = isHidden ? '🙈' : '👁';
+    });
+  }
+
+  // Cancel button: clear form
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      clearPasswordForm();
+    });
+  }
+
+  // Change password submit
+  changeBtn.addEventListener('click', async () => {
+    const newPwd = newPwdInput.value;
+    const confirmPwd = confirmPwdInput.value;
+
+    // Validation
+    if (!newPwd) {
+      showPasswordMessage('Password baru tidak boleh kosong.', 'error');
+      newPwdInput.focus();
+      return;
+    }
+    if (newPwd.length < 6) {
+      showPasswordMessage('Password minimal 6 karakter.', 'error');
+      newPwdInput.focus();
+      return;
+    }
+    if (newPwd !== confirmPwd) {
+      showPasswordMessage('Konfirmasi password tidak cocok dengan password baru.', 'error');
+      confirmPwdInput.focus();
+      return;
+    }
+
+    const originalText = changeBtn.textContent;
+    changeBtn.textContent = 'Menyimpan...';
+    changeBtn.disabled = true;
+    showPasswordMessage('Mengubah password...', 'info');
+
+    try {
+      const { error } = await updatePassword(newPwd);
+      if (error) throw error;
+
+      showPasswordMessage('✅ Password berhasil diubah. Silakan login ulang dengan password baru.', 'success');
+      clearPasswordForm();
+      newPwdInput.value = '';
+      confirmPwdInput.value = '';
+
+      changeBtn.textContent = 'Berhasil!';
+      changeBtn.style.background = 'var(--accent-secondary)';
+      changeBtn.style.borderColor = 'var(--accent-secondary)';
+      setTimeout(() => {
+        changeBtn.textContent = originalText;
+        changeBtn.style.background = '';
+        changeBtn.style.borderColor = '';
+      }, 2000);
+
+      // Auto sign out after 2 seconds so user logs in again with new password
+      setTimeout(async () => {
+        try {
+          await signOut();
+        } catch (e) {
+          console.error('Auto sign-out failed:', e);
+        }
+        window.location.href = 'index.html?password_changed=1';
+      }, 2500);
+
+    } catch (err) {
+      console.error('Change password failed:', err);
+      const errMsg = err?.message?.includes('same as') || err?.message?.includes('different')
+        ? 'Password baru harus berbeda dari password lama.'
+        : (err?.message || 'Gagal mengubah password. Coba lagi nanti.');
+      showPasswordMessage(errMsg, 'error');
+      changeBtn.textContent = 'Gagal';
+      changeBtn.style.background = 'var(--accent-danger)';
+      changeBtn.style.borderColor = 'var(--accent-danger)';
+      setTimeout(() => {
+        changeBtn.textContent = originalText;
+        changeBtn.style.background = '';
+        changeBtn.style.borderColor = '';
+      }, 2000);
+    } finally {
+      changeBtn.disabled = false;
+    }
+  });
 }
 
 function attachExchangeTabHandlers(session) {
@@ -1703,6 +1879,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateSidebarBotStatus(session.botSession?.is_active);
         if (pageContent) pageContent.innerHTML = pg.render(session);
         attachSettingsSaveHandler(session);
+        attachChangePasswordHandler();
         attachExchangeTabHandlers(session);
         updateDynamicI18n();
       });
