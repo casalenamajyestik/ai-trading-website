@@ -274,12 +274,6 @@ function updateStatCards(sheetsData, closedPositions = 0) {
   const totalPositionsEl = document.getElementById('statTotalPositions');
   if (totalPositionsEl) totalPositionsEl.textContent = openPositions.toLocaleString(); // only open positions
 
-  // Also update Execution Cycle tab label if present (shows total: open + closed)
-  const executionTab = document.querySelector('.settings-tab[data-tab="execution"]');
-  if (executionTab) {
-    executionTab.textContent = `Execution Cycle : ${totalPositions.toLocaleString()}`;
-  }
-
   console.log('[Dashboard] Stat cards updated from Sheets:', { balance, yesterdayPnL, totalPnL, biggestWin, openPositions, closedPositions, totalPositions });
 }
 
@@ -297,19 +291,13 @@ async function loadOverviewData(session) {
       const totalPositions = openPositions + closedPositions;
       
       updateStatCards(sheetsData, closedPositions);
-      
-      // Also update execution cycle value
-      const execCycleEl = document.getElementById('executionCycleValue');
-      if (execCycleEl) {
-        execCycleEl.textContent = `${totalPositions.toLocaleString()} (jumlah total open & closed posisi)`;
-      }
-      
+
       // Hide loading skeletons
       ['statBalanceLoading', 'statPnLLoading', 'statBiggestWinLoading', 'statPositionsLoading'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
-      
+
       console.log('[Overview] Data loaded and UI updated', { openPositions, closedPositions, totalPositions });
     }
   } catch (err) {
@@ -1128,7 +1116,6 @@ const pages = {
       <div class="settings-tabs-container" role="tablist">
         <button class="settings-tab active" role="tab" data-tab="profile" aria-selected="true">Profil</button>
         <button class="settings-tab" role="tab" data-tab="exchange" aria-selected="false">Exchange</button>
-        <button class="settings-tab" role="tab" data-tab="execution" aria-selected="false">Execution Cycle : ${totalPositions.toLocaleString()}</button>
         <button class="settings-tab" role="tab" data-tab="aplikasi" aria-selected="false">Aplikasi</button>
       </div>
     <div class="card">
@@ -1203,116 +1190,6 @@ const pages = {
           <div class="action-row">
             <button class="btn btn-primary" id="exchangeSaveBtn">Simpan Exchange</button>
             <button class="btn btn-danger" id="exchangeDeleteBtn" style="display:${exchangeKey.api_key ? 'inline-flex' : 'none'}">Hapus Kunci</button>
-          </div>
-        </div>
-
-        <div class="settings-panel" role="tabpanel" data-tab="execution" hidden>
-          <div class="info-banner">
-            <div class="info-title">⚙️ Execution Cycle Settings</div>
-            Konfigurasi siklus eksekusi trading bot: interval scanning, validasi sinyal, dan parameter eksekusi order.
-          </div>
-
-          <div class="exchange-section">
-            <div class="exchange-section-title">Scan Interval</div>
-            <div class="exchange-field">
-              <label>Market Scan Interval (detik)</label>
-              <input type="number" id="executionScanInterval" value="${botSession.scan_interval || 30}" min="10" max="300" step="10" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-              <div class="hint">Interval pemindaian pasar untuk mencari peluang trading. Lebih cepat = lebih responsif tapi lebih banyak API calls.</div>
-            </div>
-            <div class="exchange-field">
-              <label>Signal Validation Interval (detik)</label>
-              <input type="number" id="executionValidationInterval" value="${botSession.validation_interval || 60}" min="30" max="600" step="30" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-              <div class="hint">Interval validasi sinyal melalui multiple AI models sebelum eksekusi.</div>
-            </div>
-          </div>
-
-          <div class="exchange-section">
-            <div class="exchange-section-title">Risk Parameters</div>
-            <div class="exchange-field">
-              <label>Max Position Size (% dari balance)</label>
-              <input type="number" id="executionMaxPosition" value="${botSession.max_position_pct || 5}" min="1" max="50" step="1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-              <div class="hint">Persentase maksimum balance per posisi. Disarankan 1-10%.</div>
-            </div>
-            <div class="exchange-field">
-              <label>Max Leverage</label>
-              <input type="number" id="executionMaxLeverage" value="${botSession.max_leverage || 20}" min="1" max="125" step="1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-              <div class="hint">Leverage maksimum yang diizinkan. Futures Binance max 125x.</div>
-            </div>
-            <div class="exchange-field">
-              <label>Default Stop Loss (%)</label>
-              <input type="number" id="executionStopLoss" value="${botSession.default_stop_loss || 2}" min="0.5" max="20" step="0.5" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-              <div class="hint">Stop loss default untuk semua posisi. 0 = tidak ada SL otomatis.</div>
-            </div>
-            <div class="exchange-field">
-              <label>Default Take Profit (%)</label>
-              <input type="number" id="executionTakeProfit" value="${botSession.default_take_profit || 4}" min="0.5" max="50" step="0.5" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-              <div class="hint">Take profit default untuk semua posisi. 0 = tidak ada TP otomatis.</div>
-            </div>
-          </div>
-
-          <div class="exchange-section">
-            <div class="exchange-section-title">Execution Mode</div>
-            <div class="exchange-field">
-              <label>Order Type</label>
-              <div class="radio-group">
-                <label class="radio-option">
-                  <input type="radio" name="executionOrderType" value="market" ${botSession.order_type === 'market' ? 'checked' : ''}>
-                  <span>Market Order</span>
-                </label>
-                <label class="radio-option">
-                  <input type="radio" name="executionOrderType" value="limit" ${botSession.order_type === 'limit' ? 'checked' : ''}>
-                  <span>Limit Order</span>
-                </label>
-                <label class="radio-option">
-                  <input type="radio" name="executionOrderType" value="post_only" ${botSession.order_type === 'post_only' ? 'checked' : ''}>
-                  <span>Post Only (Maker)</span>
-                </label>
-              </div>
-              <div class="hint">Market = eksekusi instan, Limit = harga tertentu, Post Only = hanya maker fee.</div>
-            </div>
-            <div class="exchange-field">
-              <label>Slippage Tolerance (%)</label>
-              <input type="number" id="executionSlippage" value="${botSession.slippage_tolerance || 0.5}" min="0.1" max="5" step="0.1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-              <div class="hint">Toleransi slippage untuk market order. Lebih kecil = lebih aman tapi mungkin tidak terekseskusi.</div>
-            </div>
-            <div class="exchange-field">
-              <label>Max Concurrent Positions</label>
-              <input type="number" id="executionMaxPositions" value="${botSession.max_concurrent_positions || 10}" min="1" max="50" step="1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-              <div class="hint">Jumlah posisi terbuka maksimum sekaligus.</div>
-            </div>
-          </div>
-
-          <div class="exchange-section">
-            <div class="exchange-section-title">AI Model Configuration</div>
-            <div class="exchange-field">
-              <label>AI Confidence Threshold</label>
-              <input type="number" id="executionAIConfidence" value="${botSession.ai_confidence_threshold || 75}" min="50" max="99" step="1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-              <div class="hint">Minimum confidence score (0-100) dari AI models untuk mengeksekusi trade.</div>
-            </div>
-            <div class="exchange-field">
-              <label>Models Required for Consensus</label>
-              <input type="number" id="executionModelsRequired" value="${botSession.models_required || 2}" min="1" max="5" step="1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
-              <div class="hint">Jumlah model AI yang harus sepakat sebelum sinyal divalidasi.</div>
-            </div>
-            <div class="exchange-field">
-              <label>Enable Multi-Timeframe Analysis</label>
-              <div class="toggle-container">
-                <div class="toggle-info">
-                  <div class="toggle-title">Multi-Timeframe</div>
-                  <div class="toggle-desc">Analisis 1m, 5m, 15m, 1h, 4h timeframe</div>
-                </div>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="executionMultiTimeframe" ${botSession.multi_timeframe !== false ? 'checked' : ''}>
-                  <span class="toggle-slider">
-                    <span class="toggle-thumb"></span>
-                  </span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div class="action-row">
-            <button class="btn btn-primary" id="executionSaveBtn">Simpan Execution Cycle</button>
           </div>
         </div>
 
@@ -1455,10 +1332,6 @@ function attachExchangeTabHandlers(session) {
         if (isActive && tab === 'aplikasi' && !p.dataset.loaded) {
           loadBotSettingsUI(session);
           attachAplikasiTabHandlers(session);
-          p.dataset.loaded = 'true';
-        }
-        if (isActive && tab === 'execution' && !p.dataset.loaded) {
-          attachExecutionTabHandlers(session);
           p.dataset.loaded = 'true';
         }
       });
@@ -1729,78 +1602,7 @@ function attachAplikasiTabHandlers(session) {
   }
 }
 
-// ============ Execution Cycle Tab Handlers ============
-function attachExecutionTabHandlers(session) {
-  const saveBtn = document.getElementById('executionSaveBtn');
-  if (saveBtn && !saveBtn.dataset.listener) {
-    saveBtn.dataset.listener = 'true';
-    saveBtn.addEventListener('click', async () => {
-      const scanInterval = parseInt(document.getElementById('executionScanInterval')?.value) || 30;
-      const validationInterval = parseInt(document.getElementById('executionValidationInterval')?.value) || 60;
-      const maxPositionPct = parseFloat(document.getElementById('executionMaxPosition')?.value) || 5;
-      const maxLeverage = parseInt(document.getElementById('executionMaxLeverage')?.value) || 20;
-      const stopLoss = parseFloat(document.getElementById('executionStopLoss')?.value) || 2;
-      const takeProfit = parseFloat(document.getElementById('executionTakeProfit')?.value) || 4;
-      const orderType = document.querySelector('input[name="executionOrderType"]:checked')?.value || 'market';
-      const slippage = parseFloat(document.getElementById('executionSlippage')?.value) || 0.5;
-      const maxPositions = parseInt(document.getElementById('executionMaxPositions')?.value) || 10;
-      const aiConfidence = parseInt(document.getElementById('executionAIConfidence')?.value) || 75;
-      const modelsRequired = parseInt(document.getElementById('executionModelsRequired')?.value) || 2;
-      const multiTimeframe = document.getElementById('executionMultiTimeframe')?.checked !== false;
 
-      const originalText = saveBtn.textContent;
-      saveBtn.textContent = 'Menyimpan...';
-      saveBtn.disabled = true;
-
-      try {
-        const updates = {
-          scan_interval: scanInterval,
-          validation_interval: validationInterval,
-          max_position_pct: maxPositionPct,
-          max_leverage: maxLeverage,
-          default_stop_loss: stopLoss,
-          default_take_profit: takeProfit,
-          order_type: orderType,
-          slippage_tolerance: slippage,
-          max_concurrent_positions: maxPositions,
-          ai_confidence_threshold: aiConfidence,
-          models_required: modelsRequired,
-          multi_timeframe: multiTimeframe
-        };
-
-        const { error } = await updateBotSession(session.botSession.id, updates);
-        if (error) throw error;
-
-        session.botSession = { ...session.botSession, ...updates };
-        localStorage.setItem('auth_session', JSON.stringify(session));
-
-        saveBtn.textContent = 'Tersimpan!';
-        saveBtn.style.background = 'var(--accent-secondary)';
-        saveBtn.style.borderColor = 'var(--accent-secondary)';
-
-        setTimeout(() => {
-          saveBtn.textContent = originalText;
-          saveBtn.style.background = '';
-          saveBtn.style.borderColor = '';
-        }, 2000);
-
-      } catch (err) {
-        console.error('Failed to save execution settings:', err);
-        const errorMsg = err?.message || err?.details || err?.hint || JSON.stringify(err) || 'Unknown error';
-        saveBtn.textContent = 'Gagal: ' + errorMsg.substring(0, 80);
-        saveBtn.style.background = 'var(--accent-danger)';
-        saveBtn.style.borderColor = 'var(--accent-danger)';
-        setTimeout(() => {
-          saveBtn.textContent = originalText;
-          saveBtn.style.background = '';
-          saveBtn.style.borderColor = '';
-        }, 8000);
-      } finally {
-        saveBtn.disabled = false;
-      }
-    });
-  }
-}
 
 // ============ Init ============
 document.addEventListener('DOMContentLoaded', async () => {
