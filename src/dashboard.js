@@ -318,27 +318,35 @@ async function loadPositionsData(session) {
     const sheetsData = await getSheetsData(true); // force refresh
     
     if (sheetsData) {
-      // Update stat cards with real data
-      const totalPositions = sheetsData.total_position || sheetsData.total_positions || 0;
-      const longCount = sheetsData.long_position || 0;
-      const shortCount = sheetsData.short_position || 0;
-      const totalUnrealizedPnL = sheetsData.pnl_unrealized || 0;
-      
-      // Update elements
-      const posTotalPositionsEl = document.getElementById('posTotalPositions');
-      if (posTotalPositionsEl) posTotalPositionsEl.textContent = totalPositions.toLocaleString();
-      
-      const posLongCountEl = document.getElementById('posLongCount');
-      if (posLongCountEl) posLongCountEl.textContent = longCount.toLocaleString();
-      
-      const posShortCountEl = document.getElementById('posShortCount');
-      if (posShortCountEl) posShortCountEl.textContent = shortCount.toLocaleString();
-      
-      const posTotalUnrealizedPnLEl = document.getElementById('posTotalUnrealizedPnL');
-      if (posTotalUnrealizedPnLEl) {
-        posTotalUnrealizedPnLEl.textContent = `$${totalUnrealizedPnL.toFixed(2)}`;
-        posTotalUnrealizedPnLEl.className = `stat-card-value ${totalUnrealizedPnL >= 0 ? 'positive' : 'negative'}`;
-      }
+          // Update stat cards with real data
+          const totalPositions = sheetsData.total_position || sheetsData.total_positions || 0;
+          const longCount = sheetsData.long_position || 0;
+          const shortCount = sheetsData.short_position || 0;
+          const totalUnrealizedPnL = sheetsData.pnl_unrealized || 0;
+          const balance = sheetsData.saldo || sheetsData.balance || 0;
+          const unrealizedPct = balance > 0 ? (totalUnrealizedPnL / balance) * 100 : 0;
+
+          // Update elements
+          const posTotalPositionsEl = document.getElementById('posTotalPositions');
+          if (posTotalPositionsEl) posTotalPositionsEl.textContent = totalPositions.toLocaleString();
+
+          const posLongCountEl = document.getElementById('posLongCount');
+          if (posLongCountEl) posLongCountEl.textContent = longCount.toLocaleString();
+
+          const posShortCountEl = document.getElementById('posShortCount');
+          if (posShortCountEl) posShortCountEl.textContent = shortCount.toLocaleString();
+
+          const posTotalUnrealizedPnLEl = document.getElementById('posTotalUnrealizedPnL');
+          if (posTotalUnrealizedPnLEl) {
+            posTotalUnrealizedPnLEl.textContent = `$${totalUnrealizedPnL.toFixed(2)}`;
+            posTotalUnrealizedPnLEl.className = `stat-card-value ${totalUnrealizedPnL >= 0 ? 'positive' : 'negative'}`;
+          }
+
+          const posTotalUnrealizedPnLPctEl = document.getElementById('posTotalUnrealizedPnLPct');
+          if (posTotalUnrealizedPnLPctEl) {
+            posTotalUnrealizedPnLPctEl.textContent = `${unrealizedPct >= 0 ? '+' : ''}${unrealizedPct.toFixed(2)}%`;
+            posTotalUnrealizedPnLPctEl.className = `stat-card-sub ${unrealizedPct >= 0 ? 'positive' : 'negative'}`;
+          }
       
       // Hide loading skeletons
       ['posTotalPositionsLoading', 'posLongCountLoading', 'posShortCountLoading', 'posTotalUnrealizedPnLLoading'].forEach(id => {
@@ -840,6 +848,8 @@ const pages = {
       const longCount         = botState.long_position || 0;
       const shortCount        = botState.short_position || 0;
       const totalUnrealizedPnL = botState.pnl_unrealized || 0;
+      const balance           = botState.saldo || botState.balance || 0;
+      const unrealizedPct     = balance > 0 ? (totalUnrealizedPnL / balance) * 100 : 0;
 
       return `
         <!-- 4 Stat Cards -->
@@ -869,6 +879,7 @@ const pages = {
           <div class="stat-card">
             <div class="stat-card-label">Total Unrealized PnL</div>
             <div class="stat-card-value ${totalUnrealizedPnL >= 0 ? 'positive' : 'negative'}" id="posTotalUnrealizedPnL">$${totalUnrealizedPnL.toFixed(2)}</div>
+            <div class="stat-card-sub ${unrealizedPct >= 0 ? 'positive' : 'negative'}" id="posTotalUnrealizedPnLPct" style="font-size:0.75rem; opacity:0.8;">${unrealizedPct >= 0 ? '+' : ''}${unrealizedPct.toFixed(2)}%</div>
             <div class="stat-card-sub loading-skeleton" id="posTotalUnrealizedPnLLoading">Memuat data...</div>
           </div>
         </div>
