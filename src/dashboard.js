@@ -505,7 +505,7 @@ function renderActivePositionsTable(positions, sortOptions = {}) {
   if (!positions || positions.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align:center; color:var(--text-muted); padding: 20px;">
+        <td colspan="9" style="text-align:center; color:var(--text-muted); padding: 20px;">
           Belum ada data detail posisi aktif. Bot akan mengirim data setiap 5 menit.
         </td>
       </tr>
@@ -531,6 +531,24 @@ function renderActivePositionsTable(positions, sortOptions = {}) {
       case 'leverage':
         comparison = (a.leverage || 0) - (b.leverage || 0);
         break;
+      case 'distance_pct':
+        // Calculate distance % for both positions
+        const aEntry = a.entry_price || 0;
+        const aMark = a.mark_price || 0;
+        const bEntry = b.entry_price || 0;
+        const bMark = b.mark_price || 0;
+        let aDist = 0;
+        let bDist = 0;
+        if (aEntry > 0 && aMark > 0) {
+          if (a.side === 'long') aDist = ((aMark - aEntry) / aEntry) * 100;
+          else if (a.side === 'short') aDist = ((aEntry - aMark) / aEntry) * 100;
+        }
+        if (bEntry > 0 && bMark > 0) {
+          if (b.side === 'long') bDist = ((bMark - bEntry) / bEntry) * 100;
+          else if (b.side === 'short') bDist = ((bEntry - bMark) / bEntry) * 100;
+        }
+        comparison = aDist - bDist;
+        break;
       case 'side':
         // Long first, then Short
         const aSide = a.side || '';
@@ -554,28 +572,43 @@ function renderActivePositionsTable(positions, sortOptions = {}) {
   });
   
   tbody.innerHTML = sortedPositions.map((pos, index) => {
-      const side = pos.side || '';
-      const sideClass = side === 'long' ? 'buy' : side === 'short' ? 'sell' : '';
-      const sideLabel = side === 'long' ? 'Long' : side === 'short' ? 'Short' : 'N/A';
-      const unrealizedPnL = pos.unrealized_pnl || 0;
-      const pnlClass = unrealizedPnL >= 0 ? 'positive' : 'negative';
-      const pnlSign = unrealizedPnL >= 0 ? '+' : '';
-   
-      const rowNumber = index + 1;
+        const side = pos.side || '';
+        const sideClass = side === 'long' ? 'buy' : side === 'short' ? 'sell' : '';
+        const sideLabel = side === 'long' ? 'Long' : side === 'short' ? 'Short' : 'N/A';
+        const unrealizedPnL = pos.unrealized_pnl || 0;
+        const pnlClass = unrealizedPnL >= 0 ? 'positive' : 'negative';
+        const pnlSign = unrealizedPnL >= 0 ? '+' : '';
+      
+        // Calculate distance % from entry price to mark price
+        const entryPrice = pos.entry_price || 0;
+        const markPrice = pos.mark_price || 0;
+        let distancePct = 0;
+        if (entryPrice > 0 && markPrice > 0) {
+          if (side === 'long') {
+            distancePct = ((markPrice - entryPrice) / entryPrice) * 100;
+          } else if (side === 'short') {
+            distancePct = ((entryPrice - markPrice) / entryPrice) * 100;
+          }
+        }
+        const distanceClass = distancePct >= 0 ? 'positive' : 'negative';
+        const distanceSign = distancePct >= 0 ? '+' : '';
 
-      return `
-        <tr>
-          <td class="position-number">${rowNumber}</td>
-          <td class="coin-name">${pos.nama_koin || 'N/A'}</td>
-          <td class="type ${sideClass}">${sideLabel}</td>
-          <td>${pos.size_usdt ? '$' + pos.size_usdt.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00'}</td>
-          <td>${pos.entry_price ? pos.entry_price.toLocaleString('en-US', {minimumFractionDigits: 4, maximumFractionDigits: 4}) : '0'}</td>
-          <td>${pos.mark_price ? pos.mark_price.toLocaleString('en-US', {minimumFractionDigits: 4, maximumFractionDigits: 4}) : '0'}</td>
-          <td class="pnl ${pnlClass}">${pnlSign}${unrealizedPnL.toFixed(2)}</td>
-          <td>${pos.leverage ? pos.leverage + 'x' : 'N/A'}</td>
-        </tr>
-      `;
-    }).join('');
+        const rowNumber = index + 1;
+
+        return `
+          <tr>
+            <td class="position-number">${rowNumber}</td>
+            <td class="coin-name">${pos.nama_koin || 'N/A'}</td>
+            <td class="type ${sideClass}">${sideLabel}</td>
+            <td>${pos.size_usdt ? '$' + pos.size_usdt.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00'}</td>
+            <td>${pos.entry_price ? pos.entry_price.toLocaleString('en-US', {minimumFractionDigits: 4, maximumFractionDigits: 4}) : '0'}</td>
+            <td>${pos.mark_price ? pos.mark_price.toLocaleString('en-US', {minimumFractionDigits: 4, maximumFractionDigits: 4}) : '0'}</td>
+            <td class="distance-pct ${distanceClass}">${distanceSign}${distancePct.toFixed(2)}%</td>
+            <td class="pnl ${pnlClass}">${pnlSign}${unrealizedPnL.toFixed(2)}</td>
+            <td>${pos.leverage ? pos.leverage + 'x' : 'N/A'}</td>
+          </tr>
+        `;
+      }).join('');
   
   // Update sort indicators in header
   updateSortIndicators();
@@ -898,13 +931,14 @@ const pages = {
                   <th data-sort="size_usdt">Size (USDT)</th>
                   <th>Entry Price</th>
                   <th>Mark Price</th>
+                  <th data-sort="distance_pct">Distance %</th>
                   <th data-sort="unrealized_pnl">Unrealized PnL</th>
                   <th data-sort="leverage">Leverage</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td colspan="8" style="text-align:center; color:var(--text-muted); padding: 20px;">
+                  <td colspan="9" style="text-align:center; color:var(--text-muted); padding: 20px;">
                     <div class="loading-skeleton" style="display:inline-block; width:200px; height:20px; background:linear-gradient(90deg,var(--bg-tertiary),var(--bg-secondary),var(--bg-tertiary)); background-size:200% 100%; animation:shimmer 1.5s infinite;"></div>
                     <br><small>Memuat data</small>
                   </td>
