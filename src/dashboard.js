@@ -79,7 +79,7 @@ function formatCompactCurrency(num) {
 
 // Cache Sheets data with a short TTL (30 seconds) so we don't hammer the endpoint
 let _sheetsCache = { data: null, timestamp: 0, userId: null };
-const SHEETS_CACHE_TTL = 30_000; // 30 seconds
+const SHEETS_CACHE_TTL = 120_000; // 2 minutes (increased from 30s for faster loads)
 
 async function getSheetsData(forceRefresh = false) {
   const now = Date.now();
@@ -126,11 +126,11 @@ async function fetchActivePositionsDetail(userId) {
 
 // Cache untuk active positions detail
 let _activePositionsCache = { data: [], timestamp: 0, userId: null };
-const ACTIVE_POSITIONS_CACHE_TTL = 60_000; // 60 seconds cache
+const ACTIVE_POSITIONS_CACHE_TTL = 180_000; // 3 minutes cache (increased from 60s)
 
 // Cache untuk trade history (closed_position)
 let _tradeHistoryCache = { data: [], timestamp: 0, userId: null };
-const TRADE_HISTORY_CACHE_TTL = 60_000; // 60 seconds cache
+const TRADE_HISTORY_CACHE_TTL = 180_000; // 3 minutes cache (increased from 60s)
 
 async function getActivePositionsDetail(forceRefresh = false) {
   const now = Date.now();
@@ -279,19 +279,28 @@ function updateStatCards(sheetsData, closedPositions = 0) {
 }
 
 // ============ Load Overview Data Async (Progressive Loading) ============
-async function loadOverviewData(session) {
+async function loadOverviewData(session, forceRefresh = false) {
   try {
     console.log('[Overview] Loading Google Sheets data...');
-    const sheetsData = await getSheetsData(true); // force refresh
-    
+    // Parallel fetch: sheets data + trade history simultaneously
+    const [sheetsData, tradeHistory] = await Promise.all([
+      getSheetsData(forceRefresh),
+      getTradeHistory(forceRefresh)
+    ]);
+
     if (sheetsData) {
-      // Update stat cards with real data - fetch trade history to get correct total (open + closed)
+      // Update stat cards with real data - use trade history for correct total (open + closed)
       const openPositions = sheetsData.total_position || sheetsData.total_positions || 0;
-      const tradeHistory = await getTradeHistory(true); // force refresh to get closed positions count
       const closedPositions = tradeHistory ? tradeHistory.length : 0;
       const totalPositions = openPositions + closedPositions;
-      
+
       updateStatCards(sheetsData, closedPositions);
+
+      // Update Execution Cycle display
+      const execCycleEl = document.getElementById('executionCycleValue');
+      if (execCycleEl) {
+        execCycleEl.textContent = `${totalPositions.toLocaleString()} (jumlah total open & closed posisi)`;
+      }
 
       // Hide loading skeletons
       ['statBalanceLoading', 'statPnLLoading', 'statBiggestWinLoading', 'statPositionsLoading'].forEach(id => {
@@ -312,11 +321,11 @@ async function loadOverviewData(session) {
 }
 
 // ============ Load Positions Data Async (Progressive Loading) ============
-async function loadPositionsData(session) {
+async function loadPositionsData(session, forceRefresh = false) {
   try {
     console.log('[Positions] Loading Google Sheets data...');
-    const sheetsData = await getSheetsData(true); // force refresh
-    
+    const sheetsData = await getSheetsData(forceRefresh);
+
     if (sheetsData) {
           // Update stat cards with real data
           const totalPositions = sheetsData.total_position || sheetsData.total_positions || 0;
@@ -347,17 +356,17 @@ async function loadPositionsData(session) {
             posTotalUnrealizedPnLPctEl.textContent = `${unrealizedPct >= 0 ? '+' : ''}${unrealizedPct.toFixed(2)}%`;
             posTotalUnrealizedPnLPctEl.className = `stat-card-sub ${unrealizedPct >= 0 ? 'positive' : 'negative'}`;
           }
-      
+     
       // Hide loading skeletons
       ['posTotalPositionsLoading', 'posLongCountLoading', 'posShortCountLoading', 'posTotalUnrealizedPnLLoading'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
-      
+     
       console.log('[Positions] Data loaded and UI updated');
-      
+     
       // Fetch and render active positions detail
-      const activePositions = await getActivePositionsDetail(true);
+      const activePositions = await getActivePositionsDetail(forceRefresh);
       renderActivePositionsTable(activePositions);
       // Initialize sort handlers after table is rendered
       initPositionSortHandlers();
@@ -373,55 +382,55 @@ async function loadPositionsData(session) {
 }
 
 // ============ Load History Data Async (Progressive Loading) ============
-async function loadHistoryData(session) {
+async function loadHistoryData(session, forceRefresh = false) {
   try {
     console.log('[History] Loading Google Sheets trade history...');
-    const trades = await getTradeHistory(true); // force refresh
-    
+    const trades = await getTradeHistory(forceRefresh);
+   
     if (trades && trades.length > 0) {
       // Calculate stats
       const totalTrades = trades.length;
       const wins = trades.filter(t => t.pnl > 0).length;
       const losses = trades.filter(t => t.pnl < 0).length;
       const avgTrade = trades.length > 0 ? (trades.reduce((sum, t) => sum + t.pnl, 0) / trades.length).toFixed(2) : '0.00';
-      
+     
       // Update stat cards
       const totalTradesEl = document.getElementById('histTotalTrades');
       if (totalTradesEl) totalTradesEl.textContent = totalTrades.toLocaleString();
-      
+     
       const winsEl = document.getElementById('histWins');
       if (winsEl) winsEl.textContent = wins.toLocaleString();
-      
+     
       const lossesEl = document.getElementById('histLosses');
       if (lossesEl) lossesEl.textContent = losses.toLocaleString();
-      
+     
       const avgTradeEl = document.getElementById('histAvgTrade');
       if (avgTradeEl) {
         avgTradeEl.textContent = `$${avgTrade >= 0 ? '+' : ''}${avgTrade}`;
         avgTradeEl.className = `stat-card-value ${avgTrade >= 0 ? 'positive' : 'negative'}`;
       }
-      
+     
       // Hide loading skeletons on stat cards
       ['histTotalTradesLoading', 'histWinsLoading', 'histLossesLoading', 'histAvgTradeLoading'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
-      
+     
       // Render trade history table
       renderTradeHistoryTable(trades);
-      
+     
       console.log('[History] Data loaded and UI updated:', { totalTrades, wins, losses, avgTrade });
     } else {
       // No data - show empty state
       const tbody = document.getElementById('histTradesBody');
       if (tbody) {
         tbody.innerHTML = `
-          <tr>
-            <td colspan="6" style="text-align:center; color:var(--text-muted); padding: 20px;">
-              Belum ada trade history. Data akan muncul saat bot menutup posisi.
-            </td>
-          </tr>
-        `;
+            <tr>
+              <td colspan="6" style="text-align:center; color:var(--text-muted); padding: 20px;">
+                Belum ada trade history. Data akan muncul saat bot menutup posisi.
+              </td>
+            </tr>
+          `;
       }
       // Hide loading skeletons
       ['histTotalTradesLoading', 'histWinsLoading', 'histLossesLoading', 'histAvgTradeLoading'].forEach(id => {
@@ -435,12 +444,12 @@ async function loadHistoryData(session) {
     const tbody = document.getElementById('histTradesBody');
     if (tbody) {
       tbody.innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align:center; color:var(--accent-danger); padding: 20px;">
-            Gagal memuat data. Silakan coba refresh halaman.
-          </td>
-        </tr>
-      `;
+          <tr>
+            <td colspan="6" style="text-align:center; color:var(--accent-danger); padding: 20px;">
+              Gagal memuat data. Silakan coba refresh halaman.
+            </td>
+          </tr>
+        `;
     }
     // Hide loading skeletons even on error
     ['histTotalTradesLoading', 'histWinsLoading', 'histLossesLoading', 'histAvgTradeLoading'].forEach(id => {
@@ -917,7 +926,7 @@ const pages = {
           </div>
         </div>
         <div class="content-section">
-          <div class="section-header">
+          <div class="section-header center-title">
             <span class="section-title">Open Positions</span>
             <span class="section-badge">Live</span>
           </div>
@@ -1940,9 +1949,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Initialize charts/animations for specific pages
       if (pageName === 'overview') {
-        // Load Sheets data async (non-blocking, updates stat cards when ready)
+        // Load Sheets data async (non-blocking, uses cache by default for faster loads)
         setTimeout(() => {
-          loadOverviewData(session);
+          loadOverviewData(session, false); // false = use cache, don't force refresh
         }, 0);
 
         // Init BTC chart (removes overlay when ready)
@@ -1996,15 +2005,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 0);
       }
       if (pageName === 'positions') {
-        // Load Sheets data async (non-blocking, updates stat cards when ready)
+        // Load Sheets data async (non-blocking, uses cache for faster loads)
         setTimeout(() => {
-          loadPositionsData(session);
+          loadPositionsData(session, false); // false = use cache
         }, 0);
       }
       if (pageName === 'history') {
-        // Load Sheets trade history async (non-blocking, updates stat cards when ready)
+        // Load Sheets trade history async (non-blocking, uses cache for faster loads)
         setTimeout(() => {
-          loadHistoryData(session);
+          loadHistoryData(session, false); // false = use cache
         }, 0);
       }
     }
@@ -2084,7 +2093,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     navigateTo('overview');
 
-    // Auto-refresh Google Sheets data setiap 30 detik (bukan 2 menit).
+    // Auto-refresh Google Sheets data setiap 2 menit.
     // Trading dashboard butuh data fresh — bot update spreadsheet berkala.
     // Aturan: ambil data dari spreadsheet, jika angka baris terakhir = 0
     // maka fallback ke angka terakhir non-zero di kolom yang sama.
@@ -2095,12 +2104,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       isRefreshing = true;
       try {
         const currentPage = document.querySelector('.nav-item.active')?.dataset.page;
-        const data = await getSheetsData(true); // force refresh + bypass cache lokal
+        // Parallel fetch for overview page
+        const [data, tradeHistory] = await Promise.all([
+          getSheetsData(true), // force refresh for auto-refresh
+          getTradeHistory(true)
+        ]);
         if (!data) return;
 
         if (currentPage === 'overview' && pageContent) {
-          // Fetch trade history for closed positions count
-          const tradeHistory = await getTradeHistory(true);
           const closedPositions = tradeHistory ? tradeHistory.length : 0;
           updateStatCards(data, closedPositions);
           // Hide skeletons kalau ada (misalnya setelah realtime re-render)
@@ -2117,7 +2128,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }
         if (currentPage === 'positions' && pageContent) {
-          await loadPositionsData(session);
+          await loadPositionsData(session, false); // use cache in auto-refresh
+        }
+        if (currentPage === 'history' && pageContent) {
+          await loadHistoryData(session, false); // use cache in auto-refresh
         }
       } catch (err) {
         console.warn('[Auto-refresh] Sheets refresh failed:', err);
@@ -2126,7 +2140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    let sheetsRefreshInterval = setInterval(refreshSheetsInBackground, 30_000); // 30 detik
+    let sheetsRefreshInterval = setInterval(refreshSheetsInBackground, 120_000); // 2 minutes
 
     // Saat user balik ke tab (dari HP sleep, atau pindah tab browser),
     // langsung refresh supaya tidak nunggu 30 detik.
