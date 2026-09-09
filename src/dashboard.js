@@ -925,8 +925,8 @@ const pages = {
             <div class="stat-card-sub loading-skeleton" id="posTotalUnrealizedPnLLoading">Memuat data...</div>
           </div>
         </div>
-        <div class="content-section">
-          <div class="section-header center-title">
+        <div class="content-section tight">
+          <div class="section-header">
             <span class="section-title">Open Positions</span>
             <span class="section-badge">Live</span>
           </div>
