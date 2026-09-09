@@ -1,0 +1,23 @@
+# Netlify Security Headers
+# These headers will be applied to all responses
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https://zpwpqkkgdaixukishihv.supabase.co https://script.google.com https://api.coingecko.com https://api.binance.com wss://zpwpqkkgdaixukishihv.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;
+
+# Cache static assets
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# No cache for HTML
+/*.html
+  Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate
+
+# Service worker
+/sw.js
+  Cache-Control: no-cache

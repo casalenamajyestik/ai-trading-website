@@ -1,0 +1,11 @@
+# Netlify Redirects for SPA
+# Security: Prevent access to sensitive files
+
+# Block access to sensitive files
+/.env*  /404.html  404
+/.git*  /404.html  404
+/sql/*  /404.html  404
+/*.sql  /404.html  404
+
+# SPA fallback
+/*  /index.html  200

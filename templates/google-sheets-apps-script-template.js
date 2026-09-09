@@ -17,6 +17,11 @@
 //   WRITE (default):  https://script.google.com/macros/s/.../exec?saldo=...&pnl=...&total_position=...&nama_koin=...&harga_exit=...&side=...&user_id=...&timestamp=...&data_type=...&long_count=...&short_count=...&size=...]
 //   READ:             https://script.google.com/macros/s/.../exec?mode=read&user_id=...
 //   READ LAST:        https://script.google.com/macros/s/.../exec?mode=read_last&user_id=...
+//
+// Security:
+//   - All requests require ?auth_token=SECRET_TOKEN parameter
+//   - Set SECRET_TOKEN in Script Properties: Project Settings → Script Properties
+//   - This prevents unauthorized access to user data
 // ============================================================================
 
 const SHEET_NAME = 'Sheet1';
@@ -62,6 +67,15 @@ function ensureHeaders(sheet) {
 // ---- doGet: route write / read ----
 function doGet(e) {
   const params = e.parameter || {};
+
+  // SECURITY: Verify auth token
+  const authToken = params.auth_token || '';
+  const expectedToken = PropertiesService.getScriptProperties().getProperty('WEBAPP_AUTH_TOKEN');
+  if (!expectedToken || authToken !== expectedToken) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, message: 'Unauthorized: Invalid auth token' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 
   // READ mode
   // Ambil user_id dari parameter (wajib untuk isolasi)
@@ -758,6 +772,15 @@ function doPost(e) {
   } catch (err) {
     return ContentService
       .createTextOutput(JSON.stringify({ success: false, message: 'Invalid JSON body' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // SECURITY: Verify auth token
+  const authToken = params.auth_token || '';
+  const expectedToken = PropertiesService.getScriptProperties().getProperty('WEBAPP_AUTH_TOKEN');
+  if (!expectedToken || authToken !== expectedToken) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, message: 'Unauthorized: Invalid auth token' }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 

@@ -12,7 +12,10 @@ import {
   updatePassword
 } from './supabase.js';
 import { supabase } from './supabase.js';
-import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
+import { initAuth, getLocalSession, getLocalSessionSync, requireAuth } from './auth-listener.js';
+import { clearCsrfToken } from './security/csrf.js';
+import { validatePassword, createPasswordStrengthMeter, PASSWORD_REQUIREMENTS } from './security/password-validator.js';
+import { sanitizeText, sanitizeEmail, sanitizeProfile, escapeHtml, setSafeContent, sanitizeUrl } from './security/xss-protection.js';
 import { subscribeBotState } from './supabase.js';
 import { initTheme, initLanguage, updateDynamicI18n } from './language-theme.js';
 import { initBTCRealTimeChart } from './btc-chart-realtime.js';
@@ -33,6 +36,20 @@ async function requireAuthWrapper() {
 // Bisa juga hardcode di sini untuk testing
 const GOOGLE_SHEETS_WEBAPP_URL = import.meta.env.VITE_GOOGLE_SHEETS_WEBAPP_URL || 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
 
+// Auth token for Google Sheets Web App (set in Script Properties)
+const GOOGLE_SHEETS_AUTH_TOKEN = import.meta.env.VITE_GOOGLE_SHEETS_AUTH_TOKEN || '';
+
+/**
+ * Build Google Sheets URL with auth token
+ */
+function buildSheetsUrl(params) {
+  const searchParams = new URLSearchParams(params);
+  if (GOOGLE_SHEETS_AUTH_TOKEN) {
+    searchParams.set('auth_token', GOOGLE_SHEETS_AUTH_TOKEN);
+  }
+  return GOOGLE_SHEETS_WEBAPP_URL + '?' + searchParams.toString();
+}
+
 /**
  * Fetch the latest row from Google Sheets FOR CURRENT USER.
  * user_id diambil dari Supabase auth session.
@@ -44,9 +61,11 @@ async function fetchLatestSheetsData(userId) {
     // TIDAK pakai custom headers (Cache-Control, Pragma, Expires) karena
     // Google Apps Script tidak support CORS preflight untuk custom headers.
     const cacheBuster = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-    const url = GOOGLE_SHEETS_WEBAPP_URL
-      + '?mode=read_last&user_id=' + encodeURIComponent(userId)
-      + '&_=' + cacheBuster;
+    const url = buildSheetsUrl({
+      mode: 'read_last',
+      user_id: userId,
+      _: cacheBuster
+    });
     const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const result = await response.json();
@@ -107,9 +126,11 @@ async function fetchActivePositionsDetail(userId) {
     // TIDAK pakai custom headers (Cache-Control, Pragma, Expires) karena
     // Google Apps Script tidak support CORS preflight untuk custom headers.
     const cacheBuster = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-    const url = GOOGLE_SHEETS_WEBAPP_URL
-      + '?mode=read&user_id=' + encodeURIComponent(userId)
-      + '&_=' + cacheBuster;
+    const url = buildSheetsUrl({
+      mode: 'read',
+      user_id: userId,
+      _: cacheBuster
+    });
     const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const result = await response.json();
@@ -154,9 +175,11 @@ async function getActivePositionsDetail(forceRefresh = false) {
 async function fetchTradeHistory(userId) {
   try {
     const cacheBuster = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-    const url = GOOGLE_SHEETS_WEBAPP_URL
-      + '?mode=read&user_id=' + encodeURIComponent(userId)
-      + '&_=' + cacheBuster;
+    const url = buildSheetsUrl({
+      mode: 'read',
+      user_id: userId,
+      _: cacheBuster
+    });
     const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const result = await response.json();
@@ -1180,10 +1203,10 @@ const pages = {
       <div class="settings-tab-content">
         <div class="settings-panel active" role="tabpanel" data-tab="profile">
           <div style="display:flex;flex-direction:column;gap:1rem;">
-            <div><label>Nama</label><input type="text" id="settingsName" value="${session.user?.name || ''}" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
-            <div><label>Email</label><input type="email" id="settingsEmail" value="${session.user?.email || ''}" ${session.user?.email ? 'readonly' : ''} style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;${session.user?.email ? 'opacity:0.6;cursor:not-allowed;' : ''}"></div>
-            <div><label>WhatsApp</label><div class="input-row"><select id="settingsWhatsAppCountry" style="width:180px;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;flex-shrink:0;">${getCountryOptions(session.user?.whatsappCountry || 'ID')}</select><input type="tel" id="settingsWhatsApp" value="${session.user?.whatsapp || ''}" placeholder="81234567890" style="flex:1;min-width:200px;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div></div>
-            <div><label>Username Telegram</label><input type="text" id="settingsTelegram" value="${session.user?.telegram || ''}" placeholder="username (tanpa @)" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
+            <div><label>Nama</label><input type="text" id="settingsName" value="${escapeHtml(session.user?.name || '')}" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
+            <div><label>Email</label><input type="email" id="settingsEmail" value="${escapeHtml(session.user?.email || '')}" ${session.user?.email ? 'readonly' : ''} style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;${session.user?.email ? 'opacity:0.6;cursor:not-allowed;' : ''}"></div>
+            <div><label>WhatsApp</label><div class="input-row"><select id="settingsWhatsAppCountry" style="width:180px;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;flex-shrink:0;">${getCountryOptions(session.user?.whatsappCountry || 'ID')}</select><input type="tel" id="settingsWhatsApp" value="${escapeHtml(session.user?.whatsapp || '')}" placeholder="81234567890" style="flex:1;min-width:200px;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div></div>
+            <div><label>Username Telegram</label><input type="text" id="settingsTelegram" value="${escapeHtml(session.user?.telegram || '')}" placeholder="username (tanpa @)" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"></div>
             <div><label>Notifikasi</label><select id="settingsNotification" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;"><option value="">Pilih notifikasi</option><option value="telegram" ${session.user?.notification === 'telegram' ? 'selected' : ''}>Telegram</option></select></div>
             <button class="btn btn-primary" id="settingsSaveBtn" style="margin-top:0.5rem;padding:0.75rem 1.5rem;">Simpan Perubahan</button>
           </div>
@@ -1234,13 +1257,13 @@ const pages = {
             <div class="exchange-field">
               <label>API Key</label>
               <div class="input-row">
-                <input type="text" id="exchangeApiKey" value="${exchangeKey.api_key || ''}" placeholder="Masukkan API Key Binance">
+                <input type="text" id="exchangeApiKey" value="${escapeHtml(exchangeKey.api_key || '')}" placeholder="Masukkan API Key Binance">
               </div>
             </div>
             <div class="exchange-field">
               <label>Secret Key</label>
               <div class="input-row">
-                <input type="password" id="exchangeSecretKey" value="${exchangeKey.secret_key || ''}" placeholder="Masukkan Secret Key Binance">
+                <input type="password" id="exchangeSecretKey" value="${escapeHtml(exchangeKey.secret_key || '')}" placeholder="Masukkan Secret Key Binance">
                 <button type="button" class="btn btn-secondary" id="toggleSecretBtn">👁 Tampilkan</button>
               </div>
             </div>
@@ -1267,12 +1290,12 @@ const pages = {
             </div>
             <div class="exchange-field">
               <label>IP Whitelist (Opsional)</label>
-              <input type="text" id="exchangeIpWhitelist" value="${exchangeKey.ip_whitelist || ''}" placeholder="Contoh: 192.168.1.1, 10.0.0.1 (pisahkan koma)" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+              <input type="text" id="exchangeIpWhitelist" value="${escapeHtml(exchangeKey.ip_whitelist || '')}" placeholder="Contoh: 192.168.1.1, 10.0.0.1 (pisahkan koma)" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
               <div class="hint">Kosongkan untuk allow all IP. Disarankan isi IP server bot Anda untuk keamanan.</div>
             </div>
             <div class="exchange-field">
               <label>Label</label>
-              <input type="text" id="exchangeLabel" value="${exchangeKey.label || 'Main Account'}" placeholder="Contoh: Main Account, Sub Bot 1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
+              <input type="text" id="exchangeLabel" value="${escapeHtml(exchangeKey.label || 'Main Account')}" placeholder="Contoh: Main Account, Sub Bot 1" style="width:100%;padding:0.75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;">
             </div>
           </div>
 
@@ -1440,6 +1463,11 @@ function attachChangePasswordHandler() {
     if (toggleConfirmBtn) toggleConfirmBtn.textContent = '👁';
   }
 
+  // Add password strength meter
+  if (newPwdInput) {
+    createPasswordStrengthMeter(newPwdInput);
+  }
+
   // Toggle visibility for new password
   if (toggleNewBtn) {
     toggleNewBtn.addEventListener('click', () => {
@@ -1476,11 +1504,17 @@ function attachChangePasswordHandler() {
       newPwdInput.focus();
       return;
     }
-    if (newPwd.length < 6) {
-      showPasswordMessage('Password minimal 6 karakter.', 'error');
+    
+    // Validate password strength
+    const session = getLocalSessionSync();
+    const userInfo = session?.user ? { email: session.user.email, name: session.user.name } : {};
+    const passwordValidation = validatePassword(newPwd, userInfo);
+    if (!passwordValidation.isValid) {
+      showPasswordMessage(passwordValidation.feedback.join('. '), 'error');
       newPwdInput.focus();
       return;
     }
+    
     if (newPwd !== confirmPwd) {
       showPasswordMessage('Konfirmasi password tidak cocok dengan password baru.', 'error');
       confirmPwdInput.focus();
@@ -1916,6 +1950,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (pageName === 'logout') {
       signOut().then(() => {
         localStorage.removeItem('auth_session');
+        clearCsrfToken();
         window.location.href = '/';
       });
       return;

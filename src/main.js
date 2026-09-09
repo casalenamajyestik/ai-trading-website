@@ -10,10 +10,25 @@ import { initAuth, updateNavbarForAuth, setOpenLoginRef } from './auth-listener.
 // Supabase Auth
 import { supabase, signUp, signIn, signInWithOAuth, signOut, getSession as getSupabaseSession, getUser, onAuthStateChange, resendVerification, resetPassword } from './supabase.js';
 
+// Security: Rate Limiter
+import { checkRateLimit, recordAttempt, clearRateLimit, getRateLimitMessage, initRateLimiterCleanup } from './security/rate-limiter.js';
+
+// Security: CSRF Protection
+import { getCsrfToken, addCsrfToForm, initCsrfProtection, refreshCsrfToken, clearCsrfToken } from './security/csrf.js';
+
+// Security: Password Validator
+import { validatePassword, createPasswordStrengthMeter, PASSWORD_REQUIREMENTS } from './security/password-validator.js';
+
 // Initialize theme, language, and auth
 console.log('main.js: Module started');
 initTheme('#themeToggle');
 initLanguage();
+
+// Initialize rate limiter cleanup
+initRateLimiterCleanup();
+
+// Initialize CSRF protection
+initCsrfProtection();
 
 // Define openLogin BEFORE initAuth so the navbar login button works immediately
 let loginModal = document.getElementById('loginModal');
@@ -160,6 +175,19 @@ initAuth()
     // ============ Social Login Buttons ============
     document.querySelectorAll('.btn-social[data-provider]').forEach(btn => {
       btn.addEventListener('click', async () => {
+        // Check rate limit for OAuth
+        const rateLimit = checkRateLimit('OAUTH');
+        if (!rateLimit.allowed) {
+          const msg = getRateLimitMessage(rateLimit, 'OAUTH');
+          showToast(msg, 'error');
+          return;
+        }
+        
+        const warningMsg = getRateLimitMessage(rateLimit, 'OAUTH');
+        if (warningMsg && rateLimit.remainingAttempts <= 2) {
+          showToast(warningMsg, 'warning');
+        }
+        
         const provider = btn.dataset.provider;
         btn.disabled = true;
         const originalText = btn.innerHTML;
@@ -168,10 +196,14 @@ initAuth()
         const { data, error } = await signInWithOAuth(provider);
         
         if (error) {
+          // Record failed attempt
+          recordAttempt('OAUTH', false);
           showToast(error.message || `Gagal login dengan ${provider}`, 'error');
           btn.disabled = false;
           btn.innerHTML = originalText;
         } else if (data?.url) {
+          // Record successful attempt
+          recordAttempt('OAUTH', true);
           // Redirect to OAuth provider (Google, Apple, Twitter, Facebook)
           window.location.href = data.url;
         }
@@ -195,6 +227,10 @@ initAuth()
 
     if (loginForm) {
       console.log('Attaching submit listener to loginForm');
+      
+      // Add CSRF token to form
+      addCsrfToForm(loginForm);
+      
       // Prevent autofill from triggering form submission
       loginForm.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) {
@@ -224,11 +260,28 @@ initAuth()
           return;
         }
         
+        // Check rate limit
+        const rateLimit = checkRateLimit('LOGIN');
+        if (!rateLimit.allowed) {
+          e.preventDefault();
+          const msg = getRateLimitMessage(rateLimit, 'LOGIN');
+          showToast(msg, 'error');
+          showLoginError(loginForm, loginForm.querySelector('button[type="submit"]'), 'Masuk', msg);
+          return;
+        }
+        
+        // Show warning if few attempts remaining
+        const warningMsg = getRateLimitMessage(rateLimit, 'LOGIN');
+        if (warningMsg && rateLimit.remainingAttempts <= 2) {
+          showToast(warningMsg, 'warning');
+        }
+        
         e.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
-            console.log('Login form submitted:', { email });
+            // Log without sensitive data
+            console.log('Login form submitted');
 
             if (!email || !password) {
         showToast('Mohon isi semua field', 'error');
@@ -247,15 +300,28 @@ initAuth()
       // Real Supabase sign in
       const { data, error } = await signIn(email, password);
       
-      console.log('SignIn result:', { data, error });
+      console.log('SignIn result:', error ? 'error' : 'success');
       
       if (error) {
+        // Record failed attempt
+        recordAttempt('LOGIN', false);
+        
         // Translate Supabase auth error to friendly Indonesian message
         const friendly = translateAuthError(error);
         showLoginError(loginForm, btn, originalText, friendly);
         showToast(friendly, 'error');
+        
+        // Show updated rate limit warning
+        const newRateLimit = checkRateLimit('LOGIN');
+        const newWarning = getRateLimitMessage(newRateLimit, 'LOGIN');
+        if (newWarning) showToast(newWarning, 'warning');
+        
         return;
       }
+      
+      // Record successful attempt (clears rate limit)
+      recordAttempt('LOGIN', true);
+      clearRateLimit('LOGIN');
       
       // Always save "remember me" as true (default behavior - auto-login)
       localStorage.setItem('auth_remember_me', 'true');
@@ -276,11 +342,28 @@ initAuth()
     // ============ Forgot Password Form ============
         const forgotPasswordForm = document.getElementById('forgotPasswordForm');
         if (forgotPasswordForm) {
+          // Add CSRF token to form
+          addCsrfToForm(forgotPasswordForm);
+          
           forgotPasswordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             console.log('[ForgotPassword] Form submitted');
+            
+            // Check rate limit
+            const rateLimit = checkRateLimit('FORGOT_PASSWORD');
+            if (!rateLimit.allowed) {
+              const msg = getRateLimitMessage(rateLimit, 'FORGOT_PASSWORD');
+              showToast(msg, 'error');
+              return;
+            }
+            
+            const warningMsg = getRateLimitMessage(rateLimit, 'FORGOT_PASSWORD');
+            if (warningMsg && rateLimit.remainingAttempts <= 1) {
+              showToast(warningMsg, 'warning');
+            }
+            
             const email = document.getElementById('forgotEmail').value.trim();
-            console.log('[ForgotPassword] Email:', email);
+            console.log('[ForgotPassword] Form submitted');
 
             if (!email) {
               console.log('[ForgotPassword] No email provided');
@@ -290,7 +373,6 @@ initAuth()
 
             // Basic email format validation
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            console.log('[ForgotPassword] Email regex test:', emailRegex.test(email));
             if (!emailRegex.test(email)) {
               console.log('[ForgotPassword] Invalid email format');
               showToast('Format email tidak valid', 'error');
@@ -310,9 +392,11 @@ initAuth()
             console.log('[ForgotPassword] Calling resetPassword...');
             // Real Supabase reset password
             const { data, error } = await resetPassword(email);
-            console.log('[ForgotPassword] Result:', { data, error });
+            console.log('[ForgotPassword] Result:', error ? 'error' : 'success');
 
             if (error) {
+              // Record failed attempt
+              recordAttempt('FORGOT_PASSWORD', false);
               console.error('[ForgotPassword] Error:', error);
               showToast(error.message || 'Gagal mengirim tautan reset', 'error');
               if (btn) {
@@ -320,6 +404,9 @@ initAuth()
                 btn.disabled = false;
               }
             } else {
+              // Record successful attempt
+              recordAttempt('FORGOT_PASSWORD', true);
+              clearRateLimit('FORGOT_PASSWORD');
               console.log('[ForgotPassword] Success');
               showToast('Tautan reset kata sandi telah dikirim ke email Anda!', 'success');
               if (btn) {
@@ -379,6 +466,12 @@ initAuth()
             const confirmPasswordInput = document.getElementById('confirmPassword');
             const backToLoginFromReset = document.getElementById('backToLoginFromReset');
             const resetToastContainer = document.getElementById('resetToastContainer');
+            
+            // Add CSRF token to form
+            const resetPasswordForm = document.getElementById('resetPasswordForm');
+            if (resetPasswordForm) {
+              addCsrfToForm(resetPasswordForm);
+            }
 
             function showResetToast(message, type = 'info') {
               if (!resetToastContainer) return;
@@ -418,6 +511,19 @@ initAuth()
               const password = newPasswordInput?.value || '';
               const confirm = confirmPasswordInput?.value || '';
 
+              // Check rate limit
+              const rateLimit = checkRateLimit('RESET_PASSWORD');
+              if (!rateLimit.allowed) {
+                const msg = getRateLimitMessage(rateLimit, 'RESET_PASSWORD');
+                showResetToast(msg, 'error');
+                return;
+              }
+              
+              const warningMsg = getRateLimitMessage(rateLimit, 'RESET_PASSWORD');
+              if (warningMsg && rateLimit.remainingAttempts <= 1) {
+                showResetToast(warningMsg, 'warning');
+              }
+
               if (password.length < 6) {
                 showResetToast('Kata sandi minimal 6 karakter', 'error');
                 if (newPasswordInput) {
@@ -447,12 +553,17 @@ initAuth()
               const { error } = await supabase.auth.updateUser({ password });
 
               if (error) {
+                // Record failed attempt
+                recordAttempt('RESET_PASSWORD', false);
                 showResetToast(error.message || 'Gagal memperbarui kata sandi', 'error');
                 if (btn) {
                   btn.textContent = originalText;
                   btn.disabled = false;
                 }
               } else {
+                // Record successful attempt
+                recordAttempt('RESET_PASSWORD', true);
+                clearRateLimit('RESET_PASSWORD');
                 showResetToast('Kata sandi berhasil diperbarui! Mengarahkan ke login...', 'success');
                 if (btn) {
                   btn.textContent = originalText;
@@ -554,11 +665,27 @@ initAuth()
     validateForm();
 
     if (registerForm) {
+      // Add CSRF token to form
+      addCsrfToForm(registerForm);
+      
       registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = nameInput ? nameInput.value.trim() : '';
         const email = emailInput ? emailInput.value.trim() : '';
         const terms = termsCheckbox ? termsCheckbox.checked : false;
+        
+        // Check rate limit
+        const rateLimit = checkRateLimit('REGISTER');
+        if (!rateLimit.allowed) {
+          const msg = getRateLimitMessage(rateLimit, 'REGISTER');
+          showToast(msg, 'error');
+          return;
+        }
+        
+        const warningMsg = getRateLimitMessage(rateLimit, 'REGISTER');
+        if (warningMsg && rateLimit.remainingAttempts <= 1) {
+          showToast(warningMsg, 'warning');
+        }
         
         // Validate with error display
         if (!validateFormWithErrors()) {
@@ -576,15 +703,17 @@ initAuth()
         // For CTA inline form, we create account with temporary password
         const tempPassword = Math.random().toString(36).slice(-12) + 'A1!';
         
-        console.log('Registering:', { email, name });
+        console.log('Registering user');
         const { data, error } = await signUp(email, tempPassword, {
           full_name: name,
           experience: 'beginner'
         });
         
-        console.log('SignUp result:', { data, error });
+        console.log('SignUp result:', error ? 'error' : 'success');
         
         if (error) {
+          // Record failed attempt
+          recordAttempt('REGISTER', false);
           console.error('SignUp error:', error);
           showToast(error.message || 'Gagal mendaftar: ' + error.message, 'error');
           if (btn) {
@@ -593,6 +722,10 @@ initAuth()
           }
           return;
         }
+        
+        // Record successful attempt
+        recordAttempt('REGISTER', true);
+        clearRateLimit('REGISTER');
         
         showToast('Akun berhasil dibuat! Cek email untuk verifikasi.', 'success');
         registerForm.reset();
@@ -690,6 +823,14 @@ initAuth()
       // Initial state
       validateModalForm();
       
+      // Add password strength meter
+      if (modalPasswordInput) {
+        createPasswordStrengthMeter(modalPasswordInput, { email: '', name: '' });
+      }
+      
+      // Add CSRF token to form
+      addCsrfToForm(registerModalForm);
+      
       registerModalForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = modalNameInput ? modalNameInput.value.trim() : '';
@@ -698,12 +839,28 @@ initAuth()
         const experience = modalExperienceInput ? modalExperienceInput.value : '';
         const terms = modalTermsCheckbox ? modalTermsCheckbox.checked : false;
         
+        // Check rate limit
+        const rateLimit = checkRateLimit('REGISTER');
+        if (!rateLimit.allowed) {
+          const msg = getRateLimitMessage(rateLimit, 'REGISTER');
+          showToast(msg, 'error');
+          return;
+        }
+        
+        const warningMsg = getRateLimitMessage(rateLimit, 'REGISTER');
+        if (warningMsg && rateLimit.remainingAttempts <= 1) {
+          showToast(warningMsg, 'warning');
+        }
+        
         if (!validateModalFormWithErrors()) {
           return;
         }
         
-        if (password.length < 6) {
-          showToast('Kata sandi minimal 6 karakter', 'error');
+        // Validate password strength
+        const passwordValidation = validatePassword(password, { email, name });
+        if (!passwordValidation.isValid) {
+          const msg = passwordValidation.feedback.join('. ');
+          showToast(msg, 'error');
           if (modalPasswordInput) {
             modalPasswordInput.style.animation = 'shake 0.4s ease-in-out';
             setTimeout(() => { modalPasswordInput.style.animation = ''; }, 400);
@@ -719,15 +876,17 @@ initAuth()
         }
         
         // Real Supabase sign up
-        console.log('Registering (modal):', { email, name });
+        console.log('Registering user (modal)');
         const { data, error } = await signUp(email, password, {
           full_name: name,
           experience: experience || 'beginner'
         });
         
-        console.log('SignUp result (modal):', { data, error });
+        console.log('SignUp result (modal):', error ? 'error' : 'success');
         
         if (error) {
+          // Record failed attempt
+          recordAttempt('REGISTER', false);
           console.error('SignUp error (modal):', error);
           showToast(error.message || 'Gagal mendaftar: ' + error.message, 'error');
           if (btn) {
@@ -736,6 +895,10 @@ initAuth()
           }
           return;
         }
+        
+        // Record successful attempt
+        recordAttempt('REGISTER', true);
+        clearRateLimit('REGISTER');
         
         showToast('Akun berhasil dibuat! Cek email untuk verifikasi.', 'success');
         closeAllModals();
@@ -885,10 +1048,27 @@ initAuth()
 
     if (resendCodeBtn) {
       resendCodeBtn.addEventListener('click', async () => {
+        // Check rate limit for resend verification
+        const rateLimit = checkRateLimit('RESEND_VERIFICATION');
+        if (!rateLimit.allowed) {
+          const msg = getRateLimitMessage(rateLimit, 'RESEND_VERIFICATION');
+          showToast(msg, 'error');
+          return;
+        }
+        
+        const warningMsg = getRateLimitMessage(rateLimit, 'RESEND_VERIFICATION');
+        if (warningMsg && rateLimit.remainingAttempts <= 1) {
+          showToast(warningMsg, 'warning');
+        }
+        
         const { error } = await resendVerification(verificationEmail);
         if (error) {
+          // Record failed attempt
+          recordAttempt('RESEND_VERIFICATION', false);
           showToast('Gagal kirim ulang: ' + error.message, 'error');
         } else {
+          // Record successful attempt
+          recordAttempt('RESEND_VERIFICATION', true);
           showToast('Kode verifikasi dikirim ulang', 'success');
           startResendTimer();
         }

@@ -2,14 +2,17 @@
 import { onAuthStateChange, getSession as getSupabaseSession, signOut, getProfile } from './supabase.js';
 import i18next from 'i18next';
 import { translations } from './i18n.js';
+import { refreshCsrfToken, clearCsrfToken } from './security/csrf.js';
+import { saveSession, loadSession, clearSession, migrateSession, isSessionValid } from './security/session-encryption.js';
+import { sanitizeText, sanitizeEmail, sanitizeProfile, escapeHtml, setSafeContent } from './security/xss-protection.js';
 
 // ============ Shared Utils ============
-export function getLocalSession() {
+export async function getLocalSession() {
   try {
-    const session = JSON.parse(localStorage.getItem('auth_session'));
+    const session = await loadSession();
     if (!session) return null;
-    if (Date.now() > session.expiresAt) {
-      localStorage.removeItem('auth_session');
+    if (!isSessionValid(session)) {
+      await clearSession();
       return null;
     }
     return session;
@@ -18,15 +21,41 @@ export function getLocalSession() {
   }
 }
 
+// Synchronous version for backwards compatibility (use sparingly)
+export function getLocalSessionSync() {
+  try {
+    const encrypted = localStorage.getItem('auth_session');
+    if (!encrypted) return null;
+    
+    // Try to parse as plaintext first (for migration)
+    try {
+      const parsed = JSON.parse(encrypted);
+      if (parsed.user && parsed.token && parsed.expiresAt) {
+        if (Date.now() > parsed.expiresAt) {
+          localStorage.removeItem('auth_session');
+          return null;
+        }
+        return parsed;
+      }
+    } catch {
+      // Not plaintext, would need async decryption
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function logout() {
   signOut().then(() => {
-    localStorage.removeItem('auth_session');
+    clearSession();
+    clearCsrfToken();
     window.location.href = '/';
   });
 }
 
 export function requireAuth() {
-  const session = getLocalSession();
+  const session = getLocalSessionSync();
   if (!session) {
     window.location.href = '/';
     return null;
@@ -169,6 +198,8 @@ function openLogin() {
 const { data: { subscription } } = onAuthStateChange(async (event, session) => {
   console.log('[AUTH STATE CHANGE]', event, session ? 'session exists' : 'no session');
   if (event === 'SIGNED_IN' && session) {
+    // Refresh CSRF token on successful login
+    refreshCsrfToken();
     // Fetch profile from Supabase database
     let profile = null;
     try {
@@ -179,26 +210,31 @@ const { data: { subscription } } = onAuthStateChange(async (event, session) => {
     }
     
     // Priority: profiles table > Supabase Auth metadata > email fallback
-    const displayName = profile?.full_name || session.user.user_metadata?.full_name || session.user.email.split('@')[0];
-    const avatarName = profile?.full_name || session.user.user_metadata?.full_name || session.user.email;
+    const rawDisplayName = profile?.full_name || session.user.user_metadata?.full_name || session.user.email.split('@')[0];
+    const rawAvatarName = profile?.full_name || session.user.user_metadata?.full_name || session.user.email;
+    
+    // Sanitize user data for XSS protection
+    const sanitizedProfile = profile ? sanitizeProfile(profile) : {};
+    const displayName = sanitizeText(rawDisplayName);
+    const avatarName = sanitizeText(rawAvatarName);
     
     const userSession = {
       user: {
         id: session.user.id,
-        email: session.user.email,
+        email: sanitizeEmail(session.user.email),
         name: displayName,
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=4f8eff&color=fff&size=128`,
-        // Merge profile data from database
-        whatsappCountry: profile?.whatsapp_country || 'ID',
-        whatsapp: profile?.telegram || '',
-        telegram: profile?.telegram || '',
-        notification: profile?.notification || 'telegram'
+        // Merge profile data from database (sanitized)
+        whatsappCountry: sanitizeText(sanitizedProfile.whatsapp_country || 'ID'),
+        whatsapp: sanitizeText(sanitizedProfile.whatsapp || ''),
+        telegram: sanitizeText(sanitizedProfile.telegram || ''),
+        notification: sanitizeText(sanitizedProfile.notification || 'telegram')
       },
       token: session.access_token,
       expiresAt: Date.now() + session.expires_in * 1000,
       isVerified: session.user.email_confirmed_at !== null
     };
-    localStorage.setItem('auth_session', JSON.stringify(userSession));
+    await saveSession(userSession);
     updateNavbarForAuth(userSession);
     
     // Only redirect to dashboard from home page if email is verified
@@ -220,7 +256,8 @@ const { data: { subscription } } = onAuthStateChange(async (event, session) => {
         // If not on home page, stay where user is (could be on dashboard already)
   } else if (event === 'SIGNED_OUT') {
     console.log('[AUTH] Signed out');
-    localStorage.removeItem('auth_session');
+    clearSession();
+    clearCsrfToken();
     updateNavbarForAuth(null);
     
     // Redirect to home if on dashboard
@@ -232,6 +269,9 @@ const { data: { subscription } } = onAuthStateChange(async (event, session) => {
 
 // Check initial session (for page refresh on dashboard)
 export async function initAuth() {
+  // Migrate any existing plaintext sessions to encrypted storage
+  await migrateSession();
+  
   let session = null;
   try {
     const sessionPromise = getSupabaseSession();
@@ -256,26 +296,31 @@ export async function initAuth() {
     }
     
     // Priority: profiles table > Supabase Auth metadata > email fallback
-    const displayName = profile?.full_name || session.user.user_metadata?.full_name || session.user.email.split('@')[0];
-    const avatarName = profile?.full_name || session.user.user_metadata?.full_name || session.user.email;
+    const rawDisplayName = profile?.full_name || session.user.user_metadata?.full_name || session.user.email.split('@')[0];
+    const rawAvatarName = profile?.full_name || session.user.user_metadata?.full_name || session.user.email;
+    
+    // Sanitize user data for XSS protection
+    const sanitizedProfile = profile ? sanitizeProfile(profile) : {};
+    const displayName = sanitizeText(rawDisplayName);
+    const avatarName = sanitizeText(rawAvatarName);
     
     const userSession = {
       user: {
         id: session.user.id,
-        email: session.user.email,
+        email: sanitizeEmail(session.user.email),
         name: displayName,
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=4f8eff&color=fff&size=128`,
-        // Merge profile data from database
-        whatsappCountry: profile?.whatsapp_country || 'ID',
-        whatsapp: profile?.whatsapp || '',
-        telegram: profile?.telegram || '',
-        notification: profile?.notification || 'telegram'
+        // Merge profile data from database (sanitized)
+        whatsappCountry: sanitizeText(sanitizedProfile.whatsapp_country || 'ID'),
+        whatsapp: sanitizeText(sanitizedProfile.whatsapp || ''),
+        telegram: sanitizeText(sanitizedProfile.telegram || ''),
+        notification: sanitizeText(sanitizedProfile.notification || 'telegram')
       },
       token: session.access_token,
       expiresAt: Date.now() + session.expires_in * 1000,
       isVerified: session.user.email_confirmed_at !== null
     };
-    localStorage.setItem('auth_session', JSON.stringify(userSession));
+    await saveSession(userSession);
     updateNavbarForAuth(userSession);
     
     // Only redirect to dashboard from home page if user is fully authenticated (verified email)
@@ -291,7 +336,7 @@ export async function initAuth() {
         // keep the login modal accessible (don't redirect)
         // Also stay on reset-password page for password update
   } else {
-    const localSession = getLocalSession();
+    const localSession = getLocalSessionSync();
     updateNavbarForAuth(localSession);
   }
 }
