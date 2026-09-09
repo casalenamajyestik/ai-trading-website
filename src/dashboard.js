@@ -969,7 +969,7 @@ const pages = {
           <div class="stat-card"><div class="stat-card-label">Losses</div><div class="stat-card-value negative" id="histLosses">0</div><div class="stat-card-sub loading-skeleton" id="histLossesLoading">Memuat data...</div></div>
           <div class="stat-card"><div class="stat-card-label">Avg Trade PnL</div><div class="stat-card-value" id="histAvgTrade">$0.00</div><div class="stat-card-sub loading-skeleton" id="histAvgTradeLoading">Memuat data...</div></div>
         </div>
-        <div class="content-section">
+        <div class="content-section tight">
           <div class="section-header">
             <span class="section-title">Trade History</span>
             <span class="section-badge">Last 30 Days</span>
