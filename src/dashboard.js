@@ -782,22 +782,41 @@ function handleSortColumn(column) {
 }
 
 /**
- * Initialize sort click handlers on table headers
+ * Initialize sort click handlers on table headers using event delegation
  */
 function initPositionSortHandlers() {
-  const headers = document.querySelectorAll('.positions-table th[data-sort]');
+  const table = document.querySelector('.positions-table table');
+  if (!table) {
+    console.log('[Positions] Table not found for sort handlers');
+    return;
+  }
+  
+  // Remove existing delegation listener if any
+  if (table.dataset.sortListener) {
+    return; // Already initialized
+  }
+  table.dataset.sortListener = 'true';
+  
+  // Style all sortable headers
+  const headers = table.querySelectorAll('th[data-sort]');
   console.log('[Positions] Found sort headers:', headers.length);
   headers.forEach(th => {
-    if (!th.dataset.listener) {
-      th.dataset.listener = 'true';
-      th.style.cursor = 'pointer';
-      th.style.userSelect = 'none';
-      th.addEventListener('click', () => {
+    th.style.cursor = 'pointer';
+    th.style.userSelect = 'none';
+  });
+  
+  // Use event delegation on thead
+  const thead = table.querySelector('thead');
+  if (thead) {
+    thead.addEventListener('click', (e) => {
+      const th = e.target.closest('th[data-sort]');
+      if (th) {
         console.log('[Positions] Header clicked:', th.dataset.sort);
         handleSortColumn(th.dataset.sort);
-      });
-    }
-  });
+      }
+    });
+    console.log('[Positions] Sort delegation attached to thead');
+  }
 }
 
 /**
@@ -845,22 +864,41 @@ function handleHistorySortColumn(column) {
 }
 
 /**
- * Initialize sort click handlers on history table headers
+ * Initialize sort click handlers on history table headers using event delegation
  */
 function initHistorySortHandlers() {
-  const headers = document.querySelectorAll('.history-table th[data-sort]');
+  const table = document.querySelector('.history-table table');
+  if (!table) {
+    console.log('[History] Table not found for sort handlers');
+    return;
+  }
+  
+  // Remove existing delegation listener if any
+  if (table.dataset.sortListener) {
+    return; // Already initialized
+  }
+  table.dataset.sortListener = 'true';
+  
+  // Style all sortable headers
+  const headers = table.querySelectorAll('th[data-sort]');
   console.log('[History] Found sort headers:', headers.length);
   headers.forEach(th => {
-    if (!th.dataset.listener) {
-      th.dataset.listener = 'true';
-      th.style.cursor = 'pointer';
-      th.style.userSelect = 'none';
-      th.addEventListener('click', () => {
+    th.style.cursor = 'pointer';
+    th.style.userSelect = 'none';
+  });
+  
+  // Use event delegation on thead
+  const thead = table.querySelector('thead');
+  if (thead) {
+    thead.addEventListener('click', (e) => {
+      const th = e.target.closest('th[data-sort]');
+      if (th) {
         console.log('[History] Header clicked:', th.dataset.sort);
         handleHistorySortColumn(th.dataset.sort);
-      });
-    }
-  });
+      }
+    });
+    console.log('[History] Sort delegation attached to thead');
+  }
 }
 
 function getCountryOptions(selectedCode = 'ID') {
