@@ -481,9 +481,11 @@ async function loadHistoryData(session, forceRefresh = false) {
         if (el) el.style.display = 'none';
       });
      
-      // Render trade history table
+// Render trade history table
       renderTradeHistoryTable(trades);
-     
+      // Initialize sort handlers after table is rendered
+      initHistorySortHandlers();
+
       console.log('[History] Data loaded and UI updated:', { totalTrades, wins, losses, avgTrade });
     } else {
       // No data - show empty state
@@ -527,10 +529,17 @@ async function loadHistoryData(session, forceRefresh = false) {
 /**
  * Render trade history table from Google Sheets data
  * @param {Array} trades - Array of trade objects
+ * @param {Object} sortOptions - Optional sort options { column, direction }
  */
-function renderTradeHistoryTable(trades) {
+function renderTradeHistoryTable(trades, sortOptions = {}) {
   const tbody = document.getElementById('histTradesBody');
   if (!tbody) return;
+  
+  // Update sort state if provided
+  if (sortOptions.column) {
+    historySortState.column = sortOptions.column;
+    historySortState.direction = sortOptions.direction || 'desc';
+  }
   
   if (!trades || trades.length === 0) {
     tbody.innerHTML = `
@@ -543,7 +552,38 @@ function renderTradeHistoryTable(trades) {
     return;
   }
   
-  tbody.innerHTML = trades.map(t => `
+  // Apply sorting based on current sort state
+  const sortedTrades = [...trades].sort((a, b) => {
+    let comparison = 0;
+    const direction = historySortState.direction === 'asc' ? 1 : -1;
+    
+    switch (historySortState.column) {
+      case 'time':
+        comparison = new Date(a.time).getTime() - new Date(b.time).getTime();
+        break;
+      case 'coin':
+        comparison = (a.coin || '').localeCompare(b.coin || '');
+        break;
+      case 'type':
+        comparison = (a.type || '').localeCompare(b.type || '');
+        break;
+      case 'size':
+        comparison = (a.size || 0) - (b.size || 0);
+        break;
+      case 'price':
+        comparison = (a.price || 0) - (b.price || 0);
+        break;
+      case 'pnl':
+        comparison = (a.pnl || 0) - (b.pnl || 0);
+        break;
+      default:
+        comparison = new Date(b.time).getTime() - new Date(a.time).getTime(); // default: newest first
+    }
+    
+    return comparison * direction;
+  });
+  
+  tbody.innerHTML = sortedTrades.map(t => `
     <tr>
       <td>${formatLocalTime(t.time)}</td>
       <td class="coin-name">${t.coin}</td>
@@ -553,7 +593,16 @@ function renderTradeHistoryTable(trades) {
       <td class="pnl ${t.pnl >= 0 ? 'positive' : 'negative'}">$${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}</td>
     </tr>
   `).join('');
+  
+  // Update sort indicators in header
+  updateHistorySortIndicators();
 }
+
+// ============ History Filter/Sort State ============
+let historySortState = {
+  column: 'time', // default: newest first
+  direction: 'desc'
+};
 
 // ============ Positions Filter/Sort State ============
 let positionsSortState = {
@@ -746,6 +795,69 @@ function initPositionSortHandlers() {
       th.addEventListener('click', () => {
         console.log('[Positions] Header clicked:', th.dataset.sort);
         handleSortColumn(th.dataset.sort);
+      });
+    }
+  });
+}
+
+/**
+ * Update sort indicator arrows in history table header
+ */
+function updateHistorySortIndicators() {
+  const headers = document.querySelectorAll('.history-table th[data-sort]');
+  headers.forEach(th => {
+    const column = th.dataset.sort;
+    const indicator = th.querySelector('.sort-indicator');
+    if (indicator) indicator.remove();
+    
+    if (column === historySortState.column) {
+      const arrow = historySortState.direction === 'asc' ? '↑' : '↓';
+      const span = document.createElement('span');
+      span.className = 'sort-indicator';
+      span.style.marginLeft = '0.375rem';
+      span.style.fontSize = '0.7rem';
+      span.textContent = arrow;
+      th.appendChild(span);
+      th.style.color = 'var(--accent-primary)';
+    } else {
+      th.style.color = '';
+    }
+  });
+}
+
+/**
+ * Handle sort column click for history table
+ */
+function handleHistorySortColumn(column) {
+  if (historySortState.column === column) {
+    // Toggle direction
+    historySortState.direction = historySortState.direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    // New column, default to desc (except coin which defaults to asc)
+    historySortState.column = column;
+    historySortState.direction = column === 'coin' ? 'asc' : 'desc';
+  }
+  
+  // Re-render with new sort (use cached trades from last fetch)
+  getTradeHistory(true).then(trades => {
+    renderTradeHistoryTable(trades);
+  });
+}
+
+/**
+ * Initialize sort click handlers on history table headers
+ */
+function initHistorySortHandlers() {
+  const headers = document.querySelectorAll('.history-table th[data-sort]');
+  console.log('[History] Found sort headers:', headers.length);
+  headers.forEach(th => {
+    if (!th.dataset.listener) {
+      th.dataset.listener = 'true';
+      th.style.cursor = 'pointer';
+      th.style.userSelect = 'none';
+      th.addEventListener('click', () => {
+        console.log('[History] Header clicked:', th.dataset.sort);
+        handleHistorySortColumn(th.dataset.sort);
       });
     }
   });
@@ -1043,12 +1155,12 @@ const pages = {
             <table>
               <thead>
                 <tr>
-                  <th>Time</th>
-                  <th>Coin</th>
-                  <th>Type</th>
-                  <th>Size</th>
-                  <th>Price</th>
-                  <th>PnL</th>
+                  <th data-sort="time">Time</th>
+                  <th data-sort="coin">Coin</th>
+                  <th data-sort="type">Type</th>
+                  <th data-sort="size">Size</th>
+                  <th data-sort="price">Price</th>
+                  <th data-sort="pnl">PnL</th>
                 </tr>
               </thead>
               <tbody id="histTradesBody">
