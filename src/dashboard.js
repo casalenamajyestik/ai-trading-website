@@ -209,15 +209,29 @@ async function getUnifiedSheetsData(forceRefresh = false) {
   if (!forceRefresh && _unifiedSheetsCache.data && _unifiedSheetsCache.userId === currentUserId && (now - _unifiedSheetsCache.timestamp < UNIFIED_SHEETS_CACHE_TTL)) {
     return _unifiedSheetsCache.data;
   }
-  
+
   const data = await fetchAllSheetsData(currentUserId);
-  _unifiedSheetsCache = { 
-    data, 
+  // Handle fetch failure - return empty structure instead of crashing
+  if (!data) {
+    const emptyData = { latestRow: null, activePositions: [], closedPositions: [] };
+    _unifiedSheetsCache = {
+      data: emptyData,
+      latestRow: null,
+      activePositions: [],
+      closedPositions: [],
+      timestamp: now,
+      userId: currentUserId
+    };
+    return emptyData;
+  }
+  
+  _unifiedSheetsCache = {
+    data,
     latestRow: data.latestRow,
     activePositions: data.activePositions,
     closedPositions: data.closedPositions,
-    timestamp: now, 
-    userId: currentUserId 
+    timestamp: now,
+    userId: currentUserId
   };
   return data;
 }
