@@ -1,16 +1,9 @@
-/**
- * XSS Protection Utilities
- * Sanitizes user input to prevent Cross-Site Scripting attacks
- */
-
-// Allowed HTML tags and attributes for rich text (if needed)
-const ALLOWED_TAGS = [];
-const ALLOWED_ATTRIBUTES = {};
+/* ===== XSS Protection Utilities ===== */
 
 /**
- * Escape HTML special characters
+ * Escape HTML special characters to prevent XSS
  * @param {string} str - String to escape
- * @returns {string} HTML-escaped string
+ * @returns {string} Escaped string
  */
 export function escapeHtml(str) {
   if (typeof str !== 'string') return '';
@@ -19,7 +12,7 @@ export function escapeHtml(str) {
     .replace(/</g, '<')
     .replace(/>/g, '>')
     .replace(/"/g, '"')
-    .replace(/'/g, ''')
+    .replace(/'/g, '&apos;')
     .replace(/\//g, '&#x2F;');
 }
 
@@ -42,6 +35,10 @@ export function sanitizeHtml(str, options = {}) {
     sanitized = sanitized.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     // Convert *text* to <em>text</em>
     sanitized = sanitized.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    // Convert __text__ to <strong>text</strong>
+    sanitized = sanitized.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    // Convert _text_ to <em>text</em>
+    sanitized = sanitized.replace(/_(.+?)_/g, '<em>$1</em>');
     // Convert `code` to <code>code</code>
     sanitized = sanitized.replace(/`(.+?)`/g, '<code>$1</code>');
   }
@@ -50,166 +47,112 @@ export function sanitizeHtml(str, options = {}) {
 }
 
 /**
- * Sanitize text for safe use in textContent (no HTML)
+ * Sanitize text for safe display (no HTML allowed)
  * @param {string} str - String to sanitize
- * @returns {string} Sanitized string safe for textContent
+ * @returns {string} Sanitized text
  */
 export function sanitizeText(str) {
   if (typeof str !== 'string') return '';
-  // Remove null bytes and control characters except newline/tab
-  return str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  return escapeHtml(str);
 }
 
 /**
- * Sanitize string for safe use in HTML attributes
- * @param {string} str - String to sanitize
- * @returns {string} Sanitized string
- */
-export function sanitizeAttribute(str) {
-  if (typeof str !== 'string') return '';
-  return str
-    .replace(/"/g, '"')
-    .replace(/'/g, ''')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
-    .replace(/&/g, '&');
-}
-
-/**
- * Sanitize URL to prevent javascript: and data: URIs
- * @param {string} url - URL to sanitize
- * @param {string[]} allowedProtocols - Allowed protocols (default: https, http)
- * @returns {string} Sanitized URL or empty string if invalid
- */
-export function sanitizeUrl(url, allowedProtocols = ['https:', 'http:']) {
-  if (typeof url !== 'string') return '';
-  
-  try {
-    const parsed = new URL(url.trim());
-    if (!allowedProtocols.includes(parsed.protocol)) {
-      return '';
-    }
-    // Additional checks
-    if (parsed.protocol === 'javascript:' || parsed.protocol === 'data:' || parsed.protocol === 'vbscript:') {
-      return '';
-    }
-    return parsed.toString();
-  } catch {
-    return '';
-  }
-}
-
-/**
- * Sanitize email address
+ * Sanitize email for safe display
  * @param {string} email - Email to sanitize
  * @returns {string} Sanitized email
  */
 export function sanitizeEmail(email) {
   if (typeof email !== 'string') return '';
-  // Basic email sanitization - remove dangerous characters
-  return email
-    .trim()
-    .toLowerCase()
-    .replace(/[<>\"'&]/g, '')
-    .slice(0, 254); // RFC 5321 limit
+  // Basic email format validation + escape
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) return '';
+  return escapeHtml(email);
 }
 
 /**
- * Sanitize filename
- * @param {string} filename - Filename to sanitize
- * @returns {string} Sanitized filename
- */
-export function sanitizeFilename(filename) {
-  if (typeof filename !== 'string') return '';
-  return filename
-    .replace(/[^a-zA-Z0-9._-]/g, '_')
-    .replace(/\.+/g, '.')
-    .slice(0, 255);
-}
-
-/**
- * Create a safe DOM element from HTML string
- * Uses DOMParser for safe parsing
- * @param {string} html - HTML string
- * @param {Object} options - Sanitization options
- * @returns {DocumentFragment} Safe document fragment
- */
-export function createSafeFragment(html, options = {}) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  
-  // Remove scripts
-  doc.querySelectorAll('script').forEach(el => el.remove());
-  
-  // Remove event handlers
-  const allElements = doc.querySelectorAll('*');
-  allElements.forEach(el => {
-    // Remove all on* attributes
-    Array.from(el.attributes).forEach(attr => {
-      if (attr.name.startsWith('on')) {
-        el.removeAttribute(attr.name);
-      }
-      // Remove javascript: URLs
-      if (attr.name === 'href' || attr.name === 'src') {
-        const sanitized = sanitizeUrl(attr.value);
-        if (!sanitized) {
-          el.removeAttribute(attr.name);
-        } else {
-          el.setAttribute(attr.name, sanitized);
-        }
-      }
-    });
-  });
-  
-  return doc.body.firstChild ? doc.body : document.createDocumentFragment();
-}
-
-/**
- * Safe setter for element content
- * Use instead of innerHTML
- * @param {HTMLElement} element - Target element
- * @param {string} content - Content to set
- * @param {boolean} allowHtml - Whether to allow basic HTML (default: false)
- */
-export function setSafeContent(element, content, allowHtml = false) {
-  if (!element) return;
-  
-  if (allowHtml) {
-    const fragment = createSafeFragment(content);
-    element.innerHTML = '';
-    element.appendChild(fragment);
-  } else {
-    element.textContent = sanitizeText(content);
-  }
-}
-
-/**
- * Safe setter for element attribute
- * @param {HTMLElement} element - Target element
- * @param {string} attr - Attribute name
- * @param {string} value - Attribute value
- */
-export function setSafeAttribute(element, attr, value) {
-  if (!element) return;
-  element.setAttribute(attr, sanitizeAttribute(value));
-}
-
-/**
- * Sanitize user profile data for display
- * @param {Object} profile - User profile object
+ * Sanitize profile object for safe storage
+ * @param {Object} profile - Profile object
  * @returns {Object} Sanitized profile
  */
 export function sanitizeProfile(profile) {
   if (!profile || typeof profile !== 'object') return {};
   
-  return {
-    full_name: sanitizeText(profile.full_name || ''),
-    whatsapp_country: sanitizeText(profile.whatsapp_country || 'ID'),
-    whatsapp: sanitizeText(profile.whatsapp || ''),
-    telegram: sanitizeText(profile.telegram || ''),
-    notification: sanitizeText(profile.notification || 'telegram'),
-    // Don't sanitize ID, email (handled separately)
-    id: profile.id,
-    email: sanitizeEmail(profile.email)
-  };
+  const sanitized = {};
+  for (const [key, value] of Object.entries(profile)) {
+    if (typeof value === 'string') {
+      sanitized[key] = sanitizeText(value);
+    } else if (typeof value === 'number' || typeof value === 'boolean') {
+      sanitized[key] = value;
+    } else if (Array.isArray(value)) {
+      sanitized[key] = value.map(v => typeof v === 'string' ? sanitizeText(v) : v);
+    } else if (value && typeof value === 'object') {
+      sanitized[key] = sanitizeProfile(value);
+    }
+  }
+  return sanitized;
+}
+
+/**
+ * Escape string for safe use in HTML attribute
+ * @param {string} str - String to escape
+ * @returns {string} Escaped string
+ */
+export function escapeHtmlAttr(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&')
+    .replace(/"/g, '"')
+    .replace(/'/g, '&apos;')
+    .replace(/</g, '<')
+    .replace(/>/g, '>');
+}
+
+/**
+ * Create safe innerHTML by sanitizing untrusted content
+ * @param {string} html - HTML string to sanitize
+ * @param {string[]} allowedTags - List of allowed tags
+ * @returns {string} Sanitized HTML
+ */
+export function setSafeInnerHTML(html, allowedTags = ['b', 'i', 'em', 'strong', 'code', 'span', 'div', 'p', 'br', 'a']) {
+  if (typeof html !== 'string') return '';
+  
+  // Very basic tag filtering - only allow whitelisted tags
+  // This is a simple implementation; for production consider DOMPurify
+  const tagRegex = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
+  return html.replace(tagRegex, (match, tagName) => {
+    if (allowedTags.includes(tagName.toLowerCase())) {
+      return match;
+    }
+    return '';
+  });
+}
+
+/**
+ * Validate and sanitize URL for safe navigation
+ * @param {string} url - URL to validate
+ * @returns {string|null} Sanitized URL or null if invalid
+ */
+export function setSafeContent(element, content, options = {}) {
+  if (!element) return;
+  if (typeof content !== 'string') content = '';
+  element.textContent = content;
+}
+
+export function sanitizeUrl(url) {
+  if (typeof url !== 'string') return null;
+  
+  try {
+    const parsed = new URL(url);
+    // Only allow http/https protocols
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return null;
+    }
+    // Basic XSS prevention - reject javascript: and data: URLs
+    if (parsed.href.startsWith('javascript:') || parsed.href.startsWith('data:')) {
+      return null;
+    }
+    return parsed.href;
+  } catch {
+    return null;
+  }
 }
