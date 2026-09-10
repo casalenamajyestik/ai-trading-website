@@ -96,127 +96,165 @@ function formatCompactCurrency(num) {
   return '$' + (absNum / 1_000_000_000_000).toFixed(2).replace('.', ',') + 'T';
 }
 
-// Cache Sheets data with a short TTL (30 seconds) so we don't hammer the endpoint
-let _sheetsCache = { data: null, timestamp: 0, userId: null };
-const SHEETS_CACHE_TTL = 120_000; // 2 minutes (increased from 30s for faster loads)
+// ============ Unified Google Sheets Data Fetching ============
+// Single fetch for all data, then split for different uses (stats, active positions, trade history)
+// This eliminates redundant network calls that were slowing down Overview and Positions pages
 
+let _unifiedSheetsCache = { 
+  data: null, 
+  latestRow: null,      // For stat cards (from read_last logic)
+  activePositions: [],  // data_type = active_position_detail
+  closedPositions: [],  // data_type = closed_position
+  timestamp: 0, 
+  userId: null 
+};
+const UNIFIED_SHEETS_CACHE_TTL = 60_000; // 1 minute cache
+
+/**
+ * Fetch ALL data from Google Sheets in a single call (mode=read).
+ * Returns parsed data split by data_type for efficient reuse.
+ */
+async function fetchAllSheetsData(userId) {
+  try {
+    const cacheBuster = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const url = buildSheetsUrl({
+      mode: 'read',
+      user_id: userId,
+      _: cacheBuster
+    });
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const result = await response.json();
+    if (!result.success || !result.data) return { latestRow: null, activePositions: [], closedPositions: [] };
+    
+    const allRows = result.data;
+    
+    // Split by data_type
+    const activePositions = allRows.filter(row => row.data_type === 'active_position_detail');
+    const closedPositions = allRows.filter(row => row.data_type === 'closed_position');
+    
+    // Get latest meaningful row (like read_last logic) - prefer unrealized_snapshot or heartbeat
+    // that has the most recent balance/PnL data
+    let latestRow = null;
+    const priorityTypes = ['unrealized_snapshot', 'heartbeat', 'daily_pnl_yesterday'];
+    
+    for (const type of priorityTypes) {
+      const rows = allRows.filter(row => row.data_type === type);
+      if (rows.length > 0) {
+        latestRow = rows[rows.length - 1]; // most recent
+        break;
+      }
+    }
+    
+    // Fallback to absolute last row if no priority types found
+    if (!latestRow && allRows.length > 0) {
+      latestRow = allRows[allRows.length - 1];
+    }
+    
+    // Apply read_last fallback logic for numeric fields (if they're 0, look up for last non-zero)
+    if (latestRow) {
+      const NUMERIC_FIELDS = ['Saldo', 'PNL Exit', 'PNL Unrealized', 'Total Position', 'PNL Yesterday', 'Long Position', 'Short Position', 'Size'];
+      const userIdCol = allRows[0] ? allRows[0].user_id : userId; // Use userId from data
+      
+      for (const field of NUMERIC_FIELDS) {
+        const camelField = field.toLowerCase().replace(/\s+/g, '_');
+        let val = parseFloat(latestRow[camelField]) || 0;
+        if (val === 0) {
+          // Search backwards for last non-zero value for this user
+          for (let i = allRows.length - 1; i >= 0; i--) {
+            if (allRows[i].user_id !== userId) continue;
+            const cellVal = parseFloat(allRows[i][camelField]);
+            if (cellVal !== 0 && !isNaN(cellVal)) {
+              val = cellVal;
+              break;
+            }
+          }
+        }
+        latestRow[camelField] = val;
+      }
+      
+      // Special handling for PNL Yesterday - find nearest daily_pnl_yesterday row
+      let pnlYesterdayVal = parseFloat(latestRow.pnl_yesterday) || 0;
+      if (pnlYesterdayVal === 0) {
+        for (let i = allRows.length - 1; i >= 0; i--) {
+          if (allRows[i].user_id !== userId) continue;
+          if (allRows[i].data_type === 'daily_pnl_yesterday') {
+            const cellVal = parseFloat(allRows[i].pnl_yesterday);
+            if (cellVal !== 0 && !isNaN(cellVal)) {
+              pnlYesterdayVal = cellVal;
+              break;
+            }
+          }
+        }
+      }
+      latestRow.pnl_yesterday = pnlYesterdayVal;
+    }
+    
+    return { latestRow, activePositions, closedPositions };
+  } catch (err) {
+    console.error('[Sheets] Failed to fetch all data:', err);
+    return { latestRow: null, activePositions: [], closedPositions: [] };
+  }
+}
+
+/**
+ * Get unified sheets data with caching.
+ * Returns object with: latestRow (for stat cards), activePositions, closedPositions
+ */
+async function getUnifiedSheetsData(forceRefresh = false) {
+  const now = Date.now();
+  const { user } = await getUser();
+  const currentUserId = user?.id || 'anonymous';
+
+  if (!forceRefresh && _unifiedSheetsCache.data && _unifiedSheetsCache.userId === currentUserId && (now - _unifiedSheetsCache.timestamp < UNIFIED_SHEETS_CACHE_TTL)) {
+    return _unifiedSheetsCache.data;
+  }
+  
+  const data = await fetchAllSheetsData(currentUserId);
+  _unifiedSheetsCache = { 
+    data, 
+    latestRow: data.latestRow,
+    activePositions: data.activePositions,
+    closedPositions: data.closedPositions,
+    timestamp: now, 
+    userId: currentUserId 
+  };
+  return data;
+}
+
+/**
+ * Get latest row data for stat cards (equivalent to old getSheetsData)
+ */
 async function getSheetsData(forceRefresh = false) {
-  const now = Date.now();
-  const { user } = await getUser();
-  const currentUserId = user?.id || 'anonymous';
-
-  if (!forceRefresh && _sheetsCache.data && _sheetsCache.userId === currentUserId && (now - _sheetsCache.timestamp < SHEETS_CACHE_TTL)) {
-    return _sheetsCache.data;
-  }
-  const data = await fetchLatestSheetsData(currentUserId);
-  if (data) {
-    _sheetsCache = { data, timestamp: now, userId: currentUserId };
-  }
-  return data;
+  const data = await getUnifiedSheetsData(forceRefresh);
+  return data.latestRow;
 }
 
 /**
- * Fetch active position detail rows from Google Sheets (data_type = active_position_detail).
- * Returns array of position objects with full detail (size_usdt, entry_price, mark_price, unrealized_pnl, leverage, position_amt).
+ * Get active positions detail from cached unified data
  */
-async function fetchActivePositionsDetail(userId) {
-  try {
-    // Use mode=read to get ALL rows, then filter for active_position_detail.
-    // Cache-busting supaya data selalu fresh dari spreadsheet.
-    // TIDAK pakai custom headers (Cache-Control, Pragma, Expires) karena
-    // Google Apps Script tidak support CORS preflight untuk custom headers.
-    const cacheBuster = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-    const url = buildSheetsUrl({
-      mode: 'read',
-      user_id: userId,
-      _: cacheBuster
-    });
-    const response = await fetch(url, { cache: 'no-store' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const result = await response.json();
-    if (!result.success || !result.data) return [];
-    
-    // Filter hanya data_type = active_position_detail
-    const activePositions = result.data.filter(row => row.data_type === 'active_position_detail');
-    return activePositions;
-  } catch (err) {
-    console.error('[Sheets] Failed to fetch active positions detail:', err);
-    return [];
-  }
-}
-
-// Cache untuk active positions detail
-let _activePositionsCache = { data: [], timestamp: 0, userId: null };
-const ACTIVE_POSITIONS_CACHE_TTL = 180_000; // 3 minutes cache (increased from 60s)
-
-// Cache untuk trade history (closed_position)
-let _tradeHistoryCache = { data: [], timestamp: 0, userId: null };
-const TRADE_HISTORY_CACHE_TTL = 180_000; // 3 minutes cache (increased from 60s)
-
 async function getActivePositionsDetail(forceRefresh = false) {
-  const now = Date.now();
-  const { user } = await getUser();
-  const currentUserId = user?.id || 'anonymous';
-
-  if (!forceRefresh && _activePositionsCache.data.length > 0 && _activePositionsCache.userId === currentUserId && (now - _activePositionsCache.timestamp < ACTIVE_POSITIONS_CACHE_TTL)) {
-    return _activePositionsCache.data;
-  }
-  const data = await fetchActivePositionsDetail(currentUserId);
-  if (data.length > 0) {
-    _activePositionsCache = { data, timestamp: now, userId: currentUserId };
-  }
-  return data;
+  const data = await getUnifiedSheetsData(forceRefresh);
+  return data.activePositions;
 }
 
 /**
- * Fetch trade history (closed_position) from Google Sheets
- * Returns array of closed trade objects with time, coin, type, size, price, pnl
+ * Get trade history (closed positions) from cached unified data
  */
-async function fetchTradeHistory(userId) {
-  try {
-    const cacheBuster = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-    const url = buildSheetsUrl({
-      mode: 'read',
-      user_id: userId,
-      _: cacheBuster
-    });
-    const response = await fetch(url, { cache: 'no-store' });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const result = await response.json();
-    if (!result.success || !result.data) return [];
-    
-    // Filter hanya data_type = closed_position
-    const closedPositions = result.data.filter(row => row.data_type === 'closed_position');
-    
-    // Transform to trade history format
-    return closedPositions.map(row => ({
-      time: row.timestamp,
-      coin: row.nama_koin,
-      type: row.side === 'long' ? 'Buy' : row.side === 'short' ? 'Sell' : row.side,
-      size: row.size || 0,
-      price: row.harga_exit || 0,
-      pnl: row.pnl_exit || 0,
-      bot: row.session_id || 'Bot'
-    })).sort((a, b) => new Date(b.time) - new Date(a.time)); // newest first
-  } catch (err) {
-    console.error('[Sheets] Failed to fetch trade history:', err);
-    return [];
-  }
-}
-
 async function getTradeHistory(forceRefresh = false) {
-  const now = Date.now();
-  const { user } = await getUser();
-  const currentUserId = user?.id || 'anonymous';
-
-  if (!forceRefresh && _tradeHistoryCache.data.length > 0 && _tradeHistoryCache.userId === currentUserId && (now - _tradeHistoryCache.timestamp < TRADE_HISTORY_CACHE_TTL)) {
-    return _tradeHistoryCache.data;
-  }
-  const data = await fetchTradeHistory(currentUserId);
-  if (data.length > 0) {
-    _tradeHistoryCache = { data, timestamp: now, userId: currentUserId };
-  }
-  return data;
+  const data = await getUnifiedSheetsData(forceRefresh);
+  const closedPositions = data.closedPositions;
+  
+  // Transform to trade history format
+  return closedPositions.map(row => ({
+    time: row.timestamp,
+    coin: row.nama_koin,
+    type: row.side === 'long' ? 'Buy' : row.side === 'short' ? 'Sell' : row.side,
+    size: row.size || 0,
+    price: row.harga_exit || 0,
+    pnl: row.pnl_exit || 0,
+    bot: row.session_id || 'Bot'
+  })).sort((a, b) => new Date(b.time) - new Date(a.time)); // newest first
 }
 
 // ============ Helpers ============
@@ -347,7 +385,12 @@ async function loadOverviewData(session, forceRefresh = false) {
 async function loadPositionsData(session, forceRefresh = false) {
   try {
     console.log('[Positions] Loading Google Sheets data...');
-    const sheetsData = await getSheetsData(forceRefresh);
+    // Parallel fetch: stat cards data + active positions detail simultaneously
+    // Both now come from unified cache so this is very fast
+    const [sheetsData, activePositions] = await Promise.all([
+      getSheetsData(forceRefresh),
+      getActivePositionsDetail(forceRefresh)
+    ]);
 
     if (sheetsData) {
           // Update stat cards with real data
@@ -388,8 +431,7 @@ async function loadPositionsData(session, forceRefresh = false) {
      
       console.log('[Positions] Data loaded and UI updated');
      
-      // Fetch and render active positions detail
-      const activePositions = await getActivePositionsDetail(forceRefresh);
+      // Render active positions table (already fetched in parallel above)
       renderActivePositionsTable(activePositions);
       // Initialize sort handlers after table is rendered
       initPositionSortHandlers();
