@@ -453,58 +453,60 @@ async function loadHistoryData(session, forceRefresh = false) {
     const trades = await getTradeHistoryFromCache(forceRefresh);
    
     if (trades && trades.length > 0) {
-      // Calculate stats
-      const totalTrades = trades.length;
-      const wins = trades.filter(t => t.pnl > 0).length;
-      const losses = trades.filter(t => t.pnl < 0).length;
-      const avgTrade = trades.length > 0 ? (trades.reduce((sum, t) => sum + t.pnl, 0) / trades.length).toFixed(2) : '0.00';
-     
-      // Update stat cards
-      const totalTradesEl = document.getElementById('histTotalTrades');
-      if (totalTradesEl) totalTradesEl.textContent = totalTrades.toLocaleString();
-     
-      const winsEl = document.getElementById('histWins');
-      if (winsEl) winsEl.textContent = wins.toLocaleString();
-     
-      const lossesEl = document.getElementById('histLosses');
-      if (lossesEl) lossesEl.textContent = losses.toLocaleString();
-     
-      const avgTradeEl = document.getElementById('histAvgTrade');
-      if (avgTradeEl) {
-        avgTradeEl.textContent = `$${avgTrade >= 0 ? '+' : ''}${avgTrade}`;
-        avgTradeEl.className = `stat-card-value ${avgTrade >= 0 ? 'positive' : 'negative'}`;
-      }
-     
-      // Hide loading skeletons on stat cards
-      ['histTotalTradesLoading', 'histWinsLoading', 'histLossesLoading', 'histAvgTradeLoading'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-      });
-     
-// Render trade history table
-      renderTradeHistoryTable(trades);
-      // Initialize sort handlers after table is rendered
-      initHistorySortHandlers();
-
-      console.log('[History] Data loaded and UI updated:', { totalTrades, wins, losses, avgTrade });
-    } else {
-      // No data - show empty state
-      const tbody = document.getElementById('histTradesBody');
-      if (tbody) {
-        tbody.innerHTML = `
-            <tr>
-              <td colspan="6" style="text-align:center; color:var(--text-muted); padding: 20px;">
-                Belum ada trade history. Data akan muncul saat bot menutup posisi.
-              </td>
-            </tr>
-          `;
-      }
-      // Hide loading skeletons
-      ['histTotalTradesLoading', 'histWinsLoading', 'histLossesLoading', 'histAvgTradeLoading'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-      });
-    }
+          // Calculate stats
+          const totalTrades = trades.length;
+          const wins = trades.filter(t => t.pnl > 0).length;
+          const losses = trades.filter(t => t.pnl < 0).length;
+          const avgTrade = trades.length > 0 ? (trades.reduce((sum, t) => sum + t.pnl, 0) / trades.length).toFixed(2) : '0.00';
+    
+          // Update stat cards
+          const totalTradesEl = document.getElementById('histTotalTrades');
+          if (totalTradesEl) totalTradesEl.textContent = totalTrades.toLocaleString();
+    
+          const winsEl = document.getElementById('histWins');
+          if (winsEl) winsEl.textContent = wins.toLocaleString();
+    
+          const lossesEl = document.getElementById('histLosses');
+          if (lossesEl) lossesEl.textContent = losses.toLocaleString();
+    
+          const avgTradeEl = document.getElementById('histAvgTrade');
+          if (avgTradeEl) {
+            avgTradeEl.textContent = `$${avgTrade >= 0 ? '+' : ''}${avgTrade}`;
+            avgTradeEl.className = `stat-card-value ${avgTrade >= 0 ? 'positive' : 'negative'}`;
+          }
+    
+          // Hide loading skeletons on stat cards
+          ['histTotalTradesLoading', 'histWinsLoading', 'histLossesLoading', 'histAvgTradeLoading'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+          });
+    
+          // Render trade history table
+          renderTradeHistoryTable(trades);
+          // Initialize sort handlers after table is rendered
+          initHistorySortHandlers();
+    
+          console.log('[History] Data loaded and UI updated:', { totalTrades, wins, losses, avgTrade });
+        } else {
+          // No data - show empty state
+          const tbody = document.getElementById('histTradesBody');
+          if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                  <td colspan="6" style="text-align:center; color:var(--text-muted); padding: 20px;">
+                    Belum ada trade history. Data akan muncul saat bot menutup posisi.
+                  </td>
+                </tr>
+              `;
+          }
+          // Hide loading skeletons
+          ['histTotalTradesLoading', 'histWinsLoading', 'histLossesLoading', 'histAvgTradeLoading'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+          });
+          // Initialize sort handlers even for empty state (headers still exist)
+          initHistorySortHandlers();
+        }
   } catch (err) {
     console.error('[History] Failed to load Sheets data:', err);
     // Show error state

@@ -2857,5 +2857,118 @@ dialog.modal {
   to { transform: rotate(360deg); }
 }
 
+/* ===== Table Sort Styles ===== */
+.table-container table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-container thead th {
+  text-align: left;
+  padding: 0.875rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+  position: relative;
+}
+
+.table-container tbody td {
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background var(--transition-fast);
+}
+
+.table-container tbody tr:hover td {
+  background: var(--bg-glass);
+}
+
+.table-container tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Sortable header styles */
+.table-container th[data-sort] {
+  cursor: pointer;
+  user-select: none;
+}
+
+.table-container th[data-sort]:hover {
+  color: var(--accent-primary);
+  background: var(--bg-card-hover);
+}
+
+.table-container th[data-sort]:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+
+.sort-indicator {
+  margin-left: 0.375rem;
+  font-size: 0.7rem;
+  line-height: 1;
+  transition: transform var(--transition-fast);
+}
+
+th[data-sort][style*="color: var(--accent-primary)"] .sort-indicator,
+th[data-sort].sorted .sort-indicator {
+  color: var(--accent-primary);
+}
+
+/* History table specific */
+.history-table th[data-sort="time"] { width: 140px; }
+.history-table th[data-sort="coin"] { width: 80px; }
+.history-table th[data-sort="type"] { width: 80px; }
+.history-table th[data-sort="size"] { width: 100px; }
+.history-table th[data-sort="price"] { width: 120px; }
+.history-table th[data-sort="pnl"] { width: 120px; }
+
+/* Positions table specific */
+.positions-table th[data-sort="coin_name"] { width: 100px; }
+.positions-table th[data-sort="side"] { width: 80px; }
+.positions-table th[data-sort="size_usdt"] { width: 120px; }
+.positions-table th[data-sort="distance_pct"] { width: 100px; }
+.positions-table th[data-sort="unrealized_pnl"] { width: 120px; }
+.positions-table th[data-sort="leverage"] { width: 80px; }
+
+.position-number {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.coin-name {
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.type.buy,
+.type.long {
+  color: var(--accent-secondary);
+  font-weight: 600;
+}
+
+.type.sell,
+.type.short {
+  color: var(--accent-danger);
+  font-weight: 600;
+}
+
+.distance-pct.positive,
+.pnl.positive {
+  color: var(--accent-secondary);
+}
+
+.distance-pct.negative,
+.pnl.negative {
+  color: var(--accent-danger);
+}
+
 /* cache bust 1785662909570750457 */
 /* deploy trigger 1785717758 */
