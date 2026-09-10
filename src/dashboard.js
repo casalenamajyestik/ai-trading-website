@@ -782,7 +782,7 @@ function handleSortColumn(column) {
 }
 
 /**
- * Initialize sort click handlers on table headers using event delegation
+ * Initialize sort click handlers on table headers using event delegation on table
  */
 function initPositionSortHandlers() {
   const table = document.querySelector('.positions-table table');
@@ -793,6 +793,7 @@ function initPositionSortHandlers() {
   
   // Remove existing delegation listener if any
   if (table.dataset.sortListener) {
+    console.log('[Positions] Sort listener already attached, skipping');
     return; // Already initialized
   }
   table.dataset.sortListener = 'true';
@@ -805,18 +806,15 @@ function initPositionSortHandlers() {
     th.style.userSelect = 'none';
   });
   
-  // Use event delegation on thead
-  const thead = table.querySelector('thead');
-  if (thead) {
-    thead.addEventListener('click', (e) => {
-      const th = e.target.closest('th[data-sort]');
-      if (th) {
-        console.log('[Positions] Header clicked:', th.dataset.sort);
-        handleSortColumn(th.dataset.sort);
-      }
-    });
-    console.log('[Positions] Sort delegation attached to thead');
-  }
+  // Use event delegation on table (more robust than thead)
+  table.addEventListener('click', (e) => {
+    const th = e.target.closest('th[data-sort]');
+    if (th) {
+      console.log('[Positions] Header clicked:', th.dataset.sort);
+      handleSortColumn(th.dataset.sort);
+    }
+  });
+  console.log('[Positions] Sort delegation attached to table');
 }
 
 /**
@@ -864,7 +862,7 @@ function handleHistorySortColumn(column) {
 }
 
 /**
- * Initialize sort click handlers on history table headers using event delegation
+ * Initialize sort click handlers on history table headers using event delegation on table
  */
 function initHistorySortHandlers() {
   const table = document.querySelector('.history-table table');
@@ -875,6 +873,7 @@ function initHistorySortHandlers() {
   
   // Remove existing delegation listener if any
   if (table.dataset.sortListener) {
+    console.log('[History] Sort listener already attached, skipping');
     return; // Already initialized
   }
   table.dataset.sortListener = 'true';
@@ -887,18 +886,15 @@ function initHistorySortHandlers() {
     th.style.userSelect = 'none';
   });
   
-  // Use event delegation on thead
-  const thead = table.querySelector('thead');
-  if (thead) {
-    thead.addEventListener('click', (e) => {
-      const th = e.target.closest('th[data-sort]');
-      if (th) {
-        console.log('[History] Header clicked:', th.dataset.sort);
-        handleHistorySortColumn(th.dataset.sort);
-      }
-    });
-    console.log('[History] Sort delegation attached to thead');
-  }
+  // Use event delegation on table (more robust than thead)
+  table.addEventListener('click', (e) => {
+    const th = e.target.closest('th[data-sort]');
+    if (th) {
+      console.log('[History] Header clicked:', th.dataset.sort);
+      handleHistorySortColumn(th.dataset.sort);
+    }
+  });
+  console.log('[History] Sort delegation attached to table');
 }
 
 function getCountryOptions(selectedCode = 'ID') {
