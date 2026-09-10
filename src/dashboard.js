@@ -430,11 +430,9 @@ async function loadPositionsData(session, forceRefresh = false) {
       });
      
       console.log('[Positions] Data loaded and UI updated');
-     
+
       // Render active positions table (already fetched in parallel above)
       renderActivePositionsTable(activePositions);
-      // Initialize sort handlers after table is rendered
-      initPositionSortHandlers();
     }
   } catch (err) {
     console.error('[Positions] Failed to load Sheets data:', err);
@@ -483,8 +481,6 @@ async function loadHistoryData(session, forceRefresh = false) {
     
           // Render trade history table
           renderTradeHistoryTable(trades);
-          // Initialize sort handlers after table is rendered
-          initHistorySortHandlers();
     
           console.log('[History] Data loaded and UI updated:', { totalTrades, wins, losses, avgTrade });
         } else {
@@ -504,8 +500,6 @@ async function loadHistoryData(session, forceRefresh = false) {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
           });
-          // Initialize sort handlers even for empty state (headers still exist)
-          initHistorySortHandlers();
         }
   } catch (err) {
     console.error('[History] Failed to load Sheets data:', err);
@@ -2230,12 +2224,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 0);
       }
       if (pageName === 'positions') {
+        // Initialize sort handlers immediately after table is in DOM
+        initPositionSortHandlers();
         // Load Sheets data async (non-blocking, uses cache for faster loads)
         setTimeout(() => {
           loadPositionsData(session, false); // false = use cache
         }, 0);
       }
       if (pageName === 'history') {
+        // Initialize sort handlers immediately after table is in DOM
+        initHistorySortHandlers();
         // Load Sheets trade history async (non-blocking, uses cache for faster loads)
         setTimeout(() => {
           loadHistoryData(session, false); // false = use cache
