@@ -484,7 +484,7 @@ export class CinematicParticleAnimation {
       p.trail.forEach((pos, i) => {
         const trailAlpha = alpha * (1 - i / p.trail.length) * 0.15;
         const trailSize = size * (1 - i / p.trail.length) * 0.7;
-        if (trailAlpha > 0.01) {
+        if (trailAlpha > 0.01 && isFinite(trailSize) && trailSize > 0) {
           ctx.beginPath();
           ctx.arc(pos.x, pos.y, trailSize, 0, Math.PI * 2);
           ctx.fillStyle = this.hexToRgba(p.color.base, trailAlpha);
@@ -494,7 +494,8 @@ export class CinematicParticleAnimation {
     }
     
     // Draw glow (soft bloom)
-    if (glowRadius > 1 && alpha > 0.05) {
+    // Guard against non-finite glowRadius (NaN, Infinity, undefined)
+    if (glowRadius > 1 && alpha > 0.05 && isFinite(glowRadius)) {
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
       const glowAlpha = alpha * 0.6;
       gradient.addColorStop(0, this.hexToRgba(p.color.glow, glowAlpha * 0.8));
@@ -509,16 +510,18 @@ export class CinematicParticleAnimation {
     }
     
     // Draw core particle
-    if (size > 0.3 && alpha > 0.02) {
+    if (size > 0.3 && alpha > 0.02 && isFinite(size)) {
       // Bright core during sparkle
       if (p.isSparkling && p.sparkleProgress < 0.35) {
         // Intense white-hot core
         const coreAlpha = Math.min(alpha * 2, 1);
         const coreSize = size * 0.4;
-        ctx.beginPath();
-        ctx.arc(x, y, coreSize, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${coreAlpha})`;
-        ctx.fill();
+        if (isFinite(coreSize) && coreSize > 0) {
+          ctx.beginPath();
+          ctx.arc(x, y, coreSize, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${coreAlpha})`;
+          ctx.fill();
+        }
       }
       
       // Main colored particle
@@ -531,11 +534,13 @@ export class CinematicParticleAnimation {
       if (p.isSparkling && p.sparkleProgress > 0.15 && p.sparkleProgress < 0.5) {
         const ringAlpha = alpha * (1 - (p.sparkleProgress - 0.15) / 0.35) * 0.8;
         const ringSize = size * (1 + (p.sparkleProgress - 0.15) / 0.35 * 3);
-        ctx.beginPath();
-        ctx.arc(x, y, ringSize, 0, Math.PI * 2);
-        ctx.strokeStyle = this.hexToRgba(p.color.glow, ringAlpha);
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+        if (isFinite(ringSize) && ringSize > 0) {
+          ctx.beginPath();
+          ctx.arc(x, y, ringSize, 0, Math.PI * 2);
+          ctx.strokeStyle = this.hexToRgba(p.color.glow, ringAlpha);
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
       }
     }
     
