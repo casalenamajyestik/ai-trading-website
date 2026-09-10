@@ -223,9 +223,9 @@ async function getUnifiedSheetsData(forceRefresh = false) {
 }
 
 /**
- * Get latest row data for stat cards (equivalent to old getSheetsData)
+ * Get latest row data for stat cards from cached unified data
  */
-async function getSheetsData(forceRefresh = false) {
+async function getSheetsDataFromCache(forceRefresh = false) {
   const data = await getUnifiedSheetsData(forceRefresh);
   return data.latestRow;
 }
@@ -233,7 +233,7 @@ async function getSheetsData(forceRefresh = false) {
 /**
  * Get active positions detail from cached unified data
  */
-async function getActivePositionsDetail(forceRefresh = false) {
+async function getActivePositionsFromCache(forceRefresh = false) {
   const data = await getUnifiedSheetsData(forceRefresh);
   return data.activePositions;
 }
@@ -241,7 +241,7 @@ async function getActivePositionsDetail(forceRefresh = false) {
 /**
  * Get trade history (closed positions) from cached unified data
  */
-async function getTradeHistory(forceRefresh = false) {
+async function getTradeHistoryFromCache(forceRefresh = false) {
   const data = await getUnifiedSheetsData(forceRefresh);
   const closedPositions = data.closedPositions;
   
@@ -345,8 +345,8 @@ async function loadOverviewData(session, forceRefresh = false) {
     console.log('[Overview] Loading Google Sheets data...');
     // Parallel fetch: sheets data + trade history simultaneously
     const [sheetsData, tradeHistory] = await Promise.all([
-      getSheetsData(forceRefresh),
-      getTradeHistory(forceRefresh)
+      getSheetsDataFromCache(forceRefresh),
+      getTradeHistoryFromCache(forceRefresh)
     ]);
 
     if (sheetsData) {
@@ -388,8 +388,8 @@ async function loadPositionsData(session, forceRefresh = false) {
     // Parallel fetch: stat cards data + active positions detail simultaneously
     // Both now come from unified cache so this is very fast
     const [sheetsData, activePositions] = await Promise.all([
-      getSheetsData(forceRefresh),
-      getActivePositionsDetail(forceRefresh)
+      getSheetsDataFromCache(forceRefresh),
+      getActivePositionsFromCache(forceRefresh)
     ]);
 
     if (sheetsData) {
@@ -450,7 +450,7 @@ async function loadPositionsData(session, forceRefresh = false) {
 async function loadHistoryData(session, forceRefresh = false) {
   try {
     console.log('[History] Loading Google Sheets trade history...');
-    const trades = await getTradeHistory(forceRefresh);
+    const trades = await getTradeHistoryFromCache(forceRefresh);
    
     if (trades && trades.length > 0) {
       // Calculate stats
@@ -776,7 +776,7 @@ function handleSortColumn(column) {
   }
   
   // Re-render with new sort
-  getActivePositionsDetail(true).then(positions => {
+  getActivePositionsFromCache(true).then(positions => {
     renderActivePositionsTable(positions);
   });
 }
@@ -856,7 +856,7 @@ function handleHistorySortColumn(column) {
   }
   
   // Re-render with new sort (use cached trades from last fetch)
-  getTradeHistory(true).then(trades => {
+  getTradeHistoryFromCache(true).then(trades => {
     renderTradeHistoryTable(trades);
   });
 }
@@ -2329,8 +2329,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currentPage = document.querySelector('.nav-item.active')?.dataset.page;
         // Parallel fetch for overview page
         const [data, tradeHistory] = await Promise.all([
-          getSheetsData(true), // force refresh for auto-refresh
-          getTradeHistory(true)
+          getSheetsDataFromCache(true), // force refresh for auto-refresh
+          getTradeHistoryFromCache(true)
         ]);
         if (!data) return;
 
