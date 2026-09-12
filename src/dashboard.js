@@ -12,7 +12,7 @@ import {
   updatePassword
 } from './supabase.js';
 import { supabase } from './supabase.js';
-import { initAuth, getLocalSession, getLocalSessionSync, requireAuth } from './auth-listener.js';
+import { initAuth, getLocalSession, requireAuth } from './auth-listener.js';
 import { clearCsrfToken } from './security/csrf.js';
 import { validatePassword, createPasswordStrengthMeter, PASSWORD_REQUIREMENTS } from './security/password-validator.js';
 import { sanitizeText, sanitizeEmail, sanitizeProfile, escapeHtml, setSafeContent, sanitizeUrl } from './security/xss-protection.js';
@@ -26,7 +26,7 @@ import './styles/settings-tabs.css';
 // ============ Auth Guard ============
 async function requireAuthWrapper() {
   await initAuth();
-  return requireAuth();
+  return await requireAuth();
 }
 
 // ============ Google Sheets Integration ============
@@ -1706,7 +1706,7 @@ function attachChangePasswordHandler() {
     }
     
     // Validate password strength
-    const session = getLocalSessionSync();
+    const session = await getLocalSession();
     const userInfo = session?.user ? { email: session.user.email, name: session.user.name } : {};
     const passwordValidation = validatePassword(newPwd, userInfo);
     if (!passwordValidation.isValid) {

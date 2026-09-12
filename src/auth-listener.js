@@ -54,8 +54,8 @@ export function logout() {
   });
 }
 
-export function requireAuth() {
-  const session = getLocalSessionSync();
+export async function requireAuth() {
+  const session = await getLocalSession();
   if (!session) {
     window.location.href = '/';
     return null;
@@ -336,7 +336,7 @@ export async function initAuth() {
         // keep the login modal accessible (don't redirect)
         // Also stay on reset-password page for password update
   } else {
-    const localSession = getLocalSessionSync();
+    const localSession = await getLocalSession();
     updateNavbarForAuth(localSession);
   }
 }
