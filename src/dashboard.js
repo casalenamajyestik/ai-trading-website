@@ -498,12 +498,12 @@ async function loadHistoryData(session, forceRefresh = false) {
     
           console.log('[History] Data loaded and UI updated:', { totalTrades, wins, losses, avgTrade });
         } else {
-          // No data - show empty state
+// No data - show empty state
           const tbody = document.getElementById('histTradesBody');
           if (tbody) {
             tbody.innerHTML = `
                 <tr>
-                  <td colspan="6" style="text-align:center; color:var(--text-muted); padding: 20px;">
+                  <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
                     Belum ada trade history. Data akan muncul saat bot menutup posisi.
                   </td>
                 </tr>
@@ -522,7 +522,7 @@ async function loadHistoryData(session, forceRefresh = false) {
     if (tbody) {
       tbody.innerHTML = `
           <tr>
-            <td colspan="6" style="text-align:center; color:var(--accent-danger); padding: 20px;">
+            <td colspan="7" style="text-align:center; color:var(--accent-danger); padding: 20px;">
               Gagal memuat data. Silakan coba refresh halaman.
             </td>
           </tr>
@@ -554,7 +554,7 @@ function renderTradeHistoryTable(trades, sortOptions = {}) {
   if (!trades || trades.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align:center; color:var(--text-muted); padding: 20px;">
+        <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
           Belum ada trade history. Data akan muncul saat bot menutup posisi.
         </td>
       </tr>
@@ -593,8 +593,9 @@ function renderTradeHistoryTable(trades, sortOptions = {}) {
     return comparison * direction;
   });
   
-  tbody.innerHTML = sortedTrades.map(t => `
+  tbody.innerHTML = sortedTrades.map((t, index) => `
     <tr>
+      <td>${index + 1}</td>
       <td>${formatLocalTime(t.time)}</td>
       <td class="coin-name">${t.coin}</td>
       <td class="type ${t.type.toLowerCase()}">${t.type}</td>
@@ -1199,6 +1200,7 @@ const pages = {
             <table>
               <thead>
                 <tr>
+                  <th>#</th>
                   <th data-sort="time">Time</th>
                   <th data-sort="coin">Coin</th>
                   <th data-sort="type">Type</th>
@@ -1209,7 +1211,7 @@ const pages = {
               </thead>
               <tbody id="histTradesBody">
                 <tr>
-                  <td colspan="6" style="text-align:center; color:var(--text-muted); padding: 20px;">
+                  <td colspan="7" style="text-align:center; color:var(--text-muted); padding: 20px;">
                     <div class="loading-skeleton" style="display:inline-block; width:200px; height:20px; background:linear-gradient(90deg,var(--bg-tertiary),var(--bg-secondary),var(--bg-tertiary)); background-size:200% 100%; animation:shimmer 1.5s infinite;"></div>
                     <br><small>Memuat data</small>
                   </td>
