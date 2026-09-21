@@ -873,20 +873,29 @@ initAuth()
           btn.disabled = true;
         }
         
-        // Real Supabase sign up
+        // Real Supabase sign up (with password - email+password flow)
+        // User will receive email confirmation link to verify their account
         console.log('Registering user (modal)');
         const { data, error } = await signUp(email, password, {
           full_name: name,
           experience: experience || 'beginner'
         });
         
-        console.log('SignUp result (modal):', error ? 'error' : 'success');
+        console.log('SignUp result (modal):', error ? 'error' : 'success', data);
         
         if (error) {
           // Record failed attempt
           recordAttempt('REGISTER', false);
           console.error('SignUp error (modal):', error);
-          showToast(error.message || 'Gagal mendaftar: ' + error.message, 'error');
+          
+          // Check for Supabase's default provider "not authorized" error
+          const errorMessages = error.message?.toLowerCase() || '';
+          if (errorMessages.includes('not authorized') || errorMessages.includes('email address not authorized')) {
+            showToast('Email belum terotorisasi di Supabase. Silakan gunakan email tim project atau hubungi admin untuk konfigurasi SMTP.', 'error');
+          } else {
+            showToast(error.message || 'Gagal mendaftar. Silakan coba lagi.', 'error');
+          }
+          
           if (btn) {
             btn.textContent = originalText;
             btn.disabled = false;
@@ -894,21 +903,40 @@ initAuth()
           return;
         }
         
+        // Check if email confirmation is needed
+        // With Confirm Email enabled, user needs to click link in email
+        // With Confirm Email disabled, user is confirmed immediately
+        const isConfirmed = data?.user?.email_confirmed_at !== null;
+        
+        if (isConfirmed) {
+          // Email already confirmed (Confirm Email disabled in Supabase)
+          showToast('Akun berhasil dibuat!', 'success');
+          closeAllModals();
+          registerModalForm.reset();
+          if (btn) {
+            btn.textContent = originalText;
+            btn.disabled = false;
+          }
+          validateModalForm();
+          window.location.href = '/dashboard.html';
+        } else {
+          // Email verification link sent - need to verify
+          showToast('Akun berhasil dibuat! Cek email untuk verifikasi.', 'success');
+          closeAllModals();
+          registerModalForm.reset();
+          if (btn) {
+            btn.textContent = originalText;
+            btn.disabled = false;
+          }
+          validateModalForm();
+          
+          // Show verification info - Supabase sends email confirmation link
+          openVerification(email, name, true);
+        }
+        
         // Record successful attempt
         recordAttempt('REGISTER', true);
         clearRateLimit('REGISTER');
-        
-        showToast('Akun berhasil dibuat! Cek email untuk verifikasi.', 'success');
-        closeAllModals();
-        registerModalForm.reset();
-        if (btn) {
-          btn.textContent = originalText;
-          btn.disabled = false;
-        }
-        validateModalForm();
-        
-        // Show verification info (email link sent)
-        openVerification(email, name, true);
       });
     }
 
