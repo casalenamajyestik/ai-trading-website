@@ -57,7 +57,7 @@ function getDropdownItems() {
 }
 
 export function setLanguage(lang) {
-  i18next.changeLanguage(lang).then(() => {
+  return i18next.changeLanguage(lang).then(() => {
     localStorage.setItem('i18next', lang);
     
     // Update toggle button
