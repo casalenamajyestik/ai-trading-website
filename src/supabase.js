@@ -18,14 +18,22 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 // Auth helpers
 export async function signUp(email, password, metadata = {}) {
   const redirectUrl = `${window.location.origin}/dashboard.html`;
-  const { data, error } = await supabase.auth.signUp({
+  
+  // If password is empty, use magic link flow (no password)
+  const signUpOptions = {
     email,
-    password,
     options: {
       data: metadata,
       emailRedirectTo: redirectUrl
     }
-  });
+  };
+  
+  // Only include password if provided (for email+password flow)
+  if (password && password.length > 0) {
+    signUpOptions.password = password;
+  }
+  
+  const { data, error } = await supabase.auth.signUp(signUpOptions);
   return { data, error };
 }
 

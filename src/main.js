@@ -699,12 +699,10 @@ initAuth()
           btn.disabled = true;
         }
         
-        // Real Supabase sign up (password will be asked in verification step)
-        // For CTA inline form, we create account with temporary password
-        const tempPassword = Math.random().toString(36).slice(-12) + 'A1!';
-        
-        console.log('Registering user');
-        const { data, error } = await signUp(email, tempPassword, {
+        // Real Supabase sign up using MAGIC LINK flow (no password needed)
+        // User will receive email with magic link to complete registration
+        console.log('Registering user with magic link');
+        const { data, error } = await signUp(email, '', {
           full_name: name,
           experience: 'beginner'
         });
@@ -1028,13 +1026,21 @@ initAuth()
           btn.disabled = true;
         }
         
-        // Verify OTP code
+        // Verify OTP code using Supabase verifyOtp
         try {
-          const { data, error } = await resendVerification(verificationEmail);
-          // Actually we need to verify OTP - but for magic link flow this is handled differently
-          showToast('Verifikasi berhasil! Mengarahkan ke dashboard...', 'success');
-          closeVerification();
-          window.location.href = '/dashboard.html';
+          const { data, error } = await supabase.auth.verifyOtp({
+            email: verificationEmail,
+            token: code,
+            type: 'signup'
+          });
+          
+          if (error) {
+            showToast('Verifikasi gagal: ' + error.message, 'error');
+          } else {
+            showToast('Verifikasi berhasil! Mengarahkan ke dashboard...', 'success');
+            closeVerification();
+            window.location.href = '/dashboard.html';
+          }
         } catch (err) {
           showToast('Verifikasi gagal: ' + err.message, 'error');
         }
