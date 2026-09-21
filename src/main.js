@@ -735,6 +735,7 @@ initAuth()
         
         // For inline form, we don't have password - user sets it via email link
         // Show verification info modal
+        console.log('Calling openVerification for:', email);
         openVerification(email, name, true);
       });
     }
@@ -947,6 +948,7 @@ initAuth()
     let resendInterval = null;
 
     function openVerification(email, name, emailLinkSent = false) {
+      console.log('openVerification called:', { email, name, emailLinkSent });
       verificationEmail = email;
       verificationName = name;
       
@@ -954,7 +956,13 @@ initAuth()
       if (verifyCodeInput) verifyCodeInput.value = '';
       
       closeAllModals();
-      if (verificationModal) verificationModal.showModal();
+      console.log('verificationModal element:', verificationModal);
+      if (verificationModal) {
+        console.log('Showing verification modal');
+        verificationModal.showModal();
+      } else {
+        console.error('verificationModal not found!');
+      }
       
       if (emailLinkSent) {
         // Supabase sends magic link email, no code entry needed
