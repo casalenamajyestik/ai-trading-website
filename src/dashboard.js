@@ -150,12 +150,14 @@ async function fetchAllSheetsData(userId) {
     if (!latestRow && allRows.length > 0) {
       latestRow = allRows[allRows.length - 1];
     }
-    
+
     // Apply read_last fallback logic for numeric fields (if they're 0, look up for last non-zero)
+    // Clone latestRow first to avoid mutating the original allRows data (which closedPositions also reference)
     if (latestRow) {
+      latestRow = { ...latestRow };
       const NUMERIC_FIELDS = ['Saldo', 'PNL Exit', 'PNL Unrealized', 'Total Position', 'PNL Yesterday', 'Long Position', 'Short Position', 'Size'];
       const userIdCol = allRows[0] ? allRows[0].user_id : userId; // Use userId from data
-      
+
       for (const field of NUMERIC_FIELDS) {
         const camelField = field.toLowerCase().replace(/\s+/g, '_');
         let val = parseFloat(latestRow[camelField]) || 0;
@@ -172,7 +174,7 @@ async function fetchAllSheetsData(userId) {
         }
         latestRow[camelField] = val;
       }
-      
+
       // Special handling for PNL Yesterday - find nearest daily_pnl_yesterday row
       let pnlYesterdayVal = parseFloat(latestRow.pnl_yesterday) || 0;
       if (pnlYesterdayVal === 0) {
@@ -189,7 +191,7 @@ async function fetchAllSheetsData(userId) {
       }
       latestRow.pnl_yesterday = pnlYesterdayVal;
     }
-    
+
     return { latestRow, activePositions, closedPositions };
   } catch (err) {
     console.error('[Sheets] Failed to fetch all data:', err);
