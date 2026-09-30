@@ -326,7 +326,7 @@ function timeAgo(date) {
 }
 
 // ============ Update Stat Cards from Google Sheets Data ============
-function updateStatCards(sheetsData, closedPositions = 0) {
+function updateStatCards(sheetsData, closedPositions = 0, activePositionsData = []) {
   if (!sheetsData) return;
 
   // Map Google Sheets field names to card elements
@@ -337,14 +337,50 @@ function updateStatCards(sheetsData, closedPositions = 0) {
   const openPositions = sheetsData.total_position || sheetsData.total_positions || 0;
   const totalPositions = openPositions + closedPositions; // for Execution Cycle label
 
+  // Calculate PNL Today: latest active_position_detail saldo - latest daily_pnl_yesterday saldo
+  let pnlToday = 0;
+  try {
+    // Get latest daily_pnl_yesterday saldo
+    let dailyPnlYesterdaySaldo = 0;
+    for (let i = activePositionsData.length - 1; i >= 0; i--) {
+      if (activePositionsData[i].data_type === 'daily_pnl_yesterday') {
+        dailyPnlYesterdaySaldo = parseFloat(activePositionsData[i].saldo) || 0;
+        break;
+      }
+    }
+    // Also check sheetsData for saldo (could be from daily_pnl_yesterday row)
+    if (dailyPnlYesterdaySaldo === 0) {
+      dailyPnlYesterdaySaldo = parseFloat(sheetsData.saldo) || 0;
+    }
+    
+    // Get latest active_position_detail saldo
+    let activePositionSaldo = 0;
+    for (let i = activePositionsData.length - 1; i >= 0; i--) {
+      if (activePositionsData[i].data_type === 'active_position_detail') {
+        activePositionSaldo = parseFloat(activePositionsData[i].saldo) || 0;
+        break;
+      }
+    }
+    
+    if (dailyPnlYesterdaySaldo > 0 && activePositionSaldo > 0) {
+      pnlToday = activePositionSaldo - dailyPnlYesterdaySaldo;
+    }
+  } catch (e) {
+    console.warn('[Dashboard] Could not calculate PNL Today:', e);
+    pnlToday = 0;
+  }
+
   // Update each stat card
   const balanceEl = document.getElementById('statBalanceDisplay');
   if (balanceEl) balanceEl.textContent = formatCompactCurrency(balance);
 
   const pnlYesterdayEl = document.getElementById('statPnLYesterday');
   if (pnlYesterdayEl) {
-    const pnlValue = yesterdayPnL;
-    pnlYesterdayEl.innerHTML = `$ <span class="${pnlValue >= 0 ? 'positive' : 'negative'}">${pnlValue >= 0 ? '+' : ''}${Math.abs(pnlValue).toFixed(2)}</span>`;
+    const yestClass = yesterdayPnL >= 0 ? 'positive' : 'negative';
+    const todayClass = pnlToday >= 0 ? 'positive' : 'negative';
+    const yestSign = yesterdayPnL >= 0 ? '+' : '';
+    const todaySign = pnlToday >= 0 ? '+' : '';
+    pnlYesterdayEl.innerHTML = `$ <span class="${yestClass}">${yestSign}${Math.abs(yesterdayPnL).toFixed(2)}</span> <span class="pnl-divider">//</span> $ <span class="${todayClass}">${todaySign}${Math.abs(pnlToday).toFixed(2)}</span>`;
   }
 
   const biggestWinEl = document.getElementById('statBiggestWin');
@@ -356,7 +392,7 @@ function updateStatCards(sheetsData, closedPositions = 0) {
   const totalPositionsEl = document.getElementById('statTotalPositions');
   if (totalPositionsEl) totalPositionsEl.textContent = openPositions.toLocaleString(); // only open positions
 
-  console.log('[Dashboard] Stat cards updated from Sheets:', { balance, yesterdayPnL, totalPnL, biggestWin, openPositions, closedPositions, totalPositions });
+  console.log('[Dashboard] Stat cards updated from Sheets:', { balance, yesterdayPnL, pnlToday, totalPnL, biggestWin, openPositions, closedPositions, totalPositions });
 }
 
 // ============ Load Overview Data Async (Progressive Loading) ============
@@ -364,9 +400,10 @@ async function loadOverviewData(session, forceRefresh = false) {
   try {
     console.log('[Overview] Loading Google Sheets data...');
     // Parallel fetch: sheets data + trade history simultaneously
-    const [sheetsData, tradeHistory] = await Promise.all([
+    const [sheetsData, tradeHistory, activePositions] = await Promise.all([
       getSheetsDataFromCache(forceRefresh),
-      getTradeHistoryFromCache(forceRefresh)
+      getTradeHistoryFromCache(forceRefresh),
+      getActivePositionsFromCache(forceRefresh)
     ]);
 
     if (sheetsData) {
@@ -375,7 +412,7 @@ async function loadOverviewData(session, forceRefresh = false) {
       const closedPositions = tradeHistory ? tradeHistory.length : 0;
       const totalPositions = openPositions + closedPositions;
 
-      updateStatCards(sheetsData, closedPositions);
+      updateStatCards(sheetsData, closedPositions, activePositions);
 
       // Update Execution Cycle display
       const execCycleEl = document.getElementById('executionCycleValue');
@@ -1013,10 +1050,10 @@ const pages = {
             <div class="stat-card-sub loading-skeleton" id="statBalanceLoading">Memuat data...</div>
           </div>
 
-          <!-- Card 2: PNL Yesterday -->
+          <!-- Card 2: PNL Yesterday // PNL Today -->
           <div class="stat-card">
-            <div class="stat-card-label">PNL Yesterday</div>
-            <div class="stat-card-value" id="statPnLYesterday">$ <span class="${yesterdayPnL >= 0 ? 'positive' : 'negative'}">${yesterdayPnL >= 0 ? '+' : ''}${Math.abs(yesterdayPnL).toFixed(2)}</span></div>
+            <div class="stat-card-label">PNL Yesterday // PNL Today</div>
+            <div class="stat-card-value" id="statPnLYesterday">$ <span class="${yesterdayPnL >= 0 ? 'positive' : 'negative'}">${yesterdayPnL >= 0 ? '+' : ''}${Math.abs(yesterdayPnL).toFixed(2)}</span> <span class="pnl-divider">//</span> $ <span class="text-muted">--</span></div>
             <div class="stat-card-sub loading-skeleton" id="statPnLLoading">Memuat data...</div>
           </div>
 
@@ -2358,7 +2395,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (currentPage === 'overview' && pageContent) {
           const closedPositions = tradeHistory ? tradeHistory.length : 0;
-          updateStatCards(data, closedPositions);
+          const activePositions = await getActivePositionsFromCache(true);
+          updateStatCards(data, closedPositions, activePositions);
           // Hide skeletons kalau ada (misalnya setelah realtime re-render)
           ['statBalanceLoading', 'statPnLLoading', 'statBiggestWinLoading', 'statPositionsLoading'].forEach(id => {
             const el = document.getElementById(id);

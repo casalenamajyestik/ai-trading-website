@@ -73,6 +73,19 @@
   color: var(--accent-danger);
 }
 
+/* PNL Divider styling for "PNL Yesterday // PNL Today" card */
+.pnl-divider {
+  color: var(--accent-primary);
+  margin: 0 0.5rem;
+  font-weight: 500;
+  opacity: 0.5;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+  opacity: 0.6;
+}
+
 /* --- Dark theme (default) --- */
 [data-theme="dark"] {
   --bg-primary: #070b14;
