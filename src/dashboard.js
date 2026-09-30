@@ -133,6 +133,7 @@ async function fetchAllSheetsData(userId) {
     
     // Split by data_type
     const activePositions = allRows.filter(row => row.data_type === 'active_position_detail');
+    const dailyPnlYesterdayRows = allRows.filter(row => row.data_type === 'daily_pnl_yesterday');
     const closedPositions = allRows.filter(row => row.data_type === 'closed_position');
     
     // Get latest meaningful row (like read_last logic) - prefer unrealized_snapshot or heartbeat
@@ -196,7 +197,7 @@ async function fetchAllSheetsData(userId) {
       latestRow.biggest_win = biggestWinFromSheets;
     }
 
-    return { latestRow, activePositions, closedPositions };
+    return { latestRow, activePositions, dailyPnlYesterdayRows, closedPositions };
   } catch (err) {
     console.error('[Sheets] Failed to fetch all data:', err);
     return { latestRow: null, activePositions: [], closedPositions: [] };
@@ -235,6 +236,7 @@ async function getUnifiedSheetsData(forceRefresh = false) {
     data,
     latestRow: data.latestRow,
     activePositions: data.activePositions,
+    dailyPnlYesterdayRows: data.dailyPnlYesterdayRows,
     closedPositions: data.closedPositions,
     timestamp: now,
     userId: currentUserId
@@ -256,6 +258,14 @@ async function getSheetsDataFromCache(forceRefresh = false) {
 async function getActivePositionsFromCache(forceRefresh = false) {
   const data = await getUnifiedSheetsData(forceRefresh);
   return data.activePositions;
+}
+
+/**
+ * Get daily_pnl_yesterday rows from cached unified data
+ */
+async function getDailyPnlYesterdayRowsFromCache(forceRefresh = false) {
+  const data = await getUnifiedSheetsData(forceRefresh);
+  return data.dailyPnlYesterdayRows || [];
 }
 
 /**
@@ -362,6 +372,8 @@ function updateStatCards(sheetsData, closedPositions = 0, activePositionsData = 
       }
     }
     
+    console.log('[Debug PNL Today] dailyPnlYesterdaySaldo:', dailyPnlYesterdaySaldo, 'activePositionSaldo:', activePositionSaldo, 'pnlToday:', activePositionSaldo - dailyPnlYesterdaySaldo);
+    
     if (dailyPnlYesterdaySaldo > 0 && activePositionSaldo > 0) {
       pnlToday = activePositionSaldo - dailyPnlYesterdaySaldo;
     }
@@ -378,8 +390,8 @@ function updateStatCards(sheetsData, closedPositions = 0, activePositionsData = 
   if (pnlYesterdayEl) {
     const yestClass = yesterdayPnL >= 0 ? 'positive' : 'negative';
     const todayClass = pnlToday >= 0 ? 'positive' : 'negative';
-    const yestSign = yesterdayPnL >= 0 ? '+' : '';
-    const todaySign = pnlToday >= 0 ? '+' : '';
+    const yestSign = yesterdayPnL >= 0 ? '+' : '−';
+    const todaySign = pnlToday >= 0 ? '+' : '−';
     pnlYesterdayEl.innerHTML = `$ <span class="${yestClass}">${yestSign}${Math.abs(yesterdayPnL).toFixed(2)}</span> <span class="pnl-divider">//</span> $ <span class="${todayClass}">${todaySign}${Math.abs(pnlToday).toFixed(2)}</span>`;
   }
 
@@ -399,11 +411,12 @@ function updateStatCards(sheetsData, closedPositions = 0, activePositionsData = 
 async function loadOverviewData(session, forceRefresh = false) {
   try {
     console.log('[Overview] Loading Google Sheets data...');
-    // Parallel fetch: sheets data + trade history simultaneously
-    const [sheetsData, tradeHistory, activePositions] = await Promise.all([
+    // Parallel fetch: sheets data + trade history + daily_pnl_yesterday simultaneously
+    const [sheetsData, tradeHistory, activePositions, dailyPnlYesterdayRows] = await Promise.all([
       getSheetsDataFromCache(forceRefresh),
       getTradeHistoryFromCache(forceRefresh),
-      getActivePositionsFromCache(forceRefresh)
+      getActivePositionsFromCache(forceRefresh),
+      getDailyPnlYesterdayRowsFromCache(forceRefresh)
     ]);
 
     if (sheetsData) {
@@ -412,7 +425,9 @@ async function loadOverviewData(session, forceRefresh = false) {
       const closedPositions = tradeHistory ? tradeHistory.length : 0;
       const totalPositions = openPositions + closedPositions;
 
-      updateStatCards(sheetsData, closedPositions, activePositions);
+      // Combine activePositions and dailyPnlYesterdayRows for PNL Today calculation
+      const combinedData = [...activePositions, ...dailyPnlYesterdayRows];
+      updateStatCards(sheetsData, closedPositions, combinedData);
 
       // Update Execution Cycle display
       const execCycleEl = document.getElementById('executionCycleValue');
@@ -2396,7 +2411,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (currentPage === 'overview' && pageContent) {
           const closedPositions = tradeHistory ? tradeHistory.length : 0;
           const activePositions = await getActivePositionsFromCache(true);
-          updateStatCards(data, closedPositions, activePositions);
+          const dailyPnlYesterdayRows = await getDailyPnlYesterdayRowsFromCache(true);
+          const combinedData = [...activePositions, ...dailyPnlYesterdayRows];
+          updateStatCards(data, closedPositions, combinedData);
           // Hide skeletons kalau ada (misalnya setelah realtime re-render)
           ['statBalanceLoading', 'statPnLLoading', 'statBiggestWinLoading', 'statPositionsLoading'].forEach(id => {
             const el = document.getElementById(id);
