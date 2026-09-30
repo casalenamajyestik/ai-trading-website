@@ -128,6 +128,8 @@ async function fetchAllSheetsData(userId) {
     if (!result.success || !result.data) return { latestRow: null, activePositions: [], closedPositions: [] };
     
     const allRows = result.data;
+    // Extract biggest_win from Apps Script response (top-level field)
+    const biggestWinFromSheets = result.biggest_win || 0;
     
     // Split by data_type
     const activePositions = allRows.filter(row => row.data_type === 'active_position_detail');
@@ -190,6 +192,8 @@ async function fetchAllSheetsData(userId) {
         }
       }
       latestRow.pnl_yesterday = pnlYesterdayVal;
+      // Add biggest_win from Sheets response (computed server-side from closed_position rows)
+      latestRow.biggest_win = biggestWinFromSheets;
     }
 
     return { latestRow, activePositions, closedPositions };
