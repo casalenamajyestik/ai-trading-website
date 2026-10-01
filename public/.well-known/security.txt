@@ -1,0 +1,12 @@
+# Security Contact Information for ai-trading-website
+# This file helps security researchers report vulnerabilities responsibly
+
+Contact: security@ai-trading-website.com
+Contact: https://github.com/casalenamajyestik/ai-trading-website/security/advisories/new
+Preferred-Languages: en, id
+Canonical: https://ai-trading-website.com/.well-known/security.txt
+Policy: https://ai-trading-website.com/security-policy
+Acknowledgments: https://ai-trading-website.com/hall-of-fame
+Hiring: https://ai-trading-website.com/careers
+Encryption: https://ai-trading-website.com/pgp-key.txt
+Expires: 2026-12-31T23:59:59.000Z

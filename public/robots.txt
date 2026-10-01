@@ -1,0 +1,49 @@
+# Robots.txt for ai-trading-website
+# Blocks crawlers from sensitive paths while allowing public content
+
+User-agent: *
+Allow: /
+
+# Block sensitive/admin paths
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /dashboard.html
+Disallow: /reset-password.html
+Disallow: /auth/
+Disallow: /settings
+Disallow: /profile
+Disallow: /admin
+Disallow: /_next/
+Disallow: /_vercel/
+Disallow: /*.json$
+Disallow: /*.xml$
+Disallow: /*.env
+Disallow: /*.log
+Disallow: /*.bak
+Disallow: /*.backup
+Disallow: /*.sql
+Disallow: /*.db
+Disallow: /*.sqlite
+Disallow: /git/
+Disallow: /.git/
+Disallow: /.github/
+Disallow: /.vscode/
+Disallow: /.idea/
+Disallow: /node_modules/
+Disallow: /vendor/
+Disallow: /scripts/
+Disallow: /sql/
+Disallow: /templates/
+Disallow: /src/
+Disallow: /api/
+Disallow: /public/.well-known/
+Disallow: /public/security.txt
+
+# Sitemap
+Sitemap: https://ai-trading-website.com/sitemap.xml
+
+# Host
+Host: https://ai-trading-website.com
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 10

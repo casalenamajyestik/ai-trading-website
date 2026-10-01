@@ -15,25 +15,78 @@ export const PASSWORD_REQUIREMENTS = {
   // Check against common passwords
   checkCommonPasswords: true,
   // Check against user info (email, name)
-  checkUserInfo: true
+  checkUserInfo: true,
+  // Check against HaveIBeenPwned breach database (k-anonymity)
+  checkBreachDatabase: true
 };
 
-// Common weak passwords (top 1000 most common)
-const COMMON_PASSWORDS = new Set([
-  'password', '123456', '123456789', 'qwerty', 'abc123', 'password123',
-  'admin', 'letmein', 'welcome', 'monkey', 'dragon', 'master', 'hello',
-  'freedom', 'whatever', 'qazwsx', 'trustno1', '654321', 'jordan23',
-  'harley', 'robert', 'matthew', 'jordan', 'asshole', 'daniel', 'andrew',
-  // Add more as needed - in production load from file
-]);
+// Load common passwords from external file (cached)
+let commonPasswordsCache = null;
+let commonPasswordsLoadPromise = null;
+
+/**
+ * Load common passwords from external file
+ * @returns {Promise<Set<string>>} Set of common passwords
+ */
+async function loadCommonPasswords() {
+  if (commonPasswordsCache) return commonPasswordsCache;
+  
+  if (commonPasswordsLoadPromise) return commonPasswordsLoadPromise;
+  
+  commonPasswordsLoadPromise = (async () => {
+    try {
+      const response = await fetch('/common-passwords.txt', {
+        headers: { 'Accept': 'text/plain' }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to load password list: ${response.status}`);
+      }
+      
+      const text = await response.text();
+      const passwords = new Set(
+        text
+          .split('\n')
+          .map(line => line.trim().toLowerCase())
+          .filter(line => line.length > 0 && !line.startsWith('#'))
+      );
+      
+      commonPasswordsCache = passwords;
+      console.log(`Loaded ${passwords.size} common passwords from external file`);
+      return passwords;
+    } catch (err) {
+      console.warn('Failed to load external password list, using fallback:', err);
+      // Fallback to minimal hardcoded list
+      const fallback = new Set([
+        'password', '123456', '123456789', 'qwerty', 'abc123', 'password123',
+        'admin', 'letmein', 'welcome', 'monkey', 'dragon', 'master', 'hello',
+        'freedom', 'whatever', 'qazwsx', 'trustno1', '654321', 'jordan23',
+        'indonesia', 'jakarta', 'bandung', 'surabaya', 'rahasia', 'katasandi',
+        'bismillah', 'muhammad', 'ahmad', 'siti', 'ayu', 'putri', 'sari'
+      ]);
+      commonPasswordsCache = fallback;
+      return fallback;
+    }
+  })();
+  
+  return commonPasswordsLoadPromise;
+}
+
+/**
+ * Get common passwords set (loads if not cached)
+ * @returns {Promise<Set<string>>}
+ */
+export async function getCommonPasswords() {
+  return loadCommonPasswords();
+}
 
 /**
  * Check password strength and return detailed result
  * @param {string} password - Password to check
  * @param {Object} userInfo - Optional user info to check against (email, name)
- * @returns {Object} { score: number, feedback: string[], isValid: boolean, requirements: Object }
+ * @returns {Promise<Object>} { score: number, feedback: string[], isValid: boolean, requirements: Object }
  */
-export function validatePassword(password, userInfo = {}) {
+export async function validatePassword(password, userInfo = {}) {
   const feedback = [];
   let score = 0;
   const requirements = {
@@ -101,8 +154,9 @@ export function validatePassword(password, userInfo = {}) {
 
   // Check against common passwords
   if (PASSWORD_REQUIREMENTS.checkCommonPasswords) {
+    const commonPasswords = await getCommonPasswords();
     const lowerPassword = password.toLowerCase();
-    if (!COMMON_PASSWORDS.has(lowerPassword)) {
+    if (!commonPasswords.has(lowerPassword)) {
       requirements.notCommon = true;
       score += 15;
     } else {
@@ -136,6 +190,28 @@ export function validatePassword(password, userInfo = {}) {
     }
   }
 
+  // Initialize notBreached requirement
+  requirements.notBreached = true;
+
+  // Check against HaveIBeenPwned breach database (k-anonymity model)
+  if (PASSWORD_REQUIREMENTS.checkBreachDatabase) {
+    try {
+      const breachResult = await checkPasswordBreach(password);
+      if (breachResult.found) {
+        feedback.push(`⚠️ Kata sandi ini ditemukan dalam ${breachResult.count} kebocoran data! Pilih kata sandi lain.`);
+        score = Math.max(0, score - 40);
+        requirements.notBreached = false;
+      } else {
+        requirements.notBreached = true;
+        score += 10;
+      }
+    } catch (err) {
+      console.warn('HIBP check failed (network/offline):', err);
+      // Fail open - don't block if API unavailable
+      requirements.notBreached = true;
+    }
+  }
+
   // Bonus for extra length
   if (password.length >= 16) score += 5;
   if (password.length >= 20) score += 5;
@@ -149,7 +225,8 @@ export function validatePassword(password, userInfo = {}) {
                   (!PASSWORD_REQUIREMENTS.requireNumbers || requirements.hasNumber) &&
                   (!PASSWORD_REQUIREMENTS.requireSpecialChars || requirements.hasSpecialChar) &&
                   requirements.notCommon &&
-                  requirements.notUserInfo;
+                  requirements.notUserInfo &&
+                  requirements.notBreached;
 
   return {
     score,
@@ -221,7 +298,8 @@ export function createPasswordStrengthMeter(passwordInput, userInfo = {}) {
       { key: 'hasNumber', text: 'Angka (0-9)' },
       { key: 'hasSpecialChar', text: `Karakter khusus (${PASSWORD_REQUIREMENTS.allowedSpecialChars})` },
       { key: 'notCommon', text: 'Bukan kata sandi umum' },
-      { key: 'notUserInfo', text: 'Tidak mengandung info pribadi' }
+      { key: 'notUserInfo', text: 'Tidak mengandung info pribadi' },
+      { key: 'notBreached', text: 'Tidak ditemukan di database kebocoran' }
     ];
     
     reqs.forEach(req => {
@@ -244,4 +322,46 @@ export function createPasswordStrengthMeter(passwordInput, userInfo = {}) {
   passwordInput.addEventListener('input', (e) => update(e.target.value));
   
   return { meter: container, update };
+}
+
+/**
+ * Check password against HaveIBeenPwned API using k-anonymity model
+ * Only first 5 chars of SHA-1 hash are sent - never the full password
+ * @param {string} password - Password to check
+ * @returns {Promise<Object>} { found: boolean, count: number }
+ */
+export async function checkPasswordBreach(password) {
+  // SHA-1 hash the password
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  
+  // k-anonymity: send only first 5 characters
+  const prefix = hashHex.slice(0, 5);
+  const suffix = hashHex.slice(5);
+  
+  const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+    headers: {
+      'User-Agent': 'ai-trading-website-security-check',
+      'Add-Padding': 'true' // Adds padding to prevent traffic analysis
+    }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`HIBP API error: ${response.status}`);
+  }
+  
+  const text = await response.text();
+  const lines = text.trim().split('\n');
+  
+  for (const line of lines) {
+    const [hashSuffix, count] = line.split(':');
+    if (hashSuffix === suffix) {
+      return { found: true, count: parseInt(count, 10) };
+    }
+  }
+  
+  return { found: false, count: 0 };
 }
