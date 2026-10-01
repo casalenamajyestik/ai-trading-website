@@ -1,13 +1,12 @@
-#!/usr/bin/env node
 /**
  * CSP Nonce Generator & Injector
  * Generates a cryptographically secure nonce and injects it into all HTML files
- * Also updates vercel.json with the new CSP nonce
+ * Also updates vercel.json with the new CSP nonce (REPLACES old nonce, not append)
  */
 
 import { readFileSync, writeFileSync, readdirSync } from 'fs';
 import { join } from 'path';
-import { createHash, randomBytes } from 'crypto';
+import { randomBytes } from 'crypto';
 
 const DIST_DIR = '/home/lenovo/ai-trading-website/dist';
 const VERCEL_JSON = '/home/lenovo/ai-trading-website/vercel.json';
@@ -40,15 +39,11 @@ function injectNonceIntoHtml(htmlPath, nonce) {
     }
   );
   
-  // Add nonce to style attributes (inline styles)
-  // This is trickier - we can't add nonce to style attributes, they're covered by 'unsafe-inline' for styles
-  // But we can move them to <style nonce="..."> blocks
-  
   writeFileSync(htmlPath, content, 'utf-8');
   console.log(`✓ Injected nonce into ${htmlPath}`);
 }
 
-// Update vercel.json CSP header with nonce
+// Update vercel.json CSP header with nonce (REPLACE existing nonce)
 function updateVercelJson(nonce) {
   const vercelConfig = JSON.parse(readFileSync(VERCEL_JSON, 'utf-8'));
   
@@ -57,19 +52,19 @@ function updateVercelJson(nonce) {
     if (headerGroup.source === '/(.*)') {
       for (const header of headerGroup.headers) {
         if (header.key === 'Content-Security-Policy') {
-          // Replace script-src and style-src to include nonce
+          // REPLACE the entire script-src and style-src with new nonce
           let csp = header.value;
           
-          // Update script-src
+          // Replace script-src completely (remove any existing nonce-* and strict-dynamic duplicates)
           csp = csp.replace(
-            /script-src\s+([^;]+);/,
-            `script-src 'nonce-${nonce}' 'strict-dynamic' $1;`
+            /script-src\s+[^;]+;/,
+            `script-src 'nonce-${nonce}' 'strict-dynamic' 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com;`
           );
           
-          // Update style-src (keep unsafe-inline for style attributes, but add nonce)
+          // Replace style-src completely
           csp = csp.replace(
-            /style-src\s+([^;]+);/,
-            `style-src 'nonce-${nonce}' 'unsafe-inline' $1;`
+            /style-src\s+[^;]+;/,
+            `style-src 'nonce-${nonce}' 'unsafe-inline' 'self' https://fonts.googleapis.com;`
           );
           
           header.value = csp;
@@ -81,7 +76,7 @@ function updateVercelJson(nonce) {
   }
   
   writeFileSync(VERCEL_JSON, JSON.stringify(vercelConfig, null, 2), 'utf-8');
-  console.log('✓ Updated vercel.json with CSP nonce');
+  console.log('✓ Updated vercel.json with CSP nonce (replaced old)');
 }
 
 // Main
