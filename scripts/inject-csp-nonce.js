@@ -30,14 +30,7 @@ function injectNonceIntoHtml(htmlPath, nonce) {
     }
   );
   
-  // Add nonce to all <style> tags
-  content = content.replace(
-    /<style(\s+[^>]*)?>/g,
-    (match, attrs) => {
-      if (attrs && attrs.includes('nonce=')) return match;
-      return `<style${attrs || ''} nonce="${nonce}">`;
-    }
-  );
+  // NO nonce for <style> tags - CSP style-src uses 'unsafe-inline' not nonce
   
   writeFileSync(htmlPath, content, 'utf-8');
   console.log(`✓ Injected nonce into ${htmlPath}`);
@@ -55,16 +48,17 @@ function updateVercelJson(nonce) {
           // REPLACE the entire script-src and style-src with new nonce
           let csp = header.value;
           
-          // Replace script-src completely (remove any existing nonce-* and strict-dynamic duplicates)
+          // Replace script-src: allow 'self' for same-origin scripts (Vite assets), nonce for inline
+          // NO strict-dynamic - it breaks Vite multi-entry points
           csp = csp.replace(
             /script-src\s+[^;]+;/,
-            `script-src 'nonce-${nonce}' 'strict-dynamic' 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com;`
+            `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com;`
           );
           
-          // Replace style-src completely
+          // Replace style-src: NO nonce (so 'unsafe-inline' works for inline styles)
           csp = csp.replace(
             /style-src\s+[^;]+;/,
-            `style-src 'nonce-${nonce}' 'unsafe-inline' 'self' https://fonts.googleapis.com;`
+            `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;`
           );
           
           header.value = csp;
