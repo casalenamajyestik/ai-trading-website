@@ -211,14 +211,19 @@ initAuth()
       });
     });
 
-    // ============ CTA Register Button ============
-    const ctaRegisterBtn = document.querySelector('.hero-cta .btn[href="#register"]');
-    if (ctaRegisterBtn) {
-      ctaRegisterBtn.addEventListener('click', (e) => {
+    // ============ CTA Register Buttons (both hero-cta and cta-final) ============
+    const ctaRegisterBtns = document.querySelectorAll('.hero-cta .btn[href="#register"], .cta-final .btn[href="#register"]');
+    ctaRegisterBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
         e.preventDefault();
         openRegister();
       });
-    }
+    });
+
+    // Remove inline onclick if present (CSP compliance)
+    ctaRegisterBtns.forEach(btn => {
+      btn.removeAttribute('onclick');
+    });
 
     // ============ Login Form ============
     const loginForm = document.getElementById('loginForm');
