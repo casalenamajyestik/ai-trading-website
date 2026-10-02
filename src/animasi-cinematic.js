@@ -473,7 +473,9 @@ export class CinematicParticleAnimation {
     const ctx = this.ctx;
     const brightness = p.getCurrentBrightness();
     const size = p.getCurrentSize();
-    const glowRadius = p.getGlowRadius();
+    let glowRadius = p.getGlowRadius();
+    // Guard against non-finite glowRadius (NaN, Infinity, undefined)
+    if (!isFinite(glowRadius) || glowRadius <= 0) glowRadius = 1;
     const alpha = brightness * (0.4 + p.z * 0.6); // far = more transparent
     
     const x = p.x + this.cameraOffset.x * p.parallaxFactor;
@@ -494,8 +496,7 @@ export class CinematicParticleAnimation {
     }
     
     // Draw glow (soft bloom)
-    // Guard against non-finite glowRadius (NaN, Infinity, undefined)
-    if (glowRadius > 1 && alpha > 0.05 && isFinite(glowRadius)) {
+    if (glowRadius > 1 && alpha > 0.05) {
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
       const glowAlpha = alpha * 0.6;
       gradient.addColorStop(0, this.hexToRgba(p.color.glow, glowAlpha * 0.8));
